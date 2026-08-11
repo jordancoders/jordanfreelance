@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
 import { useInvoices } from "@/hooks/useInvoices";
 import { useProjects } from "@/hooks/useProjects";
 import { useReviews } from "@/hooks/useReviews";
@@ -108,25 +108,17 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
   const cli = useClients();
   const { config: cloudConfig, save: saveConfig } = useSiteConfig();
 
-  const [googleFormUrl, setGoogleFormUrl] = useState(SITE_CONFIG.googleFormUrl);
+  // Derive initial state from cloud config when available (no useEffect setState)
+  const [googleFormUrl, setGoogleFormUrl] = useState(
+    cloudConfig.googleFormUrl || SITE_CONFIG.googleFormUrl
+  );
   const [socialLinks, setSocialLinks] = useState({
-    githubUrl: SITE_CONFIG.githubUrl,
-    linkedinUrl: SITE_CONFIG.linkedinUrl,
-    facebookUrl: SITE_CONFIG.facebookUrl,
-    discordUrl: SITE_CONFIG.discordUrl,
-    repoUrl: SITE_CONFIG.repoUrl,
+    githubUrl: cloudConfig.githubUrl || SITE_CONFIG.githubUrl,
+    linkedinUrl: cloudConfig.linkedinUrl || SITE_CONFIG.linkedinUrl,
+    facebookUrl: cloudConfig.facebookUrl || SITE_CONFIG.facebookUrl,
+    discordUrl: cloudConfig.discordUrl || SITE_CONFIG.discordUrl,
+    repoUrl: cloudConfig.repoUrl || SITE_CONFIG.repoUrl,
   });
-
-  useEffect(() => {
-    if (cloudConfig.googleFormUrl) setGoogleFormUrl(cloudConfig.googleFormUrl);
-    setSocialLinks({
-      githubUrl: cloudConfig.githubUrl || SITE_CONFIG.githubUrl,
-      linkedinUrl: cloudConfig.linkedinUrl || SITE_CONFIG.linkedinUrl,
-      facebookUrl: cloudConfig.facebookUrl || SITE_CONFIG.facebookUrl,
-      discordUrl: cloudConfig.discordUrl || SITE_CONFIG.discordUrl,
-      repoUrl: cloudConfig.repoUrl || SITE_CONFIG.repoUrl,
-    });
-  }, [cloudConfig]);
 
   const saveGoogleFormUrl = useCallback(async (url: string) => {
     setGoogleFormUrl(url);

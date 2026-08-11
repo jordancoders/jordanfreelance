@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { fetchProjects, addProject, editProject, removeProject } from "@/app/actions/projects";
 import type { Project } from "@/lib/types";
 
@@ -8,6 +8,7 @@ export function useProjects() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const loaded = useRef(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -22,7 +23,12 @@ export function useProjects() {
     }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    if (!loaded.current) {
+      loaded.current = true;
+      void load();
+    }
+  }, [load]);
 
   const create = useCallback(async (project: Project) => {
     const created = await addProject(project);

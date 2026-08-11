@@ -282,6 +282,12 @@ function AdminDashboardInner() {
   // UI Toast notification
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  function showToast(msg: unknown) {
+    const text = typeof msg === "string" ? msg : String(msg || "");
+    setToastMessage(text);
+    setTimeout(() => setToastMessage(null), 3000);
+  }
+
   // Restore an authenticated session on mount if a valid httpOnly cookie exists.
   useEffect(() => {
     let cancelled = false;
@@ -293,12 +299,6 @@ function AdminDashboardInner() {
       cancelled = true;
     };
   }, []);
-
-  const showToast = (msg: unknown) => {
-    const text = typeof msg === "string" ? msg : String(msg || "");
-    setToastMessage(text);
-    setTimeout(() => setToastMessage(null), 3000);
-  };
 
   // Auth Handlers
   const handlePinSubmit = async (e: React.FormEvent) => {

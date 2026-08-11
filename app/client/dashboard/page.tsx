@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   ShieldCheck,
@@ -84,8 +84,12 @@ export default function ClientDashboardPage() {
     }
   }, [router]);
 
+  const loaded = useRef(false);
   useEffect(() => {
-    loadAccount();
+    if (!loaded.current) {
+      loaded.current = true;
+      void loadAccount();
+    }
   }, [loadAccount]);
 
   const handleLogout = async () => {

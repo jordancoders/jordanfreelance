@@ -163,7 +163,7 @@ export default function ClientPortalsTab({
     const projectTitle = cpProjectTitle.trim() || linkedInvoice?.items?.[0]?.description || "Custom Web App";
     const now = new Date().toISOString();
     let account: ClientPortalAccount = {
-      id: `client-${Date.now()}`,
+      id: `client-${now}-${cpUsername.trim()}`,
       clientName: cpClientName.trim(),
       clientCompany: cpClientCompany.trim(),
       email: cpClientEmail.trim(),

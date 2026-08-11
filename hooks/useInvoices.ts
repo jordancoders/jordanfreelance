@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { fetchInvoices, addInvoice, editInvoice, removeInvoice } from "@/app/actions/invoices";
 import type { Invoice } from "@/lib/types";
 
@@ -8,6 +8,7 @@ export function useInvoices() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const loaded = useRef(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -22,7 +23,12 @@ export function useInvoices() {
     }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    if (!loaded.current) {
+      loaded.current = true;
+      void load();
+    }
+  }, [load]);
 
   const create = useCallback(async (invoice: Invoice) => {
     const created = await addInvoice(invoice);

@@ -20,10 +20,15 @@ function ExportContent() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!docParam) { setLoading(false); return; }
+    if (!docParam) {
+      setLoading(false);
+      return;
+    }
+    let cancelled = false;
     setLoading(true);
     fetchInvoice(docParam)
       .then((inv) => {
+        if (cancelled) return;
         if (inv) {
           setInvoice(inv);
           setSignature(inv.declaration?.signatureDataUrl || "");
@@ -32,7 +37,10 @@ function ExportContent() {
         }
       })
       .catch(() => {})
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => { cancelled = true; };
   }, [docParam]);
 
   const persistDeclaration = async (sig: string, name: string, ack: boolean) => {

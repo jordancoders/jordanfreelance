@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { fetchReviews, addReview, editReview, removeReview } from "@/app/actions/reviews";
 import type { ClientReview } from "@/lib/types";
 
@@ -8,6 +8,7 @@ export function useReviews() {
   const [reviews, setReviews] = useState<ClientReview[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const loaded = useRef(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -22,7 +23,12 @@ export function useReviews() {
     }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    if (!loaded.current) {
+      loaded.current = true;
+      void load();
+    }
+  }, [load]);
 
   const create = useCallback(async (review: ClientReview) => {
     const created = await addReview(review);
