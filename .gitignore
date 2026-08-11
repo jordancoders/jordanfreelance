@@ -1,0 +1,14 @@
+node_modules/
+.next/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
+.vercel
+.wrangler/
+# AI Studio scaffolding metadata (not part of the project)
+metadata.json
+.l2s*
+*.tsbuildinfo
+next-env.d.ts

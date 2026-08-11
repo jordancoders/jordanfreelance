@@ -1,0 +1,40 @@
+{
+  "name": "jorda-portfolio",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "clean": "next clean",
+    "pages:build": "npx @cloudflare/next-on-pages",
+    "preview": "npx wrangler pages dev .vercel/output/static --compatibility-flag=nodejs_compat",
+    "deploy": "npx wrangler pages deploy .vercel/output/static --project-name=jordanfreelance --compatibility-date=2024-12-18 --compatibility-flags=nodejs_compat",
+    "cf-typegen": "npx wrangler types --env-interface CloudflareEnv env.d.ts"
+  },
+  "dependencies": {
+    "autoprefixer": "^10.4.21",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.553.0",
+    "mongodb": "^6.16.0",
+    "next": "^15.4.9",
+    "postcss": "^8.5.6",
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1",
+    "tailwind-merge": "^3.3.1"
+  },
+  "devDependencies": {
+    "@cloudflare/next-on-pages": "^1.13.0",
+    "@tailwindcss/postcss": "4.1.11",
+    "@tailwindcss/typography": "^0.5.19",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "9.39.1",
+    "eslint-config-next": "16.0.8",
+    "tailwindcss": "4.1.11",
+    "typescript": "5.9.3",
+    "wrangler": "^3.90.0"
+  }
+}
