@@ -4,7 +4,7 @@ import { Calendar } from "lucide-react";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 
 export default function DiscoveryCallButton() {
-  const config = useSiteConfig();
+  const { config } = useSiteConfig();
 
   return (
     <a

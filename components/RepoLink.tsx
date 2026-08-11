@@ -16,7 +16,7 @@ export default function RepoLink({
 }: {
   variant?: "button" | "link";
 }) {
-  const config = useSiteConfig();
+  const { config } = useSiteConfig();
   const href = config.repoUrl || config.githubUrl;
 
   if (!href) return null;

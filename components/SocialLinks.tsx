@@ -34,7 +34,7 @@ function FacebookIcon({ className }: { className?: string }) {
  * admin-editable site config. Links left empty in the Admin Studio are hidden.
  */
 export default function SocialLinks({ className = "" }: { className?: string }) {
-  const config = useSiteConfig();
+  const { config } = useSiteConfig();
 
   const links = [
     { href: config.githubUrl, label: "GitHub", icon: <Github className="w-4 h-4" /> },

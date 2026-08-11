@@ -30,6 +30,10 @@ export async function PATCH(req: NextRequest) {
   if (!account.id) {
     return NextResponse.json({ error: "invalid-account" }, { status: 500 });
   }
-  const { password: _password, ...safeAccount } = await updateClient(account.id, allowedPatch);
+  const updated = await updateClient(account.id, allowedPatch);
+  if (!updated) {
+    return NextResponse.json({ error: "update-failed" }, { status: 500 });
+  }
+  const { password: _password, ...safeAccount } = updated;
   return NextResponse.json({ account: safeAccount });
 }

@@ -161,6 +161,7 @@ export default function ClientPortalsTab({
     }
     const linkedInvoice = invoices.find((inv) => inv.id === cpInvoiceId) || null;
     const projectTitle = cpProjectTitle.trim() || linkedInvoice?.items?.[0]?.description || "Custom Web App";
+    const now = new Date().toISOString();
     let account: ClientPortalAccount = {
       id: `client-${Date.now()}`,
       clientName: cpClientName.trim(),
@@ -190,7 +191,8 @@ export default function ClientPortalsTab({
           notes: "",
         },
       status: "pending",
-      createdAt: new Date().toISOString(),
+      createdAt: now,
+      updatedAt: now,
       progress: DEFAULT_MILESTONES.map((m, i) => ({
         id: `ms-${Date.now()}-${i}`,
         label: m.label,

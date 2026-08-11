@@ -1,3 +1,5 @@
+"use client";
+
 import { Suspense } from "react";
 import { Mail, Phone, Clock, MapPin, Send, MessageSquare, Calendar, Globe } from "lucide-react";
 import Header from "@/components/Header";
@@ -7,7 +9,7 @@ import { SITE_CONFIG } from "@/data/portfolioData";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 
 function ContactFormContent() {
-  const config = useSiteConfig();
+  const { config } = useSiteConfig();
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">

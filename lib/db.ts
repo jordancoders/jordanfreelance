@@ -43,7 +43,7 @@ const globalForMongo = globalThis as unknown as {
   _jordanMongoClient?: MongoClient;
 };
 
-function getClient(): MongoClient {
+function getMongoClient(): MongoClient {
   if (!URI) {
     throw new Error("MONGODB_URI is not configured");
   }
@@ -57,7 +57,7 @@ function getClient(): MongoClient {
 }
 
 function db() {
-  return getClient().db(DATABASE);
+  return getMongoClient().db(DATABASE);
 }
 
 function coll<T extends Document>(name: string): Collection<T> {
@@ -92,7 +92,7 @@ export async function getInvoices(): Promise<Invoice[]> {
 
 export async function getInvoice(id: string): Promise<Invoice | null> {
   const doc = await coll<Invoice>(COLLECTIONS.invoices).findOne({ id });
-  return doc ? (doc ? (() => { const { _id: _, ...rest } = doc; return rest; })() : null) : null;
+  return doc ? stripId<Invoice>(doc) : null;
 }
 
 export async function createInvoice(invoice: Invoice): Promise<Invoice> {

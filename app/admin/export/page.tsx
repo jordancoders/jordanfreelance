@@ -6,7 +6,7 @@ import { Printer, ShieldCheck, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import SignaturePad from "@/components/SignaturePad";
 import { SITE_CONFIG } from "@/data/portfolioData";
-import { getInvoice } from "@/lib/db";
+import { fetchInvoice } from "@/app/actions/invoices";
 import type { Invoice } from "@/lib/types";
 
 function ExportContent() {
@@ -22,7 +22,7 @@ function ExportContent() {
   useEffect(() => {
     if (!docParam) { setLoading(false); return; }
     setLoading(true);
-    getInvoice(docParam)
+    fetchInvoice(docParam)
       .then((inv) => {
         if (inv) {
           setInvoice(inv);
@@ -38,8 +38,8 @@ function ExportContent() {
   const persistDeclaration = async (sig: string, name: string, ack: boolean) => {
     if (!invoice) return;
     try {
-      const { updateInvoice } = await import("@/app/actions/invoices");
-      await updateInvoice(invoice.id, {
+      const { editInvoice } = await import("@/app/actions/invoices");
+      await editInvoice(invoice.id, {
         declaration: { signatureDataUrl: sig, signerName: name, acknowledged: ack, signedAt: new Date().toISOString() },
       });
     } catch {

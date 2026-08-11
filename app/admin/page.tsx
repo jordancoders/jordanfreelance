@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
@@ -666,7 +666,7 @@ function AdminDashboardInner() {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = () => {
+    reader.onload = async () => {
       try {
         const parsed = JSON.parse(String(reader.result));
         const backup = {
@@ -2704,11 +2704,12 @@ function AdminDashboardInner() {
                   onInvoicesChange={async (next) => {
                     for (const inv of next) {
                       if (!inv.id) continue;
+                      const invoice = inv as Invoice;
                       const existing = data.invoices.find((i) => i.id === inv.id);
                       if (existing) {
-                        await data.updateInvoice(inv.id, inv);
+                        await data.updateInvoice(inv.id, invoice);
                       } else {
-                        await data.createInvoice(inv);
+                        await data.createInvoice(invoice);
                       }
                     }
                   }}
