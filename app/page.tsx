@@ -37,7 +37,7 @@ export default async function HomePage() {
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
               <span>Available for New SA SME Projects</span>
               <span className="text-slate-400">|</span>
-              <span className="text-orange-400 font-bold">48-Hour Staging Guarantee</span>
+              <Link href="/guarantee" className="text-orange-400 font-bold hover:underline">48-Hour Staging Guarantee</Link>
             </div>
 
             <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-slate-900 dark:text-white tracking-tight max-w-5xl mx-auto leading-[1.1]">

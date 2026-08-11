@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ShieldCheck, Mail, Phone, Lock, FileText, KeyRound } from "lucide-react";
+import { ShieldCheck, Mail, Phone, Lock, FileText } from "lucide-react";
 import { SITE_CONFIG } from "@/data/portfolioData";
 import SocialLinks from "./SocialLinks";
 import RepoLink from "./RepoLink";
@@ -107,17 +107,12 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link id="footer-link-admin" href="/admin" className="hover:text-orange-400 transition-colors flex items-center gap-1.5 font-bold text-orange-400">
-                  <Lock className="w-3.5 h-3.5 text-orange-400" />
-                  Private Studio Admin
+                <Link id="footer-link-guarantee" href="/guarantee" className="hover:text-orange-400 transition-colors flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                  Guarantee & Refund Policy
                 </Link>
               </li>
-              <li>
-                <Link id="footer-link-client-portal" href="/client" className="hover:text-orange-400 transition-colors flex items-center gap-1.5 font-semibold text-orange-400">
-                  <KeyRound className="w-3.5 h-3.5 text-orange-400" />
-                  Client Portal Login
-                </Link>
-              </li>
+
             </ul>
           </div>
 

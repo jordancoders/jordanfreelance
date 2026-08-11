@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, ShieldCheck, ArrowRight, Phone, MessageSquareQuote, FileCode, Layers, Info, Star, Home, Sparkles, Lock, Users } from "lucide-react";
+import { Menu, X, ShieldCheck, ArrowRight, Phone, MessageSquareQuote, FileCode, Layers, Info, Star, Home, Sparkles } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 import { SITE_CONFIG } from "@/data/portfolioData";
 
@@ -26,8 +26,6 @@ export default function Header() {
     { href: "/about", label: "About Jordan", icon: Info },
     { href: "/testimonials", label: "Testimonials", icon: Star },
     { href: "/contact", label: "Request Quote", icon: MessageSquareQuote },
-    { href: "/admin", label: "Admin", icon: Lock },
-    { href: "/client", label: "Client Login", icon: Users },
   ];
 
   const isActive = (path: string) => {
