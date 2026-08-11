@@ -1,3 +1,4 @@
+export const runtime = "nodejs";
 import { NextResponse } from "next/server";
 import { API_PRICING_MODELS } from "@/data/apiPricingData";
 

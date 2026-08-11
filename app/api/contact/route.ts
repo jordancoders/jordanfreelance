@@ -1,3 +1,4 @@
+export const runtime = "nodejs";
 import { NextRequest, NextResponse } from "next/server";
 
 /** Escapes user-supplied text for safe interpolation into the HTML email body

@@ -34,8 +34,11 @@ jobs:
       - name: Type check
         run: npx tsc --noEmit
 
-      - name: Build with OpenNext
-        run: npx opennextjs-cloudflare build
+      - name: Build Next.js
+        run: npm run build
+
+      - name: Build for Cloudflare Pages
+        run: npx @cloudflare/next-on-pages --compatibility-flag=nodejs_compat
 
       - name: Deploy to Cloudflare Pages
         if: github.event_name != 'pull_request'
@@ -44,7 +47,7 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           projectName: ${{ secrets.CLOUDFLARE_PROJECT_NAME }}
-          directory: .open-next
+          directory: .vercel/output/static
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
           branch: ${{ github.ref_name }}
 
