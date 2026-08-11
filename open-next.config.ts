@@ -7,11 +7,6 @@ const config: OpenNextConfig = {
       converter: "edge",
     },
   },
-  transform: {
-    init: {
-      propagateIsrMetadata: false,
-    },
-  },
 };
 
 export default config;
