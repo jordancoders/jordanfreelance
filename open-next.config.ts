@@ -7,6 +7,9 @@ const config: OpenNextConfig = {
       converter: "edge",
     },
   },
+  cloudflare: {
+    dangerousDisableConfigValidation: true,
+  },
 };
 
 export default config;
