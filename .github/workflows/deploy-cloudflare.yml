@@ -38,7 +38,7 @@ jobs:
         run: npm run build
 
       - name: Build for Cloudflare Pages
-        run: npx @cloudflare/next-on-pages --compatibility-flag=nodejs_compat
+        run: npx @cloudflare/next-on-pages
 
       - name: Deploy to Cloudflare Pages
         if: github.event_name != 'pull_request'
