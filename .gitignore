@@ -12,3 +12,6 @@ metadata.json
 .l2s*
 *.tsbuildinfo
 next-env.d.ts
+
+.vercel
+.env*

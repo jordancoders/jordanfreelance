@@ -69,7 +69,7 @@ const jsonLd = {
   '@id': SITE_CONFIG.siteUrl,
   url: SITE_CONFIG.siteUrl,
   telephone: '+27848600638',
-  email: 'jordancodespace@gmail.com',
+  email: 'jordancodefreelancer@protonmail.com',
   address: {
     '@type': 'PostalAddress',
     addressCountry: 'ZA',

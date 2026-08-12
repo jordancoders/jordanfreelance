@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
         // All user content is HTML-escaped before interpolation.
         const payload: Record<string, unknown> = {
           from: "onboarding@resend.dev",
-          to: ["jordancodespace@gmail.com"],
+          to: ["jordancodefreelancer@protonmail.com"],
           subject,
           html: `
             <div style="font-family: sans-serif; padding: 20px; color: #1e293b;">
@@ -101,7 +101,7 @@ export async function POST(req: NextRequest) {
               <p><strong>Message / Scope notes:</strong></p>
               <blockquote style="background:#f8fafc; padding:12px; border-left:4px solid #f97316; margin: 8px 0; white-space: pre-line;">${esc(message) || 'N/A'}</blockquote>
               <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 16px 0;" />
-              <p style="font-size: 12px; color: #64748b;">Sent via Jordan Peters Coder Freelancing Lead Engine to <strong>jordancodespace@gmail.com</strong></p>
+              <p style="font-size: 12px; color: #64748b;">Sent via Jordan Peters Coder Freelancing Lead Engine to <strong>jordancodefreelancer@protonmail.com</strong></p>
             </div>
           `,
         };

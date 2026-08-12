@@ -21,16 +21,14 @@ export const SITE_CONFIG = {
   developerName: "Jordan Peters",
   tradingName: "Coder Freelancing",
   brandLine: "Jordan Peters Coder Freelancing",
-  email: "jordancodespace@gmail.com",
+  email: "jordancodefreelancer@protonmail.com",
   whatsappNumber: "0848600638",
   whatsappFormatted: "+27 84 860 0638",
   whatsappLink: "https://wa.me/27848600638",
   googleFormUrl: "https://forms.google.com",
-  paypalEmail: "jordancodespace@gmail.com",
+  paypalEmail: "jordancodefreelancer@protonmail.com",
   // Canonical public URL used for metadata, sitemap, robots.txt, and JSON-LD.
-  // Currently the live Vercel deployment. When a custom domain is purchased and
-  // pointed at this deployment, change ONLY this value.
-  siteUrl: "https://jordan-viber-freelance-developer-4.vercel.app",
+  siteUrl: "https://jpfreelance.dpndns.org",
   location: "South Africa (Remote)",
   coverage: "South Africa + Worldwide Remote",
   currencies: ["ZAR (R)", "USD ($)", "EUR (€)", "GBP (£)"],
