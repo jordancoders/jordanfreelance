@@ -292,14 +292,17 @@ export default function AboutPage() {
               <div className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-orange-500" />
                 <h3 className="text-xl font-extrabold text-slate-900 dark:text-white">
-                  Full Transparency: This Website Was Built With AI
+                  Built With AI — Reviewed By a Human
                 </h3>
               </div>
               <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">
-                This very portfolio was generated with <strong className="text-slate-900 dark:text-white">DeepSeek V4 Flash</strong> inside <strong className="text-slate-900 dark:text-white">Freebuff</strong>, with human code review on every change. After each build, I re-read the site and the code multiple times using <strong className="text-slate-900 dark:text-white">DeepSeek Chat</strong> and <strong className="text-slate-900 dark:text-white">Qwen Studio</strong> to catch errors I or the AI agent might have missed — the same multi-pass review your project gets before it reaches you.
+                This site is built with an <strong className="text-slate-900 dark:text-white">AI-orchestrated workflow and a human quality gate on every change</strong> —
+                the same process your project gets. AI handles the heavy scaffolding and iteration; I review every
+                change for security, correctness, and scope before it ships. Every build passes strict TypeScript,
+                ESLint, and a production build before deploy.
               </p>
               <div className="flex flex-wrap gap-2 pt-1">
-                {["DeepSeek V4 Flash", "Freebuff", "DeepSeek Chat", "Qwen Studio", "Human Code Review"].map((tool) => (
+                {["AI-Orchestrated", "Human Code Review", "Security Audit", "Scope Control", "TypeScript + ESLint"].map((tool) => (
                   <span
                     key={tool}
                     className="px-3 py-1 rounded-full bg-orange-100 dark:bg-orange-950/60 text-orange-600 dark:text-orange-400 text-[11px] font-bold border border-orange-200 dark:border-orange-800"
