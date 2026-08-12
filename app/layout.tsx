@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { FAQ_DATA, SITE_CONFIG } from '@/data/portfolioData';
+import CookieConsent from '@/components/CookieConsent';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_CONFIG.siteUrl),
@@ -121,6 +122,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body suppressHydrationWarning className="min-h-screen bg-slate-50 dark:bg-[#070D17] text-slate-900 dark:text-slate-100 font-sans antialiased selection:bg-orange-500 selection:text-white">
         {children}
+        <CookieConsent />
       </body>
     </html>
   );

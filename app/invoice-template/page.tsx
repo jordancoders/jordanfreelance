@@ -193,7 +193,7 @@ export default function InvoiceTemplatePage() {
 
                 <div className="p-3 bg-slate-800 rounded-xl border border-slate-700 space-y-1">
                   <strong className="text-white block font-bold text-xs">Option 2: Direct EFT (Bank Transfer)</strong>
-                  <div>Send proof of payment via WhatsApp: <strong className="text-emerald-400 font-mono">0848600638</strong></div>
+                  <div>Send proof of payment via WhatsApp: <strong className="text-emerald-400 font-mono">{SITE_CONFIG.whatsappFormatted}</strong></div>
                   <div className="text-slate-400 text-[11px]">Bank details provided upon quote confirmation</div>
                 </div>
               </div>
@@ -206,7 +206,7 @@ export default function InvoiceTemplatePage() {
                 LEGAL TERMS & CONDITIONS OF PAYMENT
               </h4>
               <p>
-                <strong>&ldquo;PAY &amp; AGREE&rdquo;:</strong> Payment of the deposit invoice constitutes full legal acceptance of our Master Services Agreement, Privacy Policy, POPIA Compliance Policy, and the No-Gamble Guarantee.
+                <strong>&ldquo;PAY &amp; AGREE&rdquo;:</strong> Payment of the deposit invoice constitutes full legal acceptance of our Terms of Service, Privacy Policy, POPIA Compliance Policy, and the No-Gamble Guarantee (see the Guarantee &amp; Refund Policy for full terms).
               </p>
               <ul className="list-disc pl-5 space-y-0.5 text-[11px] text-slate-700">
                 <li>Source code will be released only upon receipt of final payment balance.</li>

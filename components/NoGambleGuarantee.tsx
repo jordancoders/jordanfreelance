@@ -44,10 +44,10 @@ export default function NoGambleGuarantee() {
           </Link>
           <Link
             id="no-gamble-cta-terms"
-            href="/terms#no-gamble"
+            href="/guarantee#48-hour-staging-guarantee"
             className="w-full lg:w-auto inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-xs text-center border border-slate-700"
           >
-            Read Clause 3 in Terms of Service
+            Read the Full Refund &amp; Guarantee Policy
           </Link>
         </div>
       </div>

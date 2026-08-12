@@ -1,0 +1,6 @@
+# Never upload local secrets or scratch files
+.env*
+!.env.example
+.freebuff/
+.wrangler/
+.next/

@@ -20,12 +20,16 @@ import {
   ExternalLink,
   Hourglass,
   ClipboardCopy,
+  Plus,
+  Printer,
+  HandCoins,
 } from "lucide-react";
+import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import SignaturePad from "@/components/SignaturePad";
-import type { ClientPortalAccount, ProgressUpdate } from "@/lib/types";
+import type { ClientPortalAccount, ProgressUpdate, PaymentRecord } from "@/lib/types";
 import { computePercentComplete, totalPaymentsReceived, appendActivity } from "@/lib/clientPortal";
 
 const STATUS_META: Record<ProgressUpdate["status"], { label: string; dot: string }> = {
@@ -61,7 +65,19 @@ export default function ClientDashboardPage() {
   const [replyText, setReplyText] = useState("");
   const [notice, setNotice] = useState("");
 
-  const loadAccount = useCallback(async () => {
+  // Report-a-payment form
+  const [repAmount, setRepAmount] = useState("");
+  const [repMethod, setRepMethod] = useState<PaymentRecord["method"]>("EFT");
+  const [repDate, setRepDate] = useState("");
+  const [repNote, setRepNote] = useState("");
+  const [repError, setRepError] = useState("");
+  const [repSubmitting, setRepSubmitting] = useState(false);
+
+  // True once the user starts drawing/typing their signature — auto-refresh
+  // must never clobber an in-progress signature with stale server state.
+  const dirtySignature = useRef(false);
+
+  const loadAccount = useCallback(async (silent = false) => {
     try {
       const res = await fetch("/api/client/account");
       if (res.status === 401) {
@@ -72,15 +88,20 @@ export default function ClientDashboardPage() {
       const json = await res.json();
       setAccount(json.account);
       if (json.account?.declaration) {
-        setSignatureDataUrl(json.account.declaration.signatureDataUrl || "");
-        setSignerName(json.account.declaration.signerName || "");
-        setAcknowledged(json.account.declaration.acknowledged || false);
-        setDeclSaved(true);
+        if (!dirtySignature.current) {
+          setSignatureDataUrl(json.account.declaration.signatureDataUrl || "");
+          setSignerName(json.account.declaration.signerName || "");
+          setAcknowledged(json.account.declaration.acknowledged || false);
+          setDeclSaved(true);
+        }
+      } else if (!dirtySignature.current && json.account?.clientName) {
+        // Pre-fill the signer's name so they only have to draw their signature.
+        setSignerName(json.account.clientName);
       }
     } catch {
-      // ignore
+      // ignore — next poll retries
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [router]);
 
@@ -91,6 +112,57 @@ export default function ClientDashboardPage() {
       void loadAccount();
     }
   }, [loadAccount]);
+
+  // Auto-refresh: poll while the tab is visible, and refresh the moment it
+  // becomes visible again (e.g. the client opens the portal after the admin
+  // posted an update). Stops polling entirely while the tab is hidden.
+  useEffect(() => {
+    const refresh = () => {
+      if (document.visibilityState === "visible") void loadAccount(true);
+    };
+    document.addEventListener("visibilitychange", refresh);
+    const id = setInterval(refresh, 25000);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", refresh);
+    };
+  }, [loadAccount]);
+
+  const handleReportPayment = async () => {
+    setRepError("");
+    const amount = Number(repAmount);
+    if (!amount || amount <= 0) {
+      setRepError("Enter a valid payment amount.");
+      return;
+    }
+    setRepSubmitting(true);
+    try {
+      const res = await fetch("/api/client/payment/report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount,
+          method: repMethod,
+          date: repDate || undefined,
+          note: repNote.trim() || undefined,
+        }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setRepError(json.error === "invalid-amount" ? "Enter a valid payment amount." : "Could not report the payment — try again.");
+        return;
+      }
+      setAccount(json.account);
+      setRepAmount("");
+      setRepNote("");
+      setRepDate("");
+      setNotice("Payment reported — your developer will confirm it shortly.");
+    } catch {
+      setRepError("Could not reach the server — please try again.");
+    } finally {
+      setRepSubmitting(false);
+    }
+  };
 
   const handleLogout = async () => {
     await fetch("/api/client/logout", { method: "POST" });
@@ -121,14 +193,17 @@ export default function ClientDashboardPage() {
       `Signed by ${signerName.trim()}`
     );
     try {
-      await fetch("/api/client/account/update", {
+      const res = await fetch("/api/client/account/update", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ declaration, activity: updated.activity }),
       });
-      setAccount(updated);
+      const json = await res.json().catch(() => ({}));
+      // Prefer the server's copy — it carries the refreshed document snapshot
+      // (status flips to Accepted the moment you sign).
+      setAccount(json.account || updated);
       setDeclSaved(true);
-      setNotice("Declaration signed and saved.");
+      setNotice("Declaration signed and saved — your developer sees it instantly.");
     } catch {
       setDeclError("Could not save — please try again.");
     }
@@ -165,7 +240,7 @@ export default function ClientDashboardPage() {
     const cardText = `SIGNED_DECLARATION:${account.username}:${account.declaration.signerName}:${account.declaration.signedAt}`;
     try {
       await navigator.clipboard.writeText(cardText);
-      setNotice("Signed declaration reference copied — send it back to me on WhatsApp or email.");
+      setNotice("Signed declaration reference copied — your developer already sees your signature on their dashboard.");
     } catch {
       setNotice("Couldn't copy automatically — long-press to copy.");
     }
@@ -186,7 +261,9 @@ export default function ClientDashboardPage() {
   const completedCount = (account?.progress || []).filter((p) => p.status === "completed").length;
   const totalMilestones = account?.progress.length || 0;
   const overdueCount = (account?.progress || []).filter(isOverdue).length;
-  const received = account ? totalPaymentsReceived(account) : 0;
+  // Money received is the greater of confirmed portal payments and the deposit
+  // actually recorded against the linked invoice — both directions stay in sync.
+  const received = account ? Math.max(totalPaymentsReceived(account), doc?.depositPaid || 0) : 0;
   const depositDue = doc?.depositAmount || 0;
   const balanceDue = doc ? Math.max(0, doc.balance - Math.max(0, received - depositDue)) : 0;
   const messages = account?.messages || [];
@@ -241,7 +318,7 @@ export default function ClientDashboardPage() {
                 <div className="flex flex-wrap items-center gap-2">
                   <button
                     id="client-refresh-btn"
-                    onClick={loadAccount}
+                    onClick={() => void loadAccount()}
                     className="px-3.5 py-2 rounded-xl bg-white dark:bg-[#0D1A2D] border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold transition-colors hover:border-orange-400 flex items-center gap-1.5"
                   >
                     <RefreshCw className="w-3.5 h-3.5" />
@@ -450,31 +527,111 @@ export default function ClientDashboardPage() {
 
                     {(account.payments || []).length === 0 ? (
                       <p className="text-xs text-slate-400">
-                        No payments recorded yet. Your developer tracks deposits and balances here.
+                        No payments recorded yet. Made a payment? Report it below and your developer will confirm it.
                       </p>
                     ) : (
                       <div className="space-y-2">
-                        {(account.payments || []).map((p) => (
-                          <div key={p.id} className="flex items-center justify-between gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
-                            <div className="flex items-center gap-3">
-                              <span className="px-2 py-0.5 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold uppercase">
-                                {p.method}
-                              </span>
-                              <div>
-                                <p className="text-sm font-extrabold font-mono text-slate-900 dark:text-white">
-                                  {symbol} {p.amount.toLocaleString()}
-                                </p>
-                                <p className="text-[10px] text-slate-400 font-mono">
-                                  {p.date}
-                                  {p.note ? ` · ${p.note}` : ""}
-                                </p>
+                        {(account.payments || []).map((p) => {
+                          const pending = p.status === "pending";
+                          return (
+                            <div key={p.id} className="flex items-center justify-between gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+                              <div className="flex items-center gap-3">
+                                <span className={`px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase ${pending ? "bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400" : "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400"}`}>
+                                  {p.method}
+                                </span>
+                                <div>
+                                  <p className="text-sm font-extrabold font-mono text-slate-900 dark:text-white">
+                                    {symbol} {p.amount.toLocaleString()}
+                                  </p>
+                                  <p className="text-[10px] text-slate-400 font-mono">
+                                    {p.date}
+                                    {p.note ? ` · ${p.note}` : ""}
+                                  </p>
+                                </div>
                               </div>
+                              {pending ? (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-600 dark:text-amber-400 shrink-0">
+                                  <Hourglass className="w-3.5 h-3.5" />
+                                  Pending confirmation
+                                </span>
+                              ) : (
+                                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                              )}
                             </div>
-                            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
+
+                    {/* Report a payment */}
+                    <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-dashed border-slate-300 dark:border-slate-600 space-y-3">
+                      <p className="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+                        <HandCoins className="w-4 h-4 text-emerald-500" />
+                        Made a payment? Report it
+                      </p>
+                      <div className="flex flex-wrap items-end gap-2">
+                        <div className="w-28">
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Amount</label>
+                          <input
+                            type="number"
+                            min={0}
+                            value={repAmount}
+                            onChange={(e) => setRepAmount(e.target.value)}
+                            placeholder="0"
+                            className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
+                          />
+                        </div>
+                        <div className="w-32">
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Method</label>
+                          <select
+                            value={repMethod}
+                            onChange={(e) => setRepMethod(e.target.value as PaymentRecord["method"])}
+                            className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
+                          >
+                            <option value="EFT">EFT</option>
+                            <option value="PayPal">PayPal</option>
+                            <option value="Cash">Cash</option>
+                            <option value="Other">Other</option>
+                          </select>
+                        </div>
+                        <div className="w-40">
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Date</label>
+                          <input
+                            type="date"
+                            value={repDate}
+                            onChange={(e) => setRepDate(e.target.value)}
+                            className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
+                          />
+                        </div>
+                        <div className="flex-1 min-w-[140px]">
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Reference / note</label>
+                          <input
+                            type="text"
+                            value={repNote}
+                            onChange={(e) => setRepNote(e.target.value)}
+                            placeholder="e.g. EFT ref, kick-off deposit"
+                            className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
+                          />
+                        </div>
+                        <button
+                          onClick={handleReportPayment}
+                          disabled={repSubmitting}
+                          className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs transition-all flex items-center gap-1.5 disabled:opacity-60 disabled:cursor-not-allowed"
+                        >
+                          <Plus className="w-4 h-4" />
+                          {repSubmitting ? "Reporting…" : "Report Payment"}
+                        </button>
+                      </div>
+                      {repError && (
+                        <p className="flex items-start gap-2 text-xs text-red-600 dark:text-red-400 font-medium bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-900 rounded-xl p-3">
+                          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                          {repError}
+                        </p>
+                      )}
+                      <p className="text-[10px] text-slate-400">
+                        Your report shows as <em>pending confirmation</em> — the deposit and balance update as soon as your developer confirms it.
+                      </p>
+                    </div>
                   </div>
 
                   {/* Shared links */}
@@ -531,6 +688,15 @@ export default function ClientDashboardPage() {
                         <h2 className="text-base font-bold">Signed Declaration</h2>
                         <p className="text-xs text-slate-500">Approve your documents here.</p>
                       </div>
+                      {doc && (
+                        <Link
+                          href="/client/declaration"
+                          className="ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-[11px] font-bold transition-colors shrink-0"
+                        >
+                          <Printer className="w-3.5 h-3.5" />
+                          Print / Save PDF
+                        </Link>
+                      )}
                     </div>
 
                     {declSaved && account?.declaration ? (
@@ -539,6 +705,9 @@ export default function ClientDashboardPage() {
                           <p className="text-xs font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
                             <CheckCircle2 className="w-4 h-4" />
                             Signed on {new Date(account.declaration.signedAt).toLocaleDateString([], { day: "numeric", month: "long", year: "numeric" })}
+                          </p>
+                          <p className="text-[11px] text-emerald-600 dark:text-emerald-500">
+                            This signature is instantly shared with your developer — no need to send anything back.
                           </p>
                           {account.declaration.signatureDataUrl && (
                             // eslint-disable-next-line @next/next/no-img-element
@@ -560,7 +729,15 @@ export default function ClientDashboardPage() {
                       </div>
                     ) : (
                       <div className="space-y-4">
-                        <SignaturePad value={signatureDataUrl} onChange={setSignatureDataUrl} height={110} label="Sign here" />
+                        <SignaturePad
+                          value={signatureDataUrl}
+                          onChange={(v) => {
+                            dirtySignature.current = true;
+                            setSignatureDataUrl(v);
+                          }}
+                          height={110}
+                          label="Sign here"
+                        />
                         <div>
                           <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                             Full name
@@ -569,7 +746,10 @@ export default function ClientDashboardPage() {
                             id="client-signer-name"
                             type="text"
                             value={signerName}
-                            onChange={(e) => setSignerName(e.target.value)}
+                            onChange={(e) => {
+                              dirtySignature.current = true;
+                              setSignerName(e.target.value);
+                            }}
                             placeholder="Your full name"
                             className="w-full p-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
                           />
@@ -579,12 +759,22 @@ export default function ClientDashboardPage() {
                             id="client-declaration-ack"
                             type="checkbox"
                             checked={acknowledged}
-                            onChange={(e) => setAcknowledged(e.target.checked)}
+                            onChange={(e) => {
+                              dirtySignature.current = true;
+                              setAcknowledged(e.target.checked);
+                            }}
                             className="mt-0.5 accent-orange-500 w-4 h-4"
                           />
-                          <span>
+                          <span className="leading-relaxed">
                             I confirm the details in this {doc?.documentType.toLowerCase() || "document"} are correct, that I
-                            accept the Terms of Service, Privacy Policy, POPIA Compliance Policy and the No-Gamble Guarantee,
+                            accept the{" "}
+                            <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline text-orange-500 font-semibold hover:text-orange-600">Terms of Service</a>,{" "}
+                            <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline text-orange-500 font-semibold hover:text-orange-600">Privacy Policy</a>,{" "}
+                            <a href="/popia" target="_blank" rel="noopener noreferrer" className="underline text-orange-500 font-semibold hover:text-orange-600">POPIA Compliance Policy</a>,{" "}
+                            the{" "}
+                            <a href="/guarantee" target="_blank" rel="noopener noreferrer" className="underline text-orange-500 font-semibold hover:text-orange-600">No-Gamble Guarantee</a>,
+                            and — where applicable — the{" "}
+                            <a href="/dpa" target="_blank" rel="noopener noreferrer" className="underline text-orange-500 font-semibold hover:text-orange-600">Data Processing Agreement</a>,
                             and that this signature is legally binding.
                           </span>
                         </label>

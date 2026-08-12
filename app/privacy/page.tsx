@@ -188,7 +188,7 @@ export default function PrivacyPage() {
           </section>
 
           {/* Section 8: Cookies */}
-          <section className="space-y-4">
+          <section id="cookies" className="space-y-4">
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Eye className="w-6 h-6 text-orange-500" />
               8. Cookies & Consent
@@ -292,7 +292,7 @@ export default function PrivacyPage() {
             <div className="space-y-2 text-sm">
               <p><strong>Jordan Peters {SITE_CONFIG.tradingName}</strong></p>
               <p>Email: <a href={`mailto:${SITE_CONFIG.email}`} className="text-orange-400 hover:underline">{SITE_CONFIG.email}</a></p>
-              <p>Phone: <a href={`tel:${SITE_CONFIG.whatsappNumber}`} className="text-orange-400 hover:underline">{SITE_CONFIG.whatsappFormatted}</a></p>
+              <p>Phone: <a href={`tel:${SITE_CONFIG.phoneE164}`} className="text-orange-400 hover:underline">{SITE_CONFIG.whatsappFormatted}</a></p>
             </div>
           </section>
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Users,
   UserPlus,
@@ -22,6 +22,7 @@ import {
   Send,
   X,
   CalendarClock,
+  PenLine,
 } from "lucide-react";
 import {
   type ClientPortalAccount,
@@ -46,6 +47,10 @@ interface ClientPortalsTabProps {
   onChange: (next: ClientPortalAccount[]) => void;
   onInvoicesChange: (next: InvoiceLike[]) => void;
   showToast: (msg: string) => void;
+  /** When set (from a notification bell click), the matching portal is opened in Manage. */
+  focusClientId?: string | null;
+  /** Called after the focused portal has been opened, so the parent can reset it. */
+  onFocusConsumed?: () => void;
 }
 
 const symbolFor = (acc: ClientPortalAccount) => (acc.document?.currency === "USD" ? "$" : "R");
@@ -73,6 +78,8 @@ export default function ClientPortalsTab({
   onChange,
   onInvoicesChange,
   showToast,
+  focusClientId,
+  onFocusConsumed,
 }: ClientPortalsTabProps) {
   // Detail panel + tracker draft
   const [selectedClient, setSelectedClient] = useState<ClientPortalAccount | null>(null);
@@ -108,7 +115,10 @@ export default function ClientPortalsTab({
   const [assetType, setAssetType] = useState<SharedAsset["type"]>("staging");
 
   const commitClient = (updated: ClientPortalAccount) => {
-    onChange(clients.map((c) => (c.id === updated.id ? updated : c)));
+    void Promise.resolve(onChange(clients.map((c) => (c.id === updated.id ? updated : c)))).catch((err) => {
+      console.error("[admin] client portal save failed:", err);
+      showToast("Portal change failed to save — MongoDB unreachable.");
+    });
     setSelectedClient(updated);
   };
 
@@ -187,9 +197,13 @@ export default function ClientPortalsTab({
           subtotal: 0,
           depositPercent: 50,
           depositAmount: 0,
+          depositPaid: 0,
           balance: 0,
           notes: "",
         },
+      // If the linked document was already signed in the studio, the client
+      // portal starts with that signed declaration so nothing needs re-signing.
+      declaration: linkedInvoice?.declaration,
       status: "pending",
       createdAt: now,
       updatedAt: now,
@@ -206,7 +220,10 @@ export default function ClientPortalsTab({
       activity: [],
     };
     account = appendActivity(account, "admin", "Client portal created", `Project: ${projectTitle}`);
-    onChange([account, ...clients]);
+    void Promise.resolve(onChange([account, ...clients])).catch((err) => {
+      console.error("[admin] client portal create failed:", err);
+      showToast("Portal could not be created — MongoDB unreachable.");
+    });
     openTrackerEditor(account);
     setCpProjectTitle(projectTitle);
     showToast(`Client portal for ${account.clientName} created — approve it to send the invite.`);
@@ -279,7 +296,10 @@ export default function ClientPortalsTab({
     } else {
       next = [account, ...clients];
     }
-    onChange(next);
+    void Promise.resolve(onChange(next)).catch((err) => {
+      console.error("[admin] client card import failed:", err);
+      showToast("Card import failed to save — MongoDB unreachable.");
+    });
     setImportCardText("");
     // If the card carries a signed declaration, archive it onto the linked invoice record.
     if (account.declaration && account.invoiceId) {
@@ -354,6 +374,8 @@ export default function ClientPortalsTab({
       method: payMethod,
       date: payDate || today(),
       note: payNote.trim() || undefined,
+      status: "confirmed",
+      reportedBy: "admin",
     };
     const received = totalPaymentsReceived(selectedClient) + amount;
     const next = baseWithDraft({ payments: [...selectedClient.payments, payment] });
@@ -365,10 +387,15 @@ export default function ClientPortalsTab({
       received > 0 ? `Total received: ${symbolFor(selectedClient)} ${received.toLocaleString()}` : undefined
     );
     commitClient(updated);
+    syncInvoicePayment(selectedClient.invoiceId, amount);
     setPayAmount("");
     setPayNote("");
     setPayDate("");
-    showToast(`Payment of ${symbolFor(updated)} ${amount.toLocaleString()} recorded.`);
+    showToast(
+      selectedClient.invoiceId
+        ? `Payment of ${symbolFor(updated)} ${amount.toLocaleString()} recorded and applied to the linked invoice.`
+        : `Payment of ${symbolFor(updated)} ${amount.toLocaleString()} recorded.`
+    );
   };
 
   const handleDeletePayment = (id: string) => {
@@ -438,8 +465,74 @@ export default function ClientPortalsTab({
     showToast("Link removed.");
   };
 
+  /** Syncs a payment onto the linked invoice: depositPaid grows, and the status
+   *  moves Sent → Accepted once a deposit lands, → Paid once fully covered.
+   *  #8 — kills the drift where portal payments never reached the invoice. */
+  const syncInvoicePayment = (invoiceId: string | undefined, amount: number) => {
+    if (!invoiceId) return;
+    const inv = invoices.find((i) => i.id === invoiceId);
+    if (!inv || !inv.id) return;
+    const total = (inv.items || []).reduce((s, it) => s + (it.quantity || 0) * (it.rate || 0), 0);
+    const depositPaid = Math.max(0, (inv.depositPaid || 0) + amount);
+    let status = inv.status || "Sent";
+    if (depositPaid >= total && total > 0) status = "Paid";
+    else if (inv.status === "Sent") status = "Accepted";
+    onInvoicesChange(
+      invoices.map((i) => (i.id === inv.id ? { ...i, depositPaid, status } : i))
+    );
+  };
+
+  /** Confirms a client-reported payment: marks it confirmed on the portal and
+   *  pushes it onto the linked invoice (depositPaid + status). */
+  const handleApprovePayment = (payment: PaymentRecord) => {
+    if (!selectedClient) return;
+    const next = baseWithDraft({
+      payments: selectedClient.payments.map((p) =>
+        p.id === payment.id ? { ...p, status: "confirmed" as const } : p
+      ),
+    });
+    if (!next) return;
+    const updated = appendActivity(
+      next,
+      "admin",
+      `Payment confirmed ${symbolFor(selectedClient)} ${payment.amount.toLocaleString()} (${payment.method})`,
+      payment.note || undefined
+    );
+    commitClient(updated);
+    syncInvoicePayment(selectedClient.invoiceId, payment.amount);
+    showToast(`Payment of ${symbolFor(updated)} ${payment.amount.toLocaleString()} confirmed and applied to the linked invoice.`);
+  };
+
+  /** Declines a client-reported payment — removed from the portal, invoice untouched. */
+  const handleRejectPayment = (payment: PaymentRecord) => {
+    if (!selectedClient) return;
+    const next = baseWithDraft({
+      payments: selectedClient.payments.filter((p) => p.id !== payment.id),
+    });
+    if (!next) return;
+    const updated = appendActivity(
+      next,
+      "admin",
+      `Payment report declined ${symbolFor(selectedClient)} ${payment.amount.toLocaleString()} (${payment.method})`,
+      payment.note || undefined
+    );
+    commitClient(updated);
+    showToast("Payment report declined — reach out to the client to confirm details.");
+  };
+
+  // Open the portal referenced by a notification bell click.
+  useEffect(() => {
+    if (!focusClientId) return;
+    const target = clients.find((c) => c.id === focusClientId);
+    if (target) openTrackerEditor(target);
+    onFocusConsumed?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusClientId]);
+
   const doc = selectedClient?.document;
-  const received = selectedClient ? totalPaymentsReceived(selectedClient) : 0;
+  const received = selectedClient
+    ? Math.max(totalPaymentsReceived(selectedClient), doc?.depositPaid || 0)
+    : 0;
   const depositDue = doc?.depositAmount || 0;
   const remainingBalance = doc ? Math.max(0, doc.balance - Math.max(0, received - depositDue)) : 0;
 
@@ -1023,35 +1116,74 @@ export default function ClientPortalsTab({
               <p className="text-xs text-slate-400">No payments recorded yet.</p>
             ) : (
               <div className="space-y-2">
-                {selectedClient.payments.map((p) => (
-                  <div
-                    key={p.id}
-                    className="flex items-center justify-between gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="px-2 py-0.5 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold uppercase">
-                        {p.method}
-                      </span>
-                      <div>
-                        <p className="text-sm font-extrabold font-mono text-slate-900 dark:text-white">
-                          {symbolFor(selectedClient)} {p.amount.toLocaleString()}
-                        </p>
-                        <p className="text-[10px] text-slate-400 font-mono">
-                          {p.date}
-                          {p.note ? ` · ${p.note}` : ""}
-                        </p>
+                {selectedClient.payments.map((p) => {
+                  const pending = p.status === "pending";
+                  return (
+                    <div
+                      key={p.id}
+                      className={`flex items-center justify-between gap-3 p-3 rounded-xl border ${
+                        pending
+                          ? "bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-800"
+                          : "bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className={`px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase ${pending ? "bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400" : "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400"}`}>
+                          {p.method}
+                        </span>
+                        <div className="min-w-0">
+                          <p className="text-sm font-extrabold font-mono text-slate-900 dark:text-white">
+                            {symbolFor(selectedClient)} {p.amount.toLocaleString()}
+                            {p.reportedBy === "client" && (
+                              <span className="ml-1.5 text-[9px] font-bold uppercase text-violet-500">reported</span>
+                            )}
+                          </p>
+                          <p className="text-[10px] text-slate-400 font-mono truncate">
+                            {p.date}
+                            {p.note ? ` · ${p.note}` : ""}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {pending ? (
+                          <>
+                            <span className="text-[9px] font-bold uppercase text-amber-600 dark:text-amber-400 mr-1 hidden sm:inline">
+                              Pending
+                            </span>
+                            <button
+                              onClick={() => handleApprovePayment(p)}
+                              className="p-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white transition-colors"
+                              title="Confirm payment — applies it to the linked invoice"
+                            >
+                              <Check className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleRejectPayment(p)}
+                              className="p-1.5 rounded-lg bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-400 hover:bg-red-200 transition-colors"
+                              title="Decline payment report"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            onClick={() => handleDeletePayment(p.id)}
+                            className="p-1.5 rounded-lg bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-400 hover:bg-red-200 transition-colors"
+                            title="Remove payment"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
                       </div>
                     </div>
-                    <button
-                      onClick={() => handleDeletePayment(p.id)}
-                      className="p-1.5 rounded-lg bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-400 hover:bg-red-200 transition-colors"
-                      title="Remove payment"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
+            )}
+            {selectedClient.payments.some((p) => p.status === "pending") && (
+              <p className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
+                A client-reported payment is awaiting confirmation — confirm it to apply it to the linked invoice.
+              </p>
             )}
           </div>
 
@@ -1103,8 +1235,7 @@ export default function ClientPortalsTab({
               </button>
             </div>
             <p className="text-[10px] text-slate-400">
-              Client replies arrive when they return their signed card — re-send the updated card to share new
-              messages with them.
+              Client replies and signatures sync live from their portal — the invite-card flow still works as a backup.
             </p>
           </div>
 
@@ -1197,6 +1328,44 @@ export default function ClientPortalsTab({
                   </div>
                 ))}
               </div>
+            )}
+          </div>
+
+          {/* ── Declaration status ── */}
+          <div className="space-y-3 border-t border-slate-200 dark:border-slate-800 pt-6">
+            <h4 className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+              <PenLine className="w-4 h-4 text-orange-500" />
+              Signed Declaration
+            </h4>
+
+            {selectedClient.declaration ? (
+              <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900 space-y-2">
+                <p className="text-xs font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
+                  <BadgeCheck className="w-4 h-4" />
+                  Signed{selectedClient.declaration.signedBy === "client" ? " by the client via their portal" : " in the studio"}{" "}
+                  on{" "}
+                  {new Date(selectedClient.declaration.signedAt).toLocaleDateString([], { day: "numeric", month: "long", year: "numeric" })}
+                </p>
+                {selectedClient.declaration.signatureDataUrl && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={selectedClient.declaration.signatureDataUrl}
+                    alt="Client signature"
+                    className="h-16 w-auto object-contain bg-white rounded-lg border border-emerald-200 dark:border-emerald-900"
+                  />
+                )}
+                <p className="text-xs text-emerald-700 dark:text-emerald-400">
+                  Signed by <strong>{selectedClient.declaration.signerName}</strong>
+                  {selectedClient.invoiceId && (
+                    <span className="text-emerald-600 dark:text-emerald-500"> — archived on the linked document & PDF bundle</span>
+                  )}
+                </p>
+              </div>
+            ) : (
+              <p className="text-xs text-slate-400 leading-relaxed">
+                No declaration yet. The client can sign it themselves from their portal (it lands here instantly), or
+                you can capture the signature on the linked document in the Invoices tab.
+              </p>
             )}
           </div>
 

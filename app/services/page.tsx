@@ -46,6 +46,13 @@ export default function ServicesPage() {
               Every project is AI-orchestrated with a human quality gate, and ships with a working staging demo in 48 hours, full source code on approval, and POPIA-aligned data handling.
             </p>
 
+            <div className="pt-1">
+              <p className="inline-flex items-center gap-2 text-sm sm:text-base font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800/80 border border-orange-300 dark:border-orange-800 rounded-full px-4 py-2 shadow-sm">
+                <span className="text-orange-500 font-bold">💰</span>
+                {SITE_CONFIG.priceAnchor} Get a transparent quote for your exact scope.
+              </p>
+            </div>
+
             <div className="pt-2 flex justify-center">
               <Link
                 id="services-hero-cta"
@@ -175,6 +182,15 @@ export default function ServicesPage() {
                 Transparent Pricing Philosophy
               </div>
 
+              <div className="rounded-xl bg-slate-800/80 border border-orange-500/30 px-5 py-4 text-center">
+                <span className="text-base sm:text-lg font-black text-orange-400">
+                  {SITE_CONFIG.priceAnchor}
+                </span>
+                <span className="block text-xs text-slate-400 mt-1">
+                  A clear starting point — your final quote depends on scope, integrations, and data complexity.
+                </span>
+              </div>
+
               <h3 className="text-2xl sm:text-3xl font-black text-white">
                 &ldquo;Production-Ready Software Built for Your SME&rdquo;
               </h3>
@@ -198,7 +214,7 @@ export default function ServicesPage() {
                   rel="noopener noreferrer"
                   className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm text-center"
                 >
-                  WhatsApp Jordan ({SITE_CONFIG.whatsappNumber})
+                  WhatsApp Jordan ({SITE_CONFIG.whatsappFormatted})
                 </a>
               </div>
 

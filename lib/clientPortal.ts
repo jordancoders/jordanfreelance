@@ -124,6 +124,7 @@ export function buildDocumentSnapshot(inv: InvoiceLike | undefined | null): Clie
     subtotal,
     depositPercent,
     depositAmount,
+    depositPaid: inv.depositPaid || 0,
     balance: Math.max(0, subtotal - depositAmount),
     notes: inv.notes || "",
   };

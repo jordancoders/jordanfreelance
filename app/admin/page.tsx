@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
@@ -35,7 +35,10 @@ import {
   Star,
   Share2,
   PenLine,
-  Users
+  Link2,
+  Users,
+  Bell,
+  CheckCheck
 } from "lucide-react";
 import { SITE_CONFIG, Project, ClientReview } from "@/data/portfolioData";
 import SignaturePad from "@/components/SignaturePad";
@@ -49,7 +52,7 @@ import ClientPortalsTab from "@/components/admin/ClientPortalsTab";
 import OverviewTab from "@/components/admin/OverviewTab";
 import { API_PRICING_MODELS as LIVE_API_MODELS, type ApiPricingModel } from "@/data/apiPricingData";
 import { loginAdmin, logoutAdmin, checkAdminAuth } from "@/app/actions/auth";
-import { AdminDataProvider, useAdminData, DEFAULT_INVOICES } from "@/components/admin/AdminDataProvider";
+import { AdminDataProvider, useAdminData } from "@/components/admin/AdminDataProvider";
 import type { Invoice, ClientPortalAccount, InvoiceItem } from "@/lib/types";
 
 interface OfficialPricingLink {
@@ -101,6 +104,71 @@ function AdminDashboardInner() {
   // Active Tab
   const [activeTab, setActiveTab] = useState<"overview" | "invoices" | "api-tracker" | "projects-manager" | "reviews-manager" | "clients-manager" | "cost-calculator" | "upgrades">("overview");
 
+  // ─── Client activity notification bell ──────────────────────────────────────
+  // Derived live from client portal activity (signed declaration, replies,
+  // payment reports). "Seen" is tracked per-device via localStorage.
+  const NOTIF_SEEN_KEY = "jp_admin_notif_seen";
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifSeenTs, setNotifSeenTs] = useState<number>(() => {
+    try {
+      return Number(localStorage.getItem(NOTIF_SEEN_KEY) || 0);
+    } catch {
+      return 0;
+    }
+  });
+  const [focusClientId, setFocusClientId] = useState<string | null>(null);
+
+  const notifications = useMemo(() => {
+    const items: { id: string; clientName: string; clientId: string; action: string; detail?: string; ts: string }[] = [];
+    for (const c of data.clients) {
+      for (const act of c.activity || []) {
+        if (act.actor !== "client") continue;
+        items.push({ id: act.id, clientName: c.clientName, clientId: c.id, action: act.action, detail: act.detail, ts: act.ts });
+      }
+    }
+    return items.sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime()).slice(0, 20);
+  }, [data.clients]);
+
+  const unreadCount = notifications.filter((n) => new Date(n.ts).getTime() > notifSeenTs).length;
+
+  const markNotifsRead = useCallback(() => {
+    const now = Date.now();
+    setNotifSeenTs(now);
+    try {
+      localStorage.setItem(NOTIF_SEEN_KEY, String(now));
+    } catch {
+      // private mode — ignore
+    }
+    setNotifOpen(false);
+  }, []);
+
+  const handleNotifClick = useCallback(
+    (clientId: string) => {
+      markNotifsRead();
+      setFocusClientId(clientId);
+      setActiveTab("clients-manager");
+    },
+    [markNotifsRead]
+  );
+
+  // Live sync: while the studio is open, silently re-pull from MongoDB so client
+  // activity (signatures, replies, payment reports) lands in the bell and lists
+  // without a manual refresh. Visibility-aware — never polls in a hidden tab.
+  const reloadAllRef = useRef(data.reloadAll);
+  reloadAllRef.current = data.reloadAll;
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const refresh = () => {
+      if (document.visibilityState === "visible") reloadAllRef.current();
+    };
+    document.addEventListener("visibilitychange", refresh);
+    const id = setInterval(refresh, 30000);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", refresh);
+    };
+  }, [isAuthenticated]);
+
   // data.invoices & Quotes State
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [isEditingInvoice, setIsEditingInvoice] = useState(false);
@@ -120,10 +188,21 @@ function AdminDashboardInner() {
         signerName: next.signerName ?? signerName,
         acknowledged: next.acknowledged ?? declarationAcknowledged,
         signedAt: new Date().toISOString(),
+        signedBy: "admin" as const,
       };
-      data.updateInvoice(selectedInvoice.id, { declaration: merged });
+      data.updateInvoice(selectedInvoice.id, { declaration: merged }).catch((err) => {
+        console.error("[admin] declaration save failed:", err);
+        showToast("Signature save failed — MongoDB unreachable.");
+      });
+      // Keep the local selection in sync so a later "Save" never overwrites the
+      // freshly captured signature with a stale timestamp / actor.
+      setSelectedInvoice({ ...selectedInvoice, declaration: merged });
+      // Interlink: mirror the studio-captured signature onto the linked client
+      // portal so the client sees it as signed the next time they log in.
+      const linkedClient = data.clients.find((c) => c.invoiceId === selectedInvoice.id);
+      if (linkedClient?.id) data.updateClient(linkedClient.id, { declaration: merged });
     },
-    [selectedInvoice, signatureDataUrl, signerName, declarationAcknowledged, data]
+    [selectedInvoice, signatureDataUrl, signerName, declarationAcknowledged, data, showToast]
   );
 
   // Load the saved declaration whenever a different invoice is opened.
@@ -363,15 +442,28 @@ function AdminDashboardInner() {
               signatureDataUrl,
               signerName,
               acknowledged: declarationAcknowledged,
-              signedAt: new Date().toISOString(),
+              signedAt: selectedInvoice?.declaration?.signedAt || new Date().toISOString(),
+              signedBy: selectedInvoice?.declaration?.signedBy,
             }
           : selectedInvoice?.declaration
     };
 
-    if (selectedInvoice && isEditingInvoice) {
-      await data.updateInvoice(selectedInvoice.id, updatedInvoice);
-    } else {
-      await data.createInvoice(updatedInvoice);
+    try {
+      if (selectedInvoice && isEditingInvoice) {
+        await data.updateInvoice(selectedInvoice.id, updatedInvoice);
+        // Interlink: if this document has a signature, mirror it onto the linked
+        // client portal so the client sees the signed state on their dashboard.
+        if (updatedInvoice.declaration?.signatureDataUrl) {
+          const linkedClient = data.clients.find((c) => c.invoiceId === updatedInvoice.id);
+          if (linkedClient?.id) data.updateClient(linkedClient.id, { declaration: updatedInvoice.declaration });
+        }
+      } else {
+        await data.createInvoice(updatedInvoice);
+      }
+    } catch (err) {
+      console.error("[admin] invoice save failed:", err);
+      showToast("Save failed — MongoDB unreachable. Your changes were not saved.");
+      return;
     }
     setSelectedInvoice(updatedInvoice);
     setIsEditingInvoice(false);
@@ -497,10 +589,16 @@ function AdminDashboardInner() {
       updatedAt: new Date().toISOString(),
     };
 
-    if (selectedProject && isEditingProject) {
-      await data.updateProject(selectedProject.id, updatedProject);
-    } else {
-      await data.createProject(updatedProject);
+    try {
+      if (selectedProject && isEditingProject) {
+        await data.updateProject(selectedProject.id, updatedProject);
+      } else {
+        await data.createProject(updatedProject);
+      }
+    } catch (err) {
+      console.error("[admin] project save failed:", err);
+      showToast("Save failed — MongoDB unreachable. Your changes were not saved.");
+      return;
     }
     setSelectedProject(updatedProject);
     setIsEditingProject(false);
@@ -598,10 +696,16 @@ function AdminDashboardInner() {
       updatedAt: new Date().toISOString(),
     };
 
-    if (selectedReview && isEditingReview) {
-      await data.updateReview(selectedReview.id, updatedReview);
-    } else {
-      await data.createReview(updatedReview);
+    try {
+      if (selectedReview && isEditingReview) {
+        await data.updateReview(selectedReview.id, updatedReview);
+      } else {
+        await data.createReview(updatedReview);
+      }
+    } catch (err) {
+      console.error("[admin] review save failed:", err);
+      showToast("Save failed — MongoDB unreachable. Your changes were not saved.");
+      return;
     }
     setSelectedReview(updatedReview);
     setIsEditingReview(false);
@@ -698,23 +802,9 @@ function AdminDashboardInner() {
   };
 
   const handleClearCache = async () => {
-    await data.importBackup({
-      invoices: DEFAULT_INVOICES,
-      projects: [],
-      reviews: [],
-      clients: [],
-      config: {
-        googleFormUrl: SITE_CONFIG.googleFormUrl,
-        socialLinks: {
-          githubUrl: SITE_CONFIG.githubUrl,
-          linkedinUrl: SITE_CONFIG.linkedinUrl,
-          facebookUrl: SITE_CONFIG.facebookUrl,
-          discordUrl: SITE_CONFIG.discordUrl,
-          repoUrl: SITE_CONFIG.repoUrl
-        }
-      },
-      exportedAt: new Date().toISOString()
-    });
+    // Source of truth is MongoDB — "resetting the cache" means re-fetching
+    // everything from the database, never seeding or overwriting live data.
+    await data.reloadAll();
     setSelectedInvoice(null);
     setSelectedProject(null);
     setSelectedReview(null);
@@ -937,6 +1027,63 @@ function AdminDashboardInner() {
                     <FileText className="w-4 h-4 text-orange-400" />
                     New Quote
                   </button>
+
+                  <div className="relative">
+                    <button
+                      type="button"
+                      id="admin-notifications-btn"
+                      onClick={() => (notifOpen ? markNotifsRead() : setNotifOpen(true))}
+                      className="relative px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-xs transition-colors flex items-center gap-1.5"
+                    >
+                      <Bell className="w-4 h-4 text-slate-400" />
+                      {unreadCount > 0 && (
+                        <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-orange-500 text-white text-[10px] font-black flex items-center justify-center">
+                          {unreadCount > 9 ? "9+" : unreadCount}
+                        </span>
+                      )}
+                    </button>
+                    {notifOpen && (
+                      <div className="absolute right-0 top-full mt-2 w-80 max-w-[85vw] bg-white dark:bg-[#0D1A2D] border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl z-50 overflow-hidden">
+                        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-800">
+                          <p className="text-xs font-extrabold text-slate-900 dark:text-white">Client Activity</p>
+                          <button
+                            onClick={markNotifsRead}
+                            className="text-[10px] font-bold text-orange-500 hover:underline flex items-center gap-1"
+                          >
+                            <CheckCheck className="w-3 h-3" /> Mark all read
+                          </button>
+                        </div>
+                        <div className="max-h-80 overflow-y-auto">
+                          {notifications.length === 0 ? (
+                            <p className="text-xs text-slate-400 p-4 text-center">No client activity yet.</p>
+                          ) : (
+                            notifications.map((n) => (
+                              <button
+                                key={n.id}
+                                onClick={() => handleNotifClick(n.clientId)}
+                                className="w-full text-left px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/60 border-b border-slate-100 dark:border-slate-800 last:border-0 flex items-start gap-2.5"
+                              >
+                                <span
+                                  className={`mt-1.5 w-1.5 h-1.5 rounded-full shrink-0 ${
+                                    new Date(n.ts).getTime() > notifSeenTs ? "bg-orange-500" : "bg-slate-300 dark:bg-slate-600"
+                                  }`}
+                                />
+                                <span className="min-w-0">
+                                  <span className="block text-xs font-bold text-slate-900 dark:text-white truncate">
+                                    {n.clientName} — {n.action}
+                                  </span>
+                                  {n.detail && <span className="block text-[10px] text-slate-500 truncate">{n.detail}</span>}
+                                  <span className="block text-[10px] text-slate-400 font-mono mt-0.5">
+                                    {new Date(n.ts).toLocaleString([], { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                                  </span>
+                                </span>
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
 
                   <button
                     type="button"
@@ -1487,6 +1634,11 @@ function AdminDashboardInner() {
                                 <div className="flex items-center justify-between mb-1">
                                   <span className="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200">
                                     {inv.documentType || "Invoice"}
+                                    {inv.declaration?.signatureDataUrl && (
+                                      <span className="ml-1 px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400 text-[9px] font-extrabold">
+                                        ✍ Signed
+                                      </span>
+                                    )}
                                   </span>
                                   <span className="text-xs font-mono font-bold text-slate-900 dark:text-white">
                                     {inv.invoiceNumber}
@@ -1717,6 +1869,25 @@ function AdminDashboardInner() {
                                   Signed Declaration (attached to this document & the PDF bundle)
                                 </h4>
                               </div>
+                            {selectedInvoice.declaration?.signedBy === "client" ? (
+                              <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900 text-[11px] text-emerald-700 dark:text-emerald-400 leading-relaxed flex items-start gap-2">
+                                <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+                                <span>
+                                  Signed by <strong>{selectedInvoice.declaration.signerName}</strong> via their client portal —
+                                  this signature is already on the record and the PDF bundle is export-ready. Editing here will overwrite it.
+                                </span>
+                              </div>
+                            ) : (
+                              data.clients.find((c) => c.invoiceId === selectedInvoice.id) && (
+                                <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 text-[11px] text-blue-700 dark:text-blue-400 leading-relaxed flex items-start gap-2">
+                                  <Link2 className="w-4 h-4 shrink-0 mt-0.5" />
+                                  <span>
+                                    Linked portal: <strong>@{data.clients.find((c) => c.invoiceId === selectedInvoice.id)?.username}</strong> —
+                                    this client can also sign this document themselves from their portal.
+                                  </span>
+                                </div>
+                              )
+                            )}
                             <SignaturePad
                               value={signatureDataUrl}
                               onChange={(dataUrl) => {
@@ -2691,6 +2862,8 @@ function AdminDashboardInner() {
                 <ClientPortalsTab
                   clients={data.clients}
                   invoices={data.invoices}
+                  focusClientId={focusClientId}
+                  onFocusConsumed={() => setFocusClientId(null)}
                   onChange={async (next) => {
                     for (const client of next) {
                       const existing = data.clients.find((c) => c.id === client.id);
@@ -2854,8 +3027,8 @@ function AdminDashboardInner() {
                             <RefreshCw className="w-5 h-5" />
                           </div>
                           <div>
-                            <h3 className="text-sm font-bold text-slate-900 dark:text-white">Reset Local Admin Cache</h3>
-                            <p className="text-xs text-slate-500">Revert studio data.invoices & projects to default template state.</p>
+                            <h3 className="text-sm font-bold text-slate-900 dark:text-white">Re-sync From MongoDB</h3>
+                            <p className="text-xs text-slate-500">Re-fetch every collection from MongoDB, discarding any unsaved local UI state. Never overwrites or seeds data.</p>
                           </div>
                         </div>
                         <button
@@ -3068,7 +3241,7 @@ function AdminDashboardInner() {
 
             {/* SIGNED DECLARATION — print block */}
             {(signatureDataUrl || signerName) && (
-              <div className="mt-8 border-2 border-slate-900 p-6 break-inside-abg-slate-50">
+              <div className="mt-8 border-2 border-slate-900 p-6 break-inside-avoid">
                 <h4 className="font-black text-slate-900 text-sm uppercase tracking-widest mb-3">
                   Signed Declaration
                 </h4>

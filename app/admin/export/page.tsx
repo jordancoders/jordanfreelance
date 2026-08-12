@@ -45,11 +45,20 @@ function ExportContent() {
 
   const persistDeclaration = async (sig: string, name: string, ack: boolean) => {
     if (!invoice) return;
+    const declaration = {
+      signatureDataUrl: sig,
+      signerName: name,
+      acknowledged: ack,
+      signedAt: new Date().toISOString(),
+      signedBy: "admin" as const,
+    };
     try {
       const { editInvoice } = await import("@/app/actions/invoices");
-      await editInvoice(invoice.id, {
-        declaration: { signatureDataUrl: sig, signerName: name, acknowledged: ack, signedAt: new Date().toISOString() },
-      });
+      await editInvoice(invoice.id, { declaration });
+      // Interlink: mirror the studio-captured signature onto the linked client
+      // portal so the client sees the signed state on their dashboard.
+      const { updateLinkedClientDeclaration } = await import("@/app/actions/clients");
+      await updateLinkedClientDeclaration(invoice.id, declaration);
     } catch {
       // Ignore — the bundle still prints fine.
     }
@@ -113,11 +122,25 @@ function ExportContent() {
             <ShieldCheck className="w-5 h-5 text-emerald-600" />
             <h2 className="text-xl font-extrabold">Signed Declaration — required before issuing</h2>
           </div>
-          <p className="text-xs text-slate-600 leading-relaxed">
-            Capture the Client&apos;s signature and name below. The signed declaration is printed on the first
-            page of the bundle, and the document(s) that follow are the official contract records. For EU/UK
-            clients, the Data Processing Agreement is included automatically.
-          </p>
+          {invoice?.declaration?.signedBy === "client" ? (
+            <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-[11px] text-emerald-700 leading-relaxed flex items-start gap-2">
+              <ShieldCheck className="w-4 h-4 shrink-0 mt-0.5" />
+              <span>
+                <strong>Signed by the client via their portal</strong> on{" "}
+                {invoice.declaration.signedAt
+                  ? new Date(invoice.declaration.signedAt).toLocaleDateString("en-ZA", { day: "2-digit", month: "long", year: "numeric" })
+                  : "—"}
+                . This is the client&apos;s own signature — the bundle is ready to export. Editing here will overwrite it.
+              </span>
+            </div>
+          ) : (
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Capture the Client&apos;s signature and name below — or better, ask them to sign it in their own portal
+              (the signature lands here automatically). The signed declaration is printed on the first page of the
+              bundle, and the document(s) that follow are the official contract records. For EU/UK clients, the Data
+              Processing Agreement is included automatically.
+            </p>
+          )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <SignaturePad
               value={signature}
@@ -307,10 +330,11 @@ function ExportContent() {
             <h2 className="text-xl font-black mb-4">Terms of Service — Key Points</h2>
             <ul className="text-xs text-slate-700 space-y-2 leading-relaxed list-disc pl-5">
               <li>Kick-off deposit agreed per project and stated in the quote; the balance is due on final approval and source-code handover.</li>
-              <li>No-Gamble Guarantee: if the 48-hour staging demo is not delivered, 100% of the deposit + 100% of unused API credits are refunded.</li>
+              <li>No-Gamble Guarantee: if the 48-hour staging demo is not delivered, 100% of the deposit + 100% of unused API credits are refunded (qualifying projects — see the Guarantee &amp; Refund Policy for exclusions).</li>
               <li>Full source code ownership transfers to the Client upon final payment.</li>
               <li>14-day critical bug-fix warranty from final delivery.</li>
-              <li>Quotes are valid for 14 days from issue date.</li>
+              <li>Quotes are valid for 30 days from the date of issue.</li>
+              <li>Rights under the Consumer Protection Act 68 of 2008 apply and are never limited by these terms — including the 5-business-day cooling-off right where the Developer approached the Client first (CPA Section 16).</li>
             </ul>
             <p className="text-[10px] text-slate-400 mt-3">Full terms: {SITE_CONFIG.siteUrl}/terms</p>
           </div>

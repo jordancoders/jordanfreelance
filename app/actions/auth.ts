@@ -8,12 +8,17 @@ import {
   destroyClientSession,
 } from "@/lib/auth";
 import { getClientByUsername } from "@/lib/db";
+import { checkRateLimit } from "@/lib/rateLimit";
 
 export async function loginAdmin(pin: string): Promise<{ success: boolean; error?: string }> {
   const adminPin = process.env.ADMIN_PIN;
   if (!adminPin) {
     console.warn("[auth] ADMIN_PIN is not configured — admin login rejected.");
     return { success: false, error: "Admin PIN is not configured on the server." };
+  }
+  const rl = await checkRateLimit("admin-login");
+  if (!rl.ok) {
+    return { success: false, error: `Too many attempts — try again in ${Math.ceil((rl.retryAfterSeconds || 0) / 60)} minutes.` };
   }
   if (!pin || pin !== adminPin) {
     return { success: false, error: "Invalid passcode." };
@@ -36,6 +41,10 @@ export async function loginClient(
 ): Promise<{ success: boolean; error?: string }> {
   if (!username.trim() || !password.trim()) {
     return { success: false, error: "Please enter your username and password." };
+  }
+  const rl = await checkRateLimit("client-login", 8);
+  if (!rl.ok) {
+    return { success: false, error: `Too many attempts — try again in ${Math.ceil((rl.retryAfterSeconds || 0) / 60)} minutes.` };
   }
   const account = await getClientByUsername(username.trim());
   if (!account || account.password !== password) {

@@ -12,14 +12,24 @@ import WhatsAppButton from "@/components/WhatsAppButton";
 import DiscoveryCallButton from "@/components/DiscoveryCallButton";
 import { SITE_CONFIG } from "@/data/portfolioData";
 import { getPublishedReviews, getPublishedProjects } from "@/lib/db";
+import type { ClientReview, Project } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [reviews, projects] = await Promise.all([
-    getPublishedReviews(),
-    getPublishedProjects(),
-  ]);
+  // Public pages must never 500 because of a database hiccup — if Mongo is
+  // briefly unavailable, render the empty state instead (the data layer is
+  // still the source of truth; it re-syncs on the next request).
+  let reviews: ClientReview[] = [];
+  let projects: Project[] = [];
+  try {
+    [reviews, projects] = await Promise.all([
+      getPublishedReviews(),
+      getPublishedProjects(),
+    ]);
+  } catch (err) {
+    console.error("[home] Mongo read failed — rendering empty state:", err);
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-[#070D17] text-slate-900 dark:text-slate-100 selection:bg-orange-500 selection:text-white transition-colors">
@@ -300,7 +310,7 @@ export default async function HomePage() {
                 rel="noopener noreferrer"
                 className="w-full sm:w-auto px-6 py-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-base transition-colors text-center"
               >
-                Chat on WhatsApp ({SITE_CONFIG.whatsappNumber})
+                Chat on WhatsApp ({SITE_CONFIG.whatsappFormatted})
               </a>
             </div>
 

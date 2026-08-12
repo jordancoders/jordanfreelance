@@ -2,7 +2,6 @@ import Link from "next/link";
 import { ShieldCheck, Mail, Phone, Lock, FileText } from "lucide-react";
 import { SITE_CONFIG } from "@/data/portfolioData";
 import SocialLinks from "./SocialLinks";
-import RepoLink from "./RepoLink";
 
 export default function Footer() {
   return (
@@ -162,11 +161,7 @@ export default function Footer() {
             <span>•</span>
             <span className="text-emerald-400 font-medium">Built with: Next.js 15 • Tailwind v4 • TypeScript • Orchestrated via AI with human quality gates.</span>
           </p>
-          <p className="flex flex-wrap items-center justify-center gap-2 pt-1">
-            <span>This site was generated with DeepSeek V4 Flash via Freebuff, human-reviewed, and re-checked with DeepSeek Chat & Qwen Studio.</span>
-            <span>•</span>
-            <RepoLink variant="link" />
-          </p>
+
         </div>
       </div>
     </footer>

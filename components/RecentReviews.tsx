@@ -59,6 +59,11 @@ export default function RecentReviews({ reviews }: RecentReviewsProps) {
                 <span className="block text-[10px] text-slate-500">
                   {r.companyTitle || "Verified Client"}
                 </span>
+                {r.createdAt && (
+                  <span className="block text-[9px] text-slate-400 font-mono">
+                    {new Date(r.createdAt).toLocaleDateString("en-ZA", { day: "numeric", month: "short", year: "numeric" })}
+                  </span>
+                )}
               </div>
             </div>
           </div>

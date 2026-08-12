@@ -12,7 +12,14 @@ import ProjectsFilter from "./ProjectsFilter";
 export const dynamic = "force-dynamic";
 
 export default async function ProjectsPage() {
-  const projects = await getPublishedProjects();
+  let projects: Project[] = [];
+  try {
+    projects = await getPublishedProjects();
+  } catch (err) {
+    // Never 500 the public portfolio because of a database hiccup — show the
+    // honest empty state; it re-syncs on the next request.
+    console.error("[projects] Mongo read failed — rendering empty state:", err);
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-[#070D17] text-slate-900 dark:text-slate-100 transition-colors">

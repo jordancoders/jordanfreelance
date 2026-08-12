@@ -15,7 +15,14 @@ export const metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function TestimonialsPage() {
-  const reviews = await getPublishedReviews();
+  let reviews: ClientReview[] = [];
+  try {
+    reviews = await getPublishedReviews();
+  } catch (err) {
+    // Never 500 the public page because of a database hiccup — the empty state
+    // ("100% Genuine Client Review Policy") renders instead.
+    console.error("[testimonials] Mongo read failed — rendering empty state:", err);
+  }
   const publishedReviews = [...reviews].sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
@@ -96,6 +103,11 @@ export default async function TestimonialsPage() {
                             {r.companyTitle || "Verified Client"}
                             {r.projectTitle ? ` • ${r.projectTitle}` : ""}
                           </span>
+                          {r.createdAt && (
+                            <span className="block text-[10px] text-slate-400 font-mono mt-0.5">
+                              Added {new Date(r.createdAt).toLocaleDateString("en-ZA", { day: "numeric", month: "short", year: "numeric" })}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>

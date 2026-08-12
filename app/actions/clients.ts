@@ -5,6 +5,7 @@ import {
   getClients,
   getClient,
   getClientByUsername,
+  getClientByInvoiceId,
   createClient,
   updateClient,
   deleteClient,
@@ -40,4 +41,21 @@ export async function removeClient(id: string): Promise<boolean> {
   const ok = await deleteClient(id);
   if (ok) revalidatePath("/admin");
   return ok;
+}
+
+/**
+ * Pushes a signed declaration captured in the admin studio onto the client
+ * portal linked to that invoice, so the client sees their signature (or an
+ * admin-captured one) the next time they open their dashboard.
+ */
+export async function updateLinkedClientDeclaration(
+  invoiceId: string,
+  declaration: ClientPortalAccount["declaration"]
+): Promise<boolean> {
+  const client = await getClientByInvoiceId(invoiceId);
+  if (!client || !client.id) return false;
+  await updateClient(client.id, { declaration });
+  revalidatePath("/admin");
+  revalidatePath("/client/dashboard");
+  return true;
 }

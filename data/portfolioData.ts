@@ -26,9 +26,18 @@ export const SITE_CONFIG = {
   whatsappFormatted: "+27 84 860 0638",
   whatsappLink: "https://wa.me/27848600638",
   googleFormUrl: "https://forms.google.com",
+  // Real scheduling link for the "Book 15-Min Discovery Call" button.
+  // Swap in a Calendly/Cal.com link here when you have one; until then it
+  // opens WhatsApp with a pre-filled booking message.
+  discoveryCallUrl:
+    "https://wa.me/27848600638?text=Hi%20Jordan%2C%20I%27d%20like%20to%20book%20a%2015-minute%20discovery%20call.",
+  // E.164 phone format for tel: links (dialable from any country).
+  phoneE164: "+27848600638",
+  // Public price anchor — edit the amount here; shown on the Services page.
+  priceAnchor: "Custom dashboards typically start from R 15,000 (excl. VAT).",
   paypalEmail: "jordancodefreelancer@protonmail.com",
   // Canonical public URL used for metadata, sitemap, robots.txt, and JSON-LD.
-  siteUrl: "https://jpfreelance.dpndns.org",
+  siteUrl: "https://jpfreelance.dpdns.org",
   location: "South Africa (Remote)",
   coverage: "South Africa + Worldwide Remote",
   currencies: ["ZAR (R)", "USD ($)", "EUR (€)", "GBP (£)"],
@@ -102,7 +111,7 @@ export const FAQ_DATA: FaqItem[] = [
   {
     id: "faq-after-handover",
     question: "What happens after handover?",
-    answer: "Every project includes a 14-day bug fix warranty after final delivery — critical bugs are fixed at no charge (as documented in the Terms, clause 10.2). You own the full source code, so you can take it to any developer at any time; ongoing support and maintenance can also be arranged if you want it."
+    answer: "Every project includes a 14-day bug fix warranty after final delivery — critical bugs are fixed at no charge (as documented in the Refund & Guarantee Policy). You own the full source code, so you can take it to any developer at any time; ongoing support and maintenance can also be arranged if you want it."
   },
   {
     id: "faq-what-if-demo",

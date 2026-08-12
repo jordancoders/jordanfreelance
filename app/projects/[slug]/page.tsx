@@ -6,6 +6,7 @@ import WhatsAppButton from "@/components/WhatsAppButton";
 import TourismDashboardPreview from "@/components/TourismDashboardPreview";
 import PromptEngineeringLog from "@/components/PromptEngineeringLog";
 import { getProjectBySlug } from "@/lib/db";
+import type { Project } from "@/lib/types";
 import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -16,7 +17,13 @@ interface PageProps {
 
 export default async function ProjectDetailPage({ params }: PageProps) {
   const { slug } = await params;
-  const project = await getProjectBySlug(slug);
+  let project: Project | null = null;
+  try {
+    project = await getProjectBySlug(slug);
+  } catch (err) {
+    // A database hiccup should land on the friendly "not found" state, not a 500.
+    console.error(`[projects/${slug}] Mongo read failed:`, err);
+  }
 
   if (!project) {
     return (
@@ -29,7 +36,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
             </div>
             <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white">Project Case Study Not Found</h2>
             <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
-              This project might have been deleted or not published yet via your Admin Dashboard (/admin).
+              This case study hasn&apos;t been published yet, or the link may be outdated.
             </p>
             <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
               <Link
@@ -40,11 +47,11 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                 ← Back to Projects
               </Link>
               <Link
-                id="admin-link-from-notfound"
-                href="/admin"
+                id="notfound-quote-btn"
+                href="/contact"
                 className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors"
               >
-                Go to Admin Dashboard
+                Request a Custom Quote
               </Link>
             </div>
           </div>

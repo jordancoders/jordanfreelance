@@ -134,7 +134,7 @@ vercel --prod --yes    # build, typecheck, and deploy to production
 
 Set `ADMIN_PIN`, `MONGODB_URI`, and optionally `RESEND_API_KEY` as environment variables in the Vercel project settings for **Production**, **Preview**, and **Development**.
 
-> **Canonical domain:** the site URL used in metadata, sitemap, `robots.txt`, and JSON-LD is a single value — `SITE_CONFIG.siteUrl` in `data/portfolioData.ts` — currently set to the live Vercel deployment. When you buy a custom domain and point it at this deployment in the Vercel dashboard, change **only that one value** and redeploy.
+> **Canonical domain:** the site URL used in metadata, sitemap, `robots.txt`, and JSON-LD is a single value — `SITE_CONFIG.siteUrl` in `data/portfolioData.ts` — currently set to `https://jpfreelance.dpdns.org`. When you change domains, change **only that one value** and redeploy.
 
 ---
 

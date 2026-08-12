@@ -244,6 +244,11 @@ export async function getClientByUsername(username: string): Promise<ClientPorta
   return doc ? (stripId<ClientPortalAccount>(doc)) : null;
 }
 
+export async function getClientByInvoiceId(invoiceId: string): Promise<ClientPortalAccount | null> {
+  const doc = await (await getCollection<ClientPortalAccount>(COLLECTIONS.clients)).findOne({ invoiceId });
+  return doc ? (stripId<ClientPortalAccount>(doc)) : null;
+}
+
 export async function createClient(client: ClientPortalAccount): Promise<ClientPortalAccount> {
   const doc = { ...client, createdAt: client.createdAt || now(), updatedAt: now() };
   await (await getCollection<ClientPortalAccount>(COLLECTIONS.clients)).insertOne(doc as ClientPortalAccount);

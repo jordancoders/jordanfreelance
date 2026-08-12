@@ -16,6 +16,8 @@ export interface InvoiceDeclaration {
   signerName: string;
   acknowledged: boolean;
   signedAt: string;
+  /** Who captured the signature: the client via their portal, or the developer in the studio. */
+  signedBy?: "client" | "admin";
 }
 
 export interface Invoice {
@@ -109,6 +111,11 @@ export interface PaymentRecord {
   method: "PayPal" | "EFT" | "Cash" | "Other";
   date: string;
   note?: string;
+  /** Client-reported payments sit as "pending" until the admin confirms them.
+   *  Admin-recorded payments (and confirmed ones) are "confirmed". */
+  status?: "pending" | "confirmed";
+  /** Who reported the payment: the client via their portal, or the admin in the studio. */
+  reportedBy?: "client" | "admin";
 }
 
 export interface ClientMessage {
@@ -148,6 +155,8 @@ export interface DocumentSnapshot {
   subtotal: number;
   depositPercent: number;
   depositAmount: number;
+  /** How much of the deposit (or more) has actually been received — mirrors the invoice. */
+  depositPaid: number;
   balance: number;
   notes: string;
 }
@@ -157,6 +166,8 @@ export interface SignedDeclaration {
   signerName: string;
   acknowledged: boolean;
   signedAt: string;
+  /** Who captured the signature: the client via their portal, or the developer in the studio. */
+  signedBy?: "client" | "admin";
 }
 
 export interface ClientPortalAccount {
@@ -202,6 +213,7 @@ export interface InvoiceLike {
   depositPercent?: number;
   depositPaid?: number;
   items?: { description?: string; quantity?: number; rate?: number }[];
+  declaration?: InvoiceDeclaration;
 }
 
 // ─── Site Config ──────────────────────────────────────────────────────────────

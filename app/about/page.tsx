@@ -91,7 +91,7 @@ export default function AboutPage() {
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 px-5 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm transition-colors"
                 >
-                  WhatsApp ({SITE_CONFIG.whatsappNumber})
+                  WhatsApp ({SITE_CONFIG.whatsappFormatted})
                 </a>
               </div>
 

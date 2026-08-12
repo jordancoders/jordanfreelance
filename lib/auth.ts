@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { createHash, timingSafeEqual } from "node:crypto";
+import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 
 // ─── Admin Auth ───────────────────────────────────────────────────────────────
 
@@ -46,9 +46,25 @@ export async function isAdminAuthenticated(): Promise<boolean> {
 
 export const CLIENT_SESSION_COOKIE = "jordanpeters_client_session";
 
+// The client session cookie holds a signed token (username + HMAC signature)
+// rather than the bare username, so it can't be forged by guessing or copying
+// a username. The signing key comes from SESSION_SECRET, falling back to the
+// admin PIN so the studio works without extra environment setup.
+function clientSessionSecret(): string {
+  return process.env.SESSION_SECRET || `jp-client-session::${process.env.ADMIN_PIN || "unconfigured"}`;
+}
+
+function clientSessionToken(username: string): string {
+  return createHmac("sha256", clientSessionSecret())
+    .update(`client-session::${username}`)
+    .digest("hex")
+    .slice(0, 32);
+}
+
 export async function createClientSession(username: string): Promise<void> {
   const cookieStore = await cookies();
-  cookieStore.set(CLIENT_SESSION_COOKIE, username, {
+  const token = `${username}.${clientSessionToken(username)}`;
+  cookieStore.set(CLIENT_SESSION_COOKIE, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "strict",
@@ -62,7 +78,22 @@ export async function destroyClientSession(): Promise<void> {
   cookieStore.delete(CLIENT_SESSION_COOKIE);
 }
 
+/**
+ * Reads and verifies the signed client session cookie.
+ * Returns the username only when the HMAC signature checks out, otherwise null
+ * (the caller treats it as logged out). Legacy unsigned cookies are rejected.
+ */
 export async function getClientSessionUsername(): Promise<string | null> {
   const cookieStore = await cookies();
-  return cookieStore.get(CLIENT_SESSION_COOKIE)?.value ?? null;
+  const raw = cookieStore.get(CLIENT_SESSION_COOKIE)?.value;
+  if (!raw) return null;
+  const dot = raw.lastIndexOf(".");
+  if (dot <= 0 || dot === raw.length - 1) return null;
+  const username = raw.slice(0, dot);
+  const signature = raw.slice(dot + 1);
+  const expected = Buffer.from(clientSessionToken(username));
+  const actual = Buffer.from(signature);
+  if (expected.length !== actual.length) return null;
+  if (!timingSafeEqual(expected, actual)) return null;
+  return username;
 }

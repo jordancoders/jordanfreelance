@@ -8,7 +8,7 @@ export default function WhatsAppButton() {
     <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 group">
       {/* Tooltip */}
       <div className="hidden sm:block opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900 dark:bg-slate-800 text-white text-xs py-1.5 px-3 rounded-lg shadow-xl border border-slate-700 whitespace-nowrap">
-        Chat with Jordan on WhatsApp (0848600638)
+        Chat with Jordan on WhatsApp ({SITE_CONFIG.whatsappFormatted})
       </div>
 
       {/* Floating Button */}

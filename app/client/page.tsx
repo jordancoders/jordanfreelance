@@ -8,6 +8,7 @@ import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import { SITE_CONFIG } from "@/data/portfolioData";
 import { loginClient } from "@/app/actions/auth";
+import { parseInviteCard, CLIENT_SESSION_KEY } from "@/lib/clientPortal";
 
 export default function ClientLoginPage() {
   const router = useRouter();
@@ -16,6 +17,35 @@ export default function ClientLoginPage() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // "Have an invite card?" box — paste the card to fill in your login
+  const [cardOpen, setCardOpen] = useState(false);
+  const [cardInput, setCardInput] = useState("");
+  const [cardNotice, setCardNotice] = useState("");
+  const [cardError, setCardError] = useState("");
+
+  const handleUseCard = () => {
+    setCardError("");
+    setCardNotice("");
+    const account = parseInviteCard(cardInput);
+    if (!account) {
+      setCardError("That doesn't look like a valid invite card. Copy the whole JPCARD1:… block from your invite message.");
+      return;
+    }
+    setUsername(account.username);
+    setPassword(account.password || "");
+    try {
+      localStorage.setItem(CLIENT_SESSION_KEY, cardInput.trim());
+    } catch {
+      // private mode — ignore
+    }
+    if (account.status !== "approved") {
+      setCardNotice(`Invite card recognised for ${account.clientName || account.username} — your portal is still awaiting approval, so you can't log in just yet.`);
+    } else {
+      setCardNotice(`Invite card recognised — username filled in. Click “Open My Dashboard” to log in.`);
+    }
+    setCardOpen(false);
+  };
 
   // If already logged in (httpOnly session cookie), go straight to the dashboard.
   useEffect(() => {
@@ -162,6 +192,57 @@ export default function ClientLoginPage() {
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </form>
+
+                {/* Have an invite card? */}
+                <div className="border-t border-slate-200 dark:border-slate-800 pt-4">
+                  <button
+                    id="client-invite-card-toggle"
+                    onClick={() => setCardOpen((v) => !v)}
+                    className="w-full flex items-center justify-between text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-orange-500 transition-colors"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <KeyRound className="w-3.5 h-3.5 text-orange-500" />
+                      Have an invite card?
+                    </span>
+                    <span className="text-[10px] text-slate-400">{cardOpen ? "Hide" : "Paste it here"}</span>
+                  </button>
+                  {cardOpen && (
+                    <div className="mt-3 space-y-2.5">
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                        Paste the <strong>JPCARD1:…</strong> block from your invite message — it fills in your username
+                        and password automatically.
+                      </p>
+                      <textarea
+                        id="client-invite-card-input"
+                        value={cardInput}
+                        onChange={(e) => setCardInput(e.target.value)}
+                        rows={3}
+                        placeholder="JPCARD1:…"
+                        className="w-full p-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500 text-xs font-mono resize-none"
+                      />
+                      <button
+                        id="client-invite-card-use-btn"
+                        onClick={handleUseCard}
+                        disabled={!cardInput.trim()}
+                        className="w-full py-2.5 rounded-xl bg-slate-900 dark:bg-slate-800 hover:bg-orange-500 text-white font-bold text-xs transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Use This Card
+                      </button>
+                      {cardError && (
+                        <p className="flex items-start gap-2 text-xs text-red-600 dark:text-red-400 font-medium bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-900 rounded-xl p-3">
+                          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                          {cardError}
+                        </p>
+                      )}
+                      {cardNotice && (
+                        <p className="flex items-start gap-2 text-xs text-emerald-700 dark:text-emerald-400 font-medium bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900 rounded-xl p-3">
+                          <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+                          {cardNotice}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
