@@ -39,7 +39,12 @@ import {
   totalPaymentsReceived,
   appendActivity,
 } from "@/lib/clientPortal";
-import { buildCPInviteMessage, buildCPWhatsAppUrl } from "@/lib/emailTemplates";
+import {
+  buildCPInviteMessage,
+  buildCPWhatsAppUrl,
+  buildWhatsAppMessageShare,
+  buildWhatsAppAssetShare,
+} from "@/lib/emailTemplates";
 
 interface ClientPortalsTabProps {
   clients: ClientPortalAccount[];
@@ -257,6 +262,18 @@ export default function ClientPortalsTab({
 
   const handleOpenCPWhatsApp = (account: ClientPortalAccount) => {
     window.open(buildCPWhatsAppUrl(account), "_blank", "noopener,noreferrer");
+  };
+
+  /** One-click WhatsApp: opens a pre-filled draft with the composed update. */
+  const handleShareMessageWhatsApp = () => {
+    if (!selectedClient || !adminMsg.trim()) return;
+    window.open(buildWhatsAppMessageShare(selectedClient, adminMsg.trim()), "_blank", "noopener,noreferrer");
+  };
+
+  /** One-click WhatsApp: shares a link / deliverable with the client. */
+  const handleShareAssetWhatsApp = (a: SharedAsset) => {
+    if (!selectedClient) return;
+    window.open(buildWhatsAppAssetShare(selectedClient, a.label, a.url), "_blank", "noopener,noreferrer");
   };
 
   /** Merges a returned card into the admin's local record WITHOUT ever rolling
@@ -1228,6 +1245,14 @@ export default function ClientPortalsTab({
                 className="flex-1 p-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500 text-sm resize-none"
               />
               <button
+                onClick={handleShareMessageWhatsApp}
+                disabled={!adminMsg.trim()}
+                title="Send this update over WhatsApp too (one click, pre-filled draft)"
+                className="px-3 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs transition-all flex items-center gap-1.5 self-end disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <MessageCircle className="w-4 h-4" /> WhatsApp
+              </button>
+              <button
                 onClick={handleSendMessage}
                 className="px-4 py-2.5 rounded-xl bg-violet-500 hover:bg-violet-600 text-white font-bold text-xs transition-all flex items-center gap-1.5 self-end"
               >
@@ -1317,6 +1342,13 @@ export default function ClientPortalsTab({
                       >
                         <ExternalLink className="w-3.5 h-3.5" />
                       </a>
+                      <button
+                        onClick={() => handleShareAssetWhatsApp(a)}
+                        className="p-1.5 rounded-lg bg-emerald-100 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400 hover:bg-emerald-200 transition-colors"
+                        title="Share link via WhatsApp (one click, pre-filled draft)"
+                      >
+                        <MessageCircle className="w-3.5 h-3.5" />
+                      </button>
                       <button
                         onClick={() => handleDeleteAsset(a.id)}
                         className="p-1.5 rounded-lg bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-400 hover:bg-red-200 transition-colors"

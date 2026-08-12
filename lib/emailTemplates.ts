@@ -225,11 +225,45 @@ export function buildCPInviteMessage(account: ClientPortalAccount, channel: "ema
   return body.join("\n");
 }
 
-/** Pre-filled WhatsApp share link for the CP invite. */
-export function buildCPWhatsAppUrl(account: ClientPortalAccount): string {
-  const text = buildCPInviteMessage(account, "whatsapp");
+/** The wa.me target for a client: their phone, falling back to the studio number. */
+function whatsAppTarget(account: ClientPortalAccount): string {
   const digits = (account.phone || "").replace(/[^0-9]/g, "");
   const normalized = digits.replace(/^27/, "").replace(/^0/, "");
-  const target = normalized ? `27${normalized}` : "27848600638";
-  return `https://wa.me/${target}?text=${encodeURIComponent(text)}`;
+  return normalized ? `27${normalized}` : "27848600638";
+}
+
+/** Pre-filled WhatsApp share link for an arbitrary update text. */
+export function buildWhatsAppShareUrl(account: ClientPortalAccount, text: string): string {
+  return `https://wa.me/${whatsAppTarget(account)}?text=${encodeURIComponent(text)}`;
+}
+
+/** WhatsApp draft for an admin update / announcement composed in the studio. */
+export function buildWhatsAppMessageShare(account: ClientPortalAccount, text: string): string {
+  const project = account.document?.projectTitle || "your project";
+  const body = [
+    `Hi ${account.clientName || account.username},`,
+    ``,
+    `Quick update on ${project}:`,
+    text,
+    ``,
+    `Your private portal: ${portalUrl()}`,
+  ].join("\n");
+  return buildWhatsAppShareUrl(account, body);
+}
+
+/** WhatsApp draft for sharing a link / deliverable with the client. */
+export function buildWhatsAppAssetShare(account: ClientPortalAccount, label: string, url: string): string {
+  const project = account.document?.projectTitle || "your project";
+  const body = [
+    `Hi ${account.clientName || account.username},`,
+    ``,
+    `Here's your ${label} for ${project}:`,
+    url,
+  ].join("\n");
+  return buildWhatsAppShareUrl(account, body);
+}
+
+/** Pre-filled WhatsApp share link for the CP invite. */
+export function buildCPWhatsAppUrl(account: ClientPortalAccount): string {
+  return buildWhatsAppShareUrl(account, buildCPInviteMessage(account, "whatsapp"));
 }
