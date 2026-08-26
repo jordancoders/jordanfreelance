@@ -71,16 +71,34 @@ export default function Logo({
   className = "",
   src,
 }: LogoProps) {
-  // Allow explicit src to override; otherwise read from localStorage
-  // (set by the admin portal when a custom logo is uploaded).
+  // Explicit src prop wins. Otherwise fetch from MongoDB via the public
+  // fetchConfig server action so every user sees the same logo.
   const [resolvedSrc, setResolvedSrc] = useState<string | undefined>(src);
 
   useEffect(() => {
     if (src) { setResolvedSrc(src); return; }
+
+    // 1. Instant: read localStorage cache (set by admin upload or previous fetch)
     try {
-      const stored = localStorage.getItem(LOGO_STORAGE_KEY);
-      if (stored) setResolvedSrc(stored);
+      const cached = localStorage.getItem(LOGO_STORAGE_KEY);
+      if (cached) setResolvedSrc(cached);
     } catch { /* private mode */ }
+
+    // 2. Fresh: fetch from MongoDB so all users get the latest logo
+    import("@/app/actions/config")
+      .then(({ fetchConfig }) => fetchConfig())
+      .then((config) => {
+        const logo = config?.logoUrl;
+        if (logo) {
+          setResolvedSrc(logo);
+          try { localStorage.setItem(LOGO_STORAGE_KEY, logo); } catch { /* ignore */ }
+        } else if (!src) {
+          // No custom logo set — clear any stale cache
+          setResolvedSrc(undefined);
+          try { localStorage.removeItem(LOGO_STORAGE_KEY); } catch { /* ignore */ }
+        }
+      })
+      .catch(() => { /* network error — keep using cache or default */ });
   }, [src]);
 
   const logoImage = resolvedSrc ? (
