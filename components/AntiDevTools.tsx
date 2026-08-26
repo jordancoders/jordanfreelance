@@ -29,15 +29,15 @@ export default function AntiDevTools() {
       // eslint-disable-next-line no-debugger
       debugger;
       const elapsed = performance.now() - start;
-      if (elapsed > 100) {
+      // DevTools pauses for >500ms; normal execution is <5ms even on slow devices
+      if (elapsed > 500) {
         devtoolsDetected = true;
         showWarning("Developer tools detected. This site is protected.");
       }
     }
 
-    // Run detection every 3 seconds
-    const debuggerInterval = setInterval(detectDebugger, 3000);
-    detectDebugger(); // Run immediately
+    // Run detection every 5 seconds (not too aggressive)
+    const debuggerInterval = setInterval(detectDebugger, 5000);
 
     // ── 2. Keyboard shortcut blocking ────────────────────────────────────
     function blockShortcuts(e: KeyboardEvent) {
@@ -87,7 +87,7 @@ export default function AntiDevTools() {
 
     // ── 4. Console.log monitoring ────────────────────────────────────────
     let logCount = 0;
-    const MAX_LOGS = 50;
+    const MAX_LOGS = 200;
     const originalLog = console.log;
     const originalWarn = console.warn;
     const originalError = console.error;
@@ -122,7 +122,9 @@ export default function AntiDevTools() {
       const widthDiff = Math.abs(window.innerWidth - initialWidth);
       const heightDiff = Math.abs(window.innerHeight - initialHeight);
 
-      if (widthDiff > 150 || heightDiff > 150) {
+      // Only trigger if BOTH dimensions shrunk significantly (docked DevTools)
+      // Single-axis changes are normal (responsive design, fullscreen video, etc.)
+      if (widthDiff > 200 && heightDiff > 200) {
         if (!devtoolsDetected) {
           devtoolsDetected = showWarning("Developer tools may be open. This site is protected.");
         }
