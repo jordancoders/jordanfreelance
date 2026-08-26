@@ -33,6 +33,7 @@ import {
   DEFAULT_MILESTONES,
   generateUsername,
   generatePassword,
+  generateInviteCode,
   buildDocumentSnapshot,
   parseInviteCard,
   computePercentComplete,
@@ -104,6 +105,9 @@ export default function ClientPortalsTab({
 
   // Import-a-signed-card box
   const [importCardText, setImportCardText] = useState("");
+
+  // Raw invite codes keyed by client ID (not persisted — regenerate if lost)
+  const [inviteCodes, setInviteCodes] = useState<Map<string, string>>(new Map());
 
   // Payment form
   const [payAmount, setPayAmount] = useState("");
@@ -177,6 +181,10 @@ export default function ClientPortalsTab({
     const linkedInvoice = invoices.find((inv) => inv.id === cpInvoiceId) || null;
     const projectTitle = cpProjectTitle.trim() || linkedInvoice?.items?.[0]?.description || "Custom Web App";
     const now = new Date().toISOString();
+    // Generate a one-time invite code so the client can log in without
+    // relying on the password alone. The raw code is shown to the admin;
+    // only the HMAC hash is persisted in MongoDB.
+    const rawInviteCode = generateInviteCode();
     let account: ClientPortalAccount = {
       id: `client-${now}-${cpUsername.trim()}`,
       clientName: cpClientName.trim(),
@@ -185,6 +193,7 @@ export default function ClientPortalsTab({
       phone: cpClientPhone.trim(),
       username: cpUsername.trim(),
       password: cpPassword,
+      inviteCode: rawInviteCode,
       invoiceId: linkedInvoice?.id,
       document:
         buildDocumentSnapshot(linkedInvoice) ||
@@ -225,13 +234,15 @@ export default function ClientPortalsTab({
       activity: [],
     };
     account = appendActivity(account, "admin", "Client portal created", `Project: ${projectTitle}`);
+    // Store the raw invite code so the admin can copy it from the invite message.
+    setInviteCodes((prev) => new Map(prev).set(account.id, rawInviteCode));
     void Promise.resolve(onChange([account, ...clients])).catch((err) => {
       console.error("[admin] client portal create failed:", err);
       showToast("Portal could not be created — MongoDB unreachable.");
     });
     openTrackerEditor(account);
     setCpProjectTitle(projectTitle);
-    showToast(`Client portal for ${account.clientName} created — approve it to send the invite.`);
+    showToast(`Portal created — invite code: ${rawInviteCode} (copy it from the invite message).`);
   };
 
   const handleApproveClient = (account: ClientPortalAccount) => {
@@ -252,7 +263,8 @@ export default function ClientPortalsTab({
   };
 
   const handleCopyCPEmail = async (account: ClientPortalAccount) => {
-    const ok = await copyText(buildCPInviteMessage(account, "email"));
+    const code = inviteCodes.get(account.id);
+    const ok = await copyText(buildCPInviteMessage(account, "email", code));
     showToast(
       ok
         ? `Client Portal invite copied — paste it into Gmail/WhatsApp for ${account.clientName}.`
@@ -261,7 +273,8 @@ export default function ClientPortalsTab({
   };
 
   const handleOpenCPWhatsApp = (account: ClientPortalAccount) => {
-    window.open(buildCPWhatsAppUrl(account), "_blank", "noopener,noreferrer");
+    const code = inviteCodes.get(account.id);
+    window.open(buildCPWhatsAppUrl(account, code), "_blank", "noopener,noreferrer");
   };
 
   /** One-click WhatsApp: opens a pre-filled draft with the composed update. */
@@ -1045,6 +1058,18 @@ export default function ClientPortalsTab({
                 className="px-4 py-2.5 rounded-xl bg-violet-500 hover:bg-violet-600 text-white font-bold text-xs transition-colors flex items-center gap-1.5"
               >
                 <Copy className="w-4 h-4" /> Re-send Updated Invite
+              </button>
+              <button
+                onClick={() => {
+                  if (!selectedClient) return;
+                  const newCode = generateInviteCode();
+                  setInviteCodes((prev) => new Map(prev).set(selectedClient.id, newCode));
+                  commitClient({ ...selectedClient, inviteCode: newCode });
+                  showToast(`New invite code generated: ${newCode} — copy it from the invite message.`);
+                }}
+                className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs transition-colors flex items-center gap-1.5"
+              >
+                <RefreshCw className="w-4 h-4" /> Regenerate Invite Code
               </button>
             </div>
           </div>

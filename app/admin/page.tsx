@@ -372,7 +372,12 @@ function AdminDashboardInner() {
     let cancelled = false;
     checkAdminAuth().then((valid) => {
       if (cancelled) return;
-      if (valid) setIsAuthenticated(true);
+      if (valid) {
+        setIsAuthenticated(true);
+        // The hooks inside AdminDataProvider fire on mount before the session
+        // cookie is restored. Re-pull everything so the dashboard is populated.
+        reloadAllRef.current();
+      }
     });
     return () => {
       cancelled = true;
@@ -393,6 +398,10 @@ function AdminDashboardInner() {
       if (result.success) {
         setIsAuthenticated(true);
         setPinInput("");
+        // Hooks fire on mount before the session cookie is set, so the
+        // initial fetches returned empty data. Now that we're authenticated,
+        // re-pull everything so the dashboard is populated.
+        data.reloadAll();
         showToast("Access Granted • Welcome Jordan Peters");
       } else {
         setPinError(result.error || "Invalid passcode.");

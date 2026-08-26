@@ -47,7 +47,14 @@ export async function loginClient(
     return { success: false, error: `Too many attempts — try again in ${Math.ceil((rl.retryAfterSeconds || 0) / 60)} minutes.` };
   }
   const account = await getClientByUsername(username.trim());
-  if (!account || account.password !== password) {
+  if (!account) {
+    return { success: false, error: "Invalid username or password." };
+  }
+  // Accept either: (a) matching password, or (b) matching invite code.
+  // The invite code is sent as the password field when the client uses it.
+  const passwordOk = account.password === password;
+  const inviteOk = account.inviteCode ? account.inviteCode === password : false;
+  if (!passwordOk && !inviteOk) {
     return { success: false, error: "Invalid username or password." };
   }
   if (account.status !== "approved") {

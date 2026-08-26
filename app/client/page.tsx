@@ -135,7 +135,7 @@ export default function ClientLoginPage() {
                   </div>
                   <div>
                     <h2 className="text-lg font-bold text-slate-900 dark:text-white">Log in</h2>
-                    <p className="text-xs text-slate-500">Use the username & password from your invite message.</p>
+                    <p className="text-xs text-slate-500">Use the username & password or invite code from your invite message.</p>
                   </div>
                 </div>
 
@@ -156,7 +156,7 @@ export default function ClientLoginPage() {
                   </div>
                   <div>
                     <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                      Password
+                      Password or Invite Code
                     </label>
                     <input
                       id="client-login-password"
@@ -164,7 +164,7 @@ export default function ClientLoginPage() {
                       autoComplete="current-password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Your password"
+                      placeholder="Your password or invite code from the message"
                       className="w-full p-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
                     />
                   </div>

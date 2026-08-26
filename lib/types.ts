@@ -179,6 +179,9 @@ export interface ClientPortalAccount {
   phone: string;
   username: string;
   password: string;
+  /** Random one-time invite code shared with the client. The code itself
+   *  is the credential — no separate password needed. */
+  inviteCode?: string;
   invoiceId?: string;
   document?: DocumentSnapshot;
   status: ClientAccountStatus;

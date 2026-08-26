@@ -42,6 +42,16 @@ export async function isAdminAuthenticated(): Promise<boolean> {
   return timingSafeEqual(expected, actual);
 }
 
+/**
+ * Guard for server actions that require an authenticated admin session.
+ * Returns true when the session is valid, false otherwise. Server actions
+ * should return empty/default data when this returns false so the client
+ * never sees an error overlay.
+ */
+export async function requireAdmin(): Promise<boolean> {
+  return isAdminAuthenticated();
+}
+
 // ─── Client Portal Auth ───────────────────────────────────────────────────────
 
 export const CLIENT_SESSION_COOKIE = "jordanpeters_client_session";
