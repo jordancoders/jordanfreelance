@@ -30,6 +30,7 @@ export function useSiteConfig() {
           facebookUrl: social.facebookUrl || prev.facebookUrl,
           discordUrl: social.discordUrl || prev.discordUrl,
           repoUrl: social.repoUrl || prev.repoUrl,
+          logoUrl: cloud.logoUrl || prev.logoUrl,
         }));
       })
       .catch((err) => {
@@ -41,12 +42,14 @@ export function useSiteConfig() {
   const save = useCallback(async (patch: {
     googleFormUrl?: string;
     socialLinks?: Partial<SocialLinkUrls>;
+    logoUrl?: string;
   }) => {
     const current = await fetchConfig();
     const curSocial = current?.socialLinks ?? {};
     const patchSocial = patch.socialLinks ?? {};
     const merged: SiteConfig = {
       googleFormUrl: patch.googleFormUrl ?? current?.googleFormUrl ?? "",
+      logoUrl: patch.logoUrl ?? current?.logoUrl ?? "",
       socialLinks: {
         linkedinUrl: patchSocial.linkedinUrl ?? curSocial.linkedinUrl ?? "",
         githubUrl: patchSocial.githubUrl ?? curSocial.githubUrl ?? "",
@@ -65,6 +68,7 @@ export function useSiteConfig() {
       facebookUrl: savedSocial.facebookUrl || prev.facebookUrl,
       discordUrl: savedSocial.discordUrl || prev.discordUrl,
       repoUrl: savedSocial.repoUrl || prev.repoUrl,
+      logoUrl: saved.logoUrl || prev.logoUrl,
     }));
     return saved;
   }, []);

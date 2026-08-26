@@ -45,6 +45,7 @@ export const SITE_CONFIG = {
   responseHours: "2 hours (Business Hours)",
   guaranteeNotice: "48-Hour Staging Guarantee | Production-Ready Delivery",
   popiaEraseDays: 7,
+  logoUrl: "",
   // Human section — leave empty until you add a real photo + social links.
   // The "Meet Jordan" block only renders once photoUrl is set.
   photoUrl: "",

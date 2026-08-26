@@ -38,7 +38,8 @@ import {
   Link2,
   Users,
   Bell,
-  CheckCheck
+  CheckCheck,
+  ImageIcon
 } from "lucide-react";
 import { SITE_CONFIG, Project, ClientReview } from "@/data/portfolioData";
 import SignaturePad from "@/components/SignaturePad";
@@ -3095,6 +3096,64 @@ function AdminDashboardInner() {
                           >
                             Save URL
                           </button>
+                        </div>
+                      </div>
+
+                      {/* Tool 3.5: Logo Upload */}
+                      <div className="p-6 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 space-y-3 md:col-span-2">
+                        <div className="flex items-center gap-3">
+                          <div className="p-3 rounded-xl bg-purple-500/10 text-purple-500">
+                            <ImageIcon className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h3 className="text-sm font-bold text-slate-900 dark:text-white">Site Logo</h3>
+                            <p className="text-xs text-slate-500">Upload your logo image — appears in the header, footer, and printed invoices. Leave blank to use the default SVG mark.</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4 pt-2">
+                          {data.logoUrl ? (
+                            <img src={data.logoUrl} alt="Site logo" className="h-12 w-12 rounded-xl object-contain border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800" />
+                          ) : (
+                            <div className="h-12 w-12 rounded-xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xs font-bold text-slate-400">
+                              Default
+                            </div>
+                          )}
+                          <div className="flex-1 flex gap-2">
+                            <label className="flex-1">
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (!file) return;
+                                  if (file.size > 2 * 1024 * 1024) {
+                                    showToast("Logo must be under 2MB.");
+                                    return;
+                                  }
+                                  const reader = new FileReader();
+                                  reader.onload = () => {
+                                    const dataUrl = reader.result as string;
+                                    void data.saveLogoUrl(dataUrl);
+                                    try { localStorage.setItem("jp-site-logo", dataUrl); } catch { /* ignore */ }
+                                    showToast("Logo saved!");
+                                  };
+                                  reader.readAsDataURL(file);
+                                }}
+                              />
+                              <span className="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs shadow transition-colors flex items-center justify-center gap-2 cursor-pointer">
+                                <Upload className="w-3.5 h-3.5" /> Upload Logo
+                              </span>
+                            </label>
+                            {data.logoUrl && (
+                              <button
+                                onClick={() => { void data.saveLogoUrl(""); try { localStorage.removeItem("jp-site-logo"); } catch { /* ignore */ } showToast("Logo reset to default."); }}
+                                className="px-4 py-2.5 rounded-xl bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400 font-bold text-xs hover:bg-red-200 transition-colors"
+                              >
+                                Remove
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
 

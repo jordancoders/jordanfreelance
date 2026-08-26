@@ -1,3 +1,7 @@
+"use client";
+
+import { useState, useEffect } from "react";
+
 /**
  * JP Logo — inline SVG for pixel-perfect rendering everywhere.
  *
@@ -19,7 +23,12 @@ interface LogoProps {
   iconSize?: number;
   /** Extra class on the outer wrapper. */
   className?: string;
+  /** Custom logo image URL (data-URL or http(s)). When set, renders an <img> instead of the SVG mark. */
+  src?: string;
 }
+
+/** localStorage key for the admin-updated logo. */
+const LOGO_STORAGE_KEY = "jp-site-logo";
 
 // ── The JP monogram mark ────────────────────────────────────────────────────
 function Mark({ size }: { size: number }) {
@@ -60,14 +69,40 @@ export default function Logo({
   subtext = "by Jordan Peters",
   iconSize = 40,
   className = "",
+  src,
 }: LogoProps) {
+  // Allow explicit src to override; otherwise read from localStorage
+  // (set by the admin portal when a custom logo is uploaded).
+  const [resolvedSrc, setResolvedSrc] = useState<string | undefined>(src);
+
+  useEffect(() => {
+    if (src) { setResolvedSrc(src); return; }
+    try {
+      const stored = localStorage.getItem(LOGO_STORAGE_KEY);
+      if (stored) setResolvedSrc(stored);
+    } catch { /* private mode */ }
+  }, [src]);
+
+  const logoImage = resolvedSrc ? (
+    <img
+      src={resolvedSrc}
+      alt="Logo"
+      width={iconSize}
+      height={iconSize}
+      className="rounded-xl object-contain shrink-0"
+      style={{ width: iconSize, height: iconSize }}
+    />
+  ) : (
+    <Mark size={iconSize} />
+  );
+
   if (variant === "mark") {
-    return <Mark size={iconSize} />;
+    return logoImage;
   }
 
   return (
     <div className={`flex items-center gap-3 ${className}`}>
-      <Mark size={iconSize} />
+      {logoImage}
       <div className="flex flex-col">
         <span className="font-bold text-lg leading-tight">{text}</span>
         <span className="text-xs opacity-60 font-medium">{subtext}</span>

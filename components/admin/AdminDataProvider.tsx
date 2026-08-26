@@ -21,6 +21,7 @@ interface AdminDataContextType {
   clientsLoading: boolean;
   configLoading: boolean;
   googleFormUrl: string;
+  logoUrl: string;
   socialLinks: {
     githubUrl: string;
     linkedinUrl: string;
@@ -41,6 +42,7 @@ interface AdminDataContextType {
   updateClient: (id: string, patch: Partial<ClientPortalAccount>) => Promise<ClientPortalAccount | null>;
   deleteClient: (id: string) => Promise<boolean>;
   saveGoogleFormUrl: (url: string) => Promise<void>;
+  saveLogoUrl: (url: string) => Promise<void>;
   saveSocialLinks: (links: { githubUrl: string; linkedinUrl: string; facebookUrl: string; discordUrl: string; repoUrl: string }) => Promise<void>;
   exportBackup: () => Promise<BackupPayload>;
   importBackup: (data: BackupPayload) => Promise<void>;
@@ -112,6 +114,7 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
   const [googleFormUrl, setGoogleFormUrl] = useState(
     cloudConfig.googleFormUrl || SITE_CONFIG.googleFormUrl
   );
+  const [logoUrl, setLogoUrl] = useState(cloudConfig.logoUrl || "");
   const [socialLinks, setSocialLinks] = useState({
     githubUrl: cloudConfig.githubUrl || SITE_CONFIG.githubUrl,
     linkedinUrl: cloudConfig.linkedinUrl || SITE_CONFIG.linkedinUrl,
@@ -123,6 +126,11 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
   const saveGoogleFormUrl = useCallback(async (url: string) => {
     setGoogleFormUrl(url);
     await saveConfig({ googleFormUrl: url });
+  }, [saveConfig]);
+
+  const saveLogoUrl = useCallback(async (url: string) => {
+    setLogoUrl(url);
+    await saveConfig({ logoUrl: url });
   }, [saveConfig]);
 
   const saveSocialLinks = useCallback(async (links: typeof socialLinks) => {
@@ -162,6 +170,7 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
         clientsLoading: cli.loading,
         configLoading: cloudConfig.googleFormUrl === undefined,
         googleFormUrl,
+        logoUrl,
         socialLinks,
         createInvoice: inv.create,
         updateInvoice: inv.update,
@@ -176,6 +185,7 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
         updateClient: cli.update,
         deleteClient: cli.remove,
         saveGoogleFormUrl,
+        saveLogoUrl,
         saveSocialLinks,
         exportBackup,
         importBackup,

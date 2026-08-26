@@ -230,6 +230,8 @@ export interface SiteConfig {
   _id?: DocId;
   googleFormUrl?: string;
   socialLinks?: SiteSocialLinks;
+  /** Base64 data-URL or external URL for the site logo. Empty = use default SVG. */
+  logoUrl?: string;
   updatedAt?: string;
 }
 
