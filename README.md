@@ -18,7 +18,7 @@ Built with **Next.js 15 (App Router)**, **React 19**, **Tailwind CSS v4**, and *
 - **48-Hour Live Staging Guarantee** — the "No-Gamble Guarantee": if the staging demo isn't delivered on time, 100% of the deposit plus 100% of unused API credits are refunded (qualifying projects — exclusions documented in the policy).
 - **Guarantee & Refund Policy** — `/guarantee`: a redesigned policy page that backs every marketing claim (48-hour staging, 14-day bug-fix warranty, 7-day data erasure) with CPA-aligned legal wording and a non-waiver statement.
 - **Interactive demo embed** — a live Tourism Operations dashboard preview on the homepage, clearly labeled as a sample build.
-- **AI API pricing reference tracker** — 38 researched models across 16 providers (OpenAI GPT-5.6, Claude 5, Gemini 3.x, DeepSeek V4, Qwen 3.x, Kimi K3, Grok 4.x and more) with input/output token rates, refreshed on tab open, and clearly labeled as a **reference snapshot** — rates are always verified against official pricing pages before quoting.
+- **Live AI API pricing reference** — 38 models across 16 providers (OpenAI, Anthropic, Google, DeepSeek, Qwen, Mistral, Cohere, Kimi, Grok, Groq, Together, Fireworks, Replicate, Ollama). Prices **auto-sync from OpenRouter** on tab open with a static fallback. Official pricing link notes are **dynamically generated** from the live model data so they always reflect current rates.
 - **Testimonials** — `/testimonials` and homepage "Recent Verified Client Reviews": real reviews (with **displayed dates**) added by clients after project sign-off; never fabricated.
 - **Quote & discovery-call flow** — WhatsApp-powered lead capture, `/api/contact` route for the quote form (Resend email with graceful failure), and a "Book 15-Min Discovery Call" button driven by a single config value.
 - **International clients** — `/international`: USD/EUR/GBP quotes, PayPal/Wise/Direct EFT payments, GDPR-aligned Data Processing Agreement, W-8BEN readiness for US clients.
@@ -28,10 +28,11 @@ Built with **Next.js 15 (App Router)**, **React 19**, **Tailwind CSS v4**, and *
 
 Each client gets a private portal (unique username + password) linked to their quote/invoice:
 
-- **Invite-card login** — paste the `JPCARD1:…` block from the invite message to auto-fill credentials (matching the invite email's instructions).
+- **Username + password login** — simple credentials from the invite message. No invite codes or cards — the invite message shows the portal URL, username, and password. Clients log in directly.
+- **Auto-approved on creation** — portals start as "approved" so clients can log in immediately. No manual approval step.
 - **Live build tracker** — dated milestone timeline with overall % progress, overdue highlighting, and stage badges.
 - **Live document snapshot** — the quote/invoice (items, totals, deposit split, status) is kept in sync with the studio: any invoice edit **rebuilds the client's view automatically**.
-- **Signed Declaration** — clients draw their signature in the portal; it is stamped `signedBy: "client"` server-side, pushed instantly to the linked invoice, and flips the document status to **Accepted** (signing *is* accepting). The admin sees a "✍ Signed" chip and the PDF bundle becomes export-ready — no card round-trip.
+- **Signed Declaration** — clients draw their signature in the portal; it is stamped `signedBy: "client"` server-side, pushed instantly to the linked invoice, and flips the document status to **Accepted** (signing *is* accepting). The admin sees a "✍ Signed" chip and the PDF bundle becomes export-ready.
 - **Printable declaration page** — `/client/declaration`: a clean, print/PDF-ready copy of the signed declaration with the document breakdown, signature, and legal references.
 - **Payments** — clients see confirmed payments, pending confirmations, and can **report a payment** (amount/method/date) which the admin confirms or declines.
 - **Messages** — two-way threaded updates between client and developer.
@@ -43,6 +44,15 @@ Each client gets a private portal (unique username + password) linked to their q
 
 - **🔒 Server-verified passcode login** — PIN checked against `ADMIN_PIN` in a Server Action; a secure **httpOnly session cookie** is issued on success. The PIN is **never** bundled into client JavaScript. Login attempts are **rate-limited** (10/15 min per IP).
 - **Invoice & Quote Manager** — create, edit, print, and track invoices/quotes (no tax/VAT — total always equals subtotal) with per-document deposit percentage, balances, PayPal/EFT notes, and a live **Signed Declaration** capture pad (canvas, mouse/touch).
+- **Proposal Builder (quotes only)** — winning proposals, not invoice clones. When creating a Quote, a **Proposal Builder** section appears with sales-oriented fields:
+  - 🎯 **Client Problem / What They Need** — show you understand their pain
+  - 💡 **Proposed Solution** — what you'll build and why
+  - 📦 **Deliverables** — one-per-line checklist (renders with ✓ checkmarks on print)
+  - ⏱️ **Timeline** — when they'll see staging, final delivery, etc.
+  - 🛡️ **Guarantee / Risk Reversal** — pre-filled with 14-day warranty + data erasure
+  - ⭐ **Social Proof** — trust signals, stats, ratings
+  - 🚀 **Next Steps / CTA** — clear "reply YES" path to close
+  - On print, these render as **color-coded cards** (orange=problem, green=solution, blue=timeline, dark=guarantee). Invoices show none of these fields.
 - **Share straight to clients**:
   - 🟣 **Copy Email** — polished quote email (auto-calculated next-Monday kickoff + Wednesday staging dates)
   - ✍️ **Kickoff** — the build "recipe" email (plan, timeline, deposit, what's needed from the client)
@@ -51,18 +61,50 @@ Each client gets a private portal (unique username + password) linked to their q
   - 🟢 **WhatsApp** — opens a WhatsApp chat with the document summary pre-filled
   - 🖨️ **Print / Export PDF** — clean white-paper output of just the document
 - **Signed Declaration + PDF Bundle** — capture a signature in the studio (stamped `signedBy: "admin"` and mirrored to the linked portal) or receive the client's own signature, then export the full legal bundle (signed declaration → invoice/quote → terms → privacy → POPIA → DPA) via `/admin/export`.
-- **Client Portals tab** — create a portal, link it to a quote/invoice (the snapshot is pre-built, and if the document was already signed the portal starts pre-signed), approve it, and send the invite message. Manage milestones, payments, messages, and links; **pending client-reported payments get ✓ Confirm / ✗ Decline** controls that apply the money to the linked invoice (status moves Sent → Accepted → Paid).
+- **Client Portals tab** — create a portal, link it to a quote/invoice (the snapshot is pre-built), and it's **auto-approved** so you can send the invite immediately. WhatsApp opens automatically with the invite pre-filled. Manage milestones, payments, messages, and links; **pending client-reported payments get ✓ Confirm / ✗ Decline** controls that apply the money to the linked invoice (status moves Sent → Accepted → Paid).
 - **Notification bell** — unread badge fed live from client activity (signed, replied, payment reported); clicking a notification jumps to that client's Manage panel.
 - **One-click WhatsApp sharing** — a WhatsApp button next to any composed update and next to every shared link/deliverable, opening a pre-filled `wa.me` draft to the client's number.
 - **Project Manager** — draft/published case studies with live demo + GitHub links and image upload; only published projects render publicly.
 - **Client Reviews Manager** — add, edit, delete, publish reviews (rating, avatar, linked project); published reviews appear on `/testimonials` and the homepage with dates.
-- **API Pricing Reference** — searchable, filterable, sortable model pricing with a last-synced indicator.
+- **Self-editable site logo** — upload a custom logo image (max 2MB) from the Settings section. It saves to MongoDB + localStorage and appears instantly across the site: header, footer, mobile drawer, invoice template, and document exports. Remove button resets to the default SVG mark.
+- **API Pricing Reference** — searchable, filterable, sortable model pricing with live-sync from OpenRouter and a last-synced indicator showing the data source.
 - **JSON Backup & Restore** — export the full dataset (invoices, projects, reviews, clients, config) to JSON and import it on any device.
 - **Re-sync From MongoDB** — re-fetches every collection from the database (never seeds or destroys data).
 
+### Accessibility
+
+- **Accessibility settings panel** — floating orange button in the bottom-right opens a panel with:
+  - **Text Size** — A-/A+ buttons scaling from 80% to 150% (CSS variable on `<html>`)
+  - **High Contrast** — boosts text contrast, underlines all links
+  - **Dyslexia Font** — swaps to Lexend/OpenDyslexic with wider letter-spacing and line-height
+  - **Reduced Motion** — kills all animations and transitions
+  - Settings persist to `localStorage` and restore before paint via inline script (zero flash)
+- **Skip-to-content link** — visually hidden until keyboard-focused, jumps to main content
+- **Focus-visible rings** — orange outline for keyboard users, none for mouse clicks
+- **44×44px minimum tap targets** on all interactive elements
+- **`prefers-reduced-motion`** — respects OS-level motion preference
+- **`forced-colors`** — high-contrast mode support
+- **ARIA labels & roles** — on search inputs, filter tabs, theme toggle, navigation, mobile drawer
+
+### Dark Mode
+
+- **Class-based dark mode** — Tailwind v4 configured with `@custom-variant dark (&:is(.dark *))` so `dark:` utilities respond to the `.dark` class on `<html>`.
+- **Flash-free** — inline `<script>` in `<head>` reads `localStorage('theme')` and `prefers-color-scheme` before paint, applying the correct class immediately.
+- **Theme toggle** — `role="switch"` with `aria-checked`, screen-reader announcements, and smooth transitions.
+
+### Anti-DevTools Protection
+
+- **Debugger timing detection** — fires a `debugger` statement every 3 seconds; if DevTools is open the pause exceeds 100ms and triggers a warning overlay.
+- **Keyboard shortcut blocking** — F12, Ctrl+Shift+I/J/C, Ctrl+U (view source), Ctrl+S all suppressed.
+- **Right-click disabled** — context menu blocked on all pages.
+- **Console monitoring** — warns after 50 log calls.
+- **Window resize detection** — catches docked DevTools panels (width/height drop >150px).
+- Full-screen orange warning overlay when triggered (auto-dismisses after 5 seconds).
+
 ### Security & Privacy
 
-- **Content-Security-Policy + security headers** on every response — `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Permissions-Policy` (camera/mic/geo/payment/usb off), and a CSP tuned so project embeds and the Google Form iframe keep working. Dev builds add `unsafe-eval` for hot reload; production stays strict.
+- **Content-Security-Policy + security headers** on every response — `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Permissions-Policy` (camera/mic/geo/payment/usb off), and a CSP that allows Google Fonts (Lexend dyslexia font), project embeds, and the Google Form iframe. Dev builds add `unsafe-eval` for hot reload; production stays strict.
+- **`server-only` import guards** — `lib/auth.ts`, `lib/db.ts`, `lib/rateLimit.ts`, `lib/notifyAdmin.ts` all import `server-only` so Next.js build fails if any of these are accidentally imported into a client component (prevents ADMIN_PIN, MONGODB_URI, RESEND_API_KEY, SESSION_SECRET from leaking into browser JS).
 - **Signed session cookies** — the client session is an HMAC-signed token (username + signature), not a bare username; verified with a timing-safe compare. Admin session uses a hashed PIN token with the same comparison.
 - **Login rate limiting** — in-memory sliding window per IP for both admin and client logins.
 - **CSRF protection** — same-origin (Origin/Referer) checks on all state-changing client API routes, on top of SameSite=strict cookies.
@@ -87,10 +129,12 @@ Each client gets a private portal (unique username + password) linked to their q
 | Framework | Next.js 15 (App Router, React 19) |
 | Styling | Tailwind CSS v4, Lucide icons |
 | CI | GitHub Actions (ESLint + strict TypeScript on push/PR) |
-| API | Next.js Server Actions + Route Handlers (`/api/contact`, `/api/client/*`) |
+| API | Next.js Server Actions + Route Handlers (`/api/contact`, `/api/client/*`, `/api/pricing/live`) |
 | Auth | Server Actions + httpOnly session cookies (`lib/auth.ts`, `app/actions/auth.ts`) |
 | Data | MongoDB Atlas (free M0 tier) — all data persisted server-side |
 | Email | Resend API (contact leads + portal notifications) |
+| Live Pricing | OpenRouter API (token rates for 12+ providers, merged with static data) |
+| Fonts | Google Fonts (Lexend for dyslexia-friendly mode) |
 | Language | TypeScript (strict) |
 
 ---
@@ -178,11 +222,11 @@ All site data is stored in MongoDB Atlas (free M0 tier) using the **official Mon
 
 | Collection | Stores |
 |---|---|
-| `invoices` | Invoices & quotes (including signed declarations) |
+| `invoices` | Invoices & quotes (including signed declarations, proposal fields for quotes) |
 | `projects` | Case studies / portfolio items |
 | `reviews` | Client testimonials |
 | `clients` | Client portal accounts (progress, payments, messages, assets, activity) |
-| `config` | Site config (social links, Google Form URL) — single document |
+| `config` | Site config (social links, Google Form URL, **site logo**) — single document |
 
 ### Create the cluster & copy the connection string
 
@@ -222,11 +266,12 @@ app/
   guarantee/  terms/  privacy/  popia/  dpa/   # Legal & compliance pages
   api/contact/          # Lead dispatch route (Resend + server logging)
   api/client/           # Portal auth, account, and payment-report endpoints
+  api/pricing/live/     # Live AI pricing endpoint (OpenRouter fetch + static fallback)
   actions/              # Server Actions (auth, invoices, projects, reviews, clients, config, backup)
-components/             # Shared UI (Header, Footer, CookieConsent, demos, admin tabs…)
+components/             # Shared UI (Header, Footer, Logo, AccessibilityPanel, AntiDevTools, ThemeToggle, demos, admin tabs…)
 data/portfolioData.ts   # SITE_CONFIG + static content + type re-exports
-lib/                    # Database, auth, CSRF, rate limiting, email templates, portal utils, admin notifications
-hooks/                  # Client-side data hooks
+lib/                    # Database, auth, CSRF, rate limiting, email templates, portal utils, live pricing fetcher, admin notifications
+hooks/                  # Client-side data hooks (useSiteConfig, useInvoices, etc.)
 ```
 
 ---
