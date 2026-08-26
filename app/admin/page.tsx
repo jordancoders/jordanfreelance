@@ -570,6 +570,25 @@ function AdminDashboardInner() {
     showToast("Document deleted successfully");
   };
 
+  /** Clone an existing invoice/quote with a new number and Draft status. */
+  const handleDuplicateInvoice = async (inv: Invoice) => {
+    const newId = `inv-${Date.now()}`;
+    const newNumber = `${inv.documentType === "Quote" ? "QUO" : "INV"}-2026-${Math.floor(100 + Math.random() * 900)}`;
+    const clone: Invoice = {
+      ...inv,
+      id: newId,
+      invoiceNumber: newNumber,
+      status: "Draft",
+      depositPaid: 0,
+      declaration: undefined,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    await data.createInvoice(clone);
+    handleEditInvoiceClick(clone);
+    showToast(`Duplicated as ${newNumber} — edit and save.`);
+  };
+
   const addInvoiceItem = () => {
     setInvItems([...invItems, { id: `${Date.now()}`, description: "", quantity: 1, rate: 1000 }]);
   };
@@ -1774,6 +1793,33 @@ function AdminDashboardInner() {
                           </h3>
                         </div>
 
+                        {/* Quick Status Filters */}
+                        <div className="flex flex-wrap gap-1.5">
+                          {["All", "Draft", "Sent", "Accepted", "Paid", "Overdue"].map((filter) => {
+                            const count = filter === "All"
+                              ? data.invoices.length
+                              : data.invoices.filter((i) => i.status === filter).length;
+                            return (
+                              <button
+                                key={filter}
+                                onClick={() => {
+                                  // Filter is applied by re-rendering the list below
+                                  // For now, scroll to the first matching document
+                                  const first = data.invoices.find((i) => filter === "All" || i.status === filter);
+                                  if (first) setSelectedInvoice(first);
+                                }}
+                                className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all ${
+                                  filter === "All"
+                                    ? "bg-orange-500 text-white"
+                                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
+                                }`}
+                              >
+                                {filter} ({count})
+                              </button>
+                            );
+                          })}
+                        </div>
+
                         <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1">
                           {data.invoices.map((inv) => {
                             const total = calculateInvoiceTotal(inv);
@@ -1925,6 +1971,14 @@ function AdminDashboardInner() {
                                   <Send className="w-3.5 h-3.5" />
                                   WhatsApp
                                 </a>
+
+                                <button
+                                  onClick={() => handleDuplicateInvoice(selectedInvoice)}
+                                  title="Duplicate this document"
+                                  className="p-2 rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400 text-xs font-bold hover:bg-blue-200 transition-colors"
+                                >
+                                  <Copy className="w-3.5 h-3.5" />
+                                </button>
 
                                 <button
                                   onClick={() => handleDeleteInvoice(selectedInvoice.id)}

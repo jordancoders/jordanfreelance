@@ -461,9 +461,18 @@ export default function ClientDashboardPage() {
                           <FileText className="w-5 h-5 text-orange-500" />
                           {doc.documentType} {doc.invoiceNumber}
                         </h2>
-                        <span className="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-[11px] font-bold text-slate-600 dark:text-slate-300">
-                          {doc.status}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-[11px] font-bold text-slate-600 dark:text-slate-300">
+                            {doc.status}
+                          </span>
+                          <button
+                            onClick={() => window.print()}
+                            className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-colors"
+                            title="Print / Export document"
+                          >
+                            <Printer className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </div>
 
                       <div className="space-y-2 text-sm">
@@ -531,35 +540,47 @@ export default function ClientDashboardPage() {
                       </p>
                     ) : (
                       <div className="space-y-2">
-                        {(account.payments || []).map((p) => {
-                          const pending = p.status === "pending";
-                          return (
-                            <div key={p.id} className="flex items-center justify-between gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
-                              <div className="flex items-center gap-3">
-                                <span className={`px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase ${pending ? "bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400" : "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400"}`}>
-                                  {p.method}
-                                </span>
-                                <div>
-                                  <p className="text-sm font-extrabold font-mono text-slate-900 dark:text-white">
-                                    {symbol} {p.amount.toLocaleString()}
-                                  </p>
-                                  <p className="text-[10px] text-slate-400 font-mono">
-                                    {p.date}
-                                    {p.note ? ` · ${p.note}` : ""}
-                                  </p>
+                        {/* Running total */}
+                        {(() => {
+                          let running = 0;
+                          return (account.payments || []).map((p) => {
+                            const pending = p.status === "pending";
+                            if (!pending) running += p.amount;
+                            return (
+                              <div key={p.id} className="flex items-center justify-between gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+                                <div className="flex items-center gap-3">
+                                  <span className={`px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase ${pending ? "bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400" : "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400"}`}>
+                                    {p.method}
+                                  </span>
+                                  <div>
+                                    <p className="text-sm font-extrabold font-mono text-slate-900 dark:text-white">
+                                      {symbol} {p.amount.toLocaleString()}
+                                    </p>
+                                    <p className="text-[10px] text-slate-400 font-mono">
+                                      {p.date}
+                                      {p.note ? ` · ${p.note}` : ""}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2 shrink-0">
+                                  {!pending && (
+                                    <span className="text-[10px] font-mono text-slate-400">
+                                      Total: {symbol} {running.toLocaleString()}
+                                    </span>
+                                  )}
+                                  {pending ? (
+                                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-600 dark:text-amber-400">
+                                      <Hourglass className="w-3.5 h-3.5" />
+                                      Pending
+                                    </span>
+                                  ) : (
+                                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                                  )}
                                 </div>
                               </div>
-                              {pending ? (
-                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-600 dark:text-amber-400 shrink-0">
-                                  <Hourglass className="w-3.5 h-3.5" />
-                                  Pending confirmation
-                                </span>
-                              ) : (
-                                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                              )}
-                            </div>
-                          );
-                        })}
+                            );
+                          });
+                        })()}
                       </div>
                     )}
 
