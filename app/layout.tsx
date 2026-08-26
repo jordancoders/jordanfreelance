@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { FAQ_DATA, SITE_CONFIG } from '@/data/portfolioData';
 import CookieConsent from '@/components/CookieConsent';
+import AccessibilityPanel from '@/components/AccessibilityPanel';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_CONFIG.siteUrl),
@@ -111,7 +112,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className="scroll-smooth" suppressHydrationWarning>
       <head>
-        {/* Inline script: apply saved theme before paint to prevent flash */}
+        {/* Lexend font for dyslexia-friendly mode */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&display=swap" rel="stylesheet" />
+        {/* Inline script: apply saved theme + a11y settings before paint to prevent flash */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(()=>{try{var t=localStorage.getItem('theme');if(t==='dark'||(!t&&matchMedia('(prefers-color-scheme:dark)').matches))document.documentElement.classList.add('dark');else if(t==='light')document.documentElement.classList.remove('dark');else if(matchMedia('(prefers-color-scheme:dark)').matches)document.documentElement.classList.add('dark');}catch(e){}try{var a=JSON.parse(localStorage.getItem('a11y-settings')||'{}');if(a.fontSize&&a.fontSize!==100)document.documentElement.style.setProperty('--a11y-font-scale',a.fontSize/100);if(a.highContrast)document.documentElement.classList.add('a11y-high-contrast');if(a.dyslexiaFont)document.documentElement.classList.add('a11y-dyslexia-font');if(a.reducedMotion)document.documentElement.classList.add('a11y-reduced-motion');}catch(e){}})();`,
+          }}
+        />
         <script
           dangerouslySetInnerHTML={{
             __html: `(()=>{try{var t=localStorage.getItem('theme');if(t==='dark'||(!t&&matchMedia('(prefers-color-scheme:dark)').matches))document.documentElement.classList.add('dark');else if(t==='light')document.documentElement.classList.remove('dark');else if(matchMedia('(prefers-color-scheme:dark)').matches)document.documentElement.classList.add('dark');}catch(e){}})();`,
@@ -133,6 +143,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <div id="main-content" tabIndex={-1} />
         {children}
         <CookieConsent />
+        <AccessibilityPanel />
       </body>
     </html>
   );

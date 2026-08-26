@@ -64,19 +64,6 @@ body {
 
 /* ============ ACCESSIBILITY ============ */
 
-/* Screen-reader only: visually hidden but still readable by assistive tech */
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border-width: 0;
-}
-
 /* Focus-visible: visible ring only for keyboard users, never mouse clicks */
 :focus-visible {
   outline: 2px solid #f97316;
@@ -118,6 +105,54 @@ textarea,
   .sr-only {
     forced-color-adjust: none;
   }
+}
+
+/* ============ ACCESSIBILITY PANEL STYLES ============ */
+
+/* Font size scaling via CSS variable */
+html {
+  font-size: calc(16px * var(--a11y-font-scale, 1));
+}
+
+/* High contrast mode */
+.a11y-high-contrast,
+.a11y-high-contrast * {
+  --foreground: #000000 !important;
+  --muted-foreground: #333333 !important;
+}
+.dark.a11y-high-contrast,
+.dark.a11y-high-contrast * {
+  --foreground: #ffffff !important;
+  --muted-foreground: #cccccc !important;
+}
+.a11y-high-contrast {
+  color: #000000 !important;
+}
+.dark.a11y-high-contrast {
+  color: #ffffff !important;
+}
+.a11y-high-contrast a,
+.a11y-high-contrast button {
+  text-decoration: underline !important;
+  text-decoration-thickness: 2px !important;
+}
+
+/* Dyslexia-friendly font (OpenDyslexic via Google Fonts alternative: Lexend) */
+.a11y-dyslexia-font,
+.a11y-dyslexia-font * {
+  font-family: 'Lexend', 'OpenDyslexic', 'Comic Sans MS', system-ui, sans-serif !important;
+  letter-spacing: 0.02em !important;
+  word-spacing: 0.1em !important;
+  line-height: 1.7 !important;
+}
+
+/* Reduced motion: kill all animations */
+.a11y-reduced-motion,
+.a11y-reduced-motion * {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
 }
 
 /* Custom scrollbar */
