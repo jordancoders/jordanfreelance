@@ -24,10 +24,12 @@ const securityHeaders = [
       // dev additionally needs 'unsafe-eval' for webpack hot reload
       `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
       // Inline styles are used throughout (React style props, signature pad)
-      "style-src 'self' 'unsafe-inline'",
+      // fonts.googleapis.com for Lexend (accessibility dyslexia font)
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       // Project demo images come from picsum/unsplash; signatures are data: URIs
       "img-src 'self' data: blob: https:",
-      "font-src 'self' data:",
+      // fonts.gstatic.com for Lexend font files
+      "font-src 'self' data: https://fonts.gstatic.com",
       "connect-src 'self'",
       "media-src 'self'",
       // Project embeds (staging demos, Google Form on /contact) are https iframes

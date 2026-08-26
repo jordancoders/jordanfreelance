@@ -7,6 +7,7 @@
  * RESEND_API_KEY when configured and silently no-ops otherwise — the in-app
  * notification bell is the always-available fallback.
  */
+import "server-only";
 
 const ADMIN_EMAIL = "jordancodefreelancer@protonmail.com";
 const FROM = "onboarding@resend.dev";
