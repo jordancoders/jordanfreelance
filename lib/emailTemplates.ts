@@ -79,7 +79,7 @@ export function buildQuoteEmailDraft(inv: InvoiceLike): string {
   const start = nextMonday();
   const staging = stagingDate(start);
 
-  return [
+  const body: string[] = [
     `Hi ${inv.clientName},`,
     ``,
     `I've put together your ${docTitle} ${inv.invoiceNumber} for the ${projectTitleOf(inv)}.`,
@@ -93,13 +93,32 @@ export function buildQuoteEmailDraft(inv: InvoiceLike): string {
     `1. You approve the ${docTitle.toLowerCase()} and the ${pct}% kick-off deposit covers the API tokens and kick-off labour.`,
     `2. I start ${prettyDate(start)} and you get a live staging link to click through by ${prettyDate(staging)} — before you pay the balance.`,
     `3. You test it, we do any agreed revisions, and the full source code becomes yours on final payment.`,
+  ];
+
+  // Append proposal sections for quotes
+  if (inv.documentType === "Quote") {
+    if (inv.proposalSummary) body.push(``, `━━━ YOUR PROJECT ━━━`, inv.proposalSummary);
+    if (inv.proposalSolution) body.push(``, `━━━ PROPOSED SOLUTION ━━━`, inv.proposalSolution);
+    if (inv.proposalDeliverables && inv.proposalDeliverables.length > 0) {
+      body.push(``, `━━━ WHAT YOU GET ━━━`);
+      inv.proposalDeliverables.forEach((d) => { body.push(`✓ ${d}`); });
+    }
+    if (inv.proposalTimeline) body.push(``, `━━━ TIMELINE ━━━`, inv.proposalTimeline);
+    if (inv.proposalGuarantee) body.push(``, `━━━ GUARANTEE ━━━`, inv.proposalGuarantee);
+    if (inv.proposalSocialProof) body.push(``, `━━━ WHY US ━━━`, inv.proposalSocialProof);
+    if (inv.proposalNextSteps) body.push(``, `━━━ NEXT STEPS ━━━`, inv.proposalNextSteps);
+  }
+
+  body.push(
     ``,
     `Payment is via PayPal (${SITE_CONFIG.paypalEmail}) or Direct EFT (bank transfer) — proof of payment via WhatsApp ${SITE_CONFIG.whatsappFormatted}.`,
     ...(notes ? [``, `Note: ${notes}`, ``] : [``]),
     `Reply to this email or WhatsApp me to approve, and I'll get your slot booked for ${prettyDate(start)}.`,
     ``,
     signatureBlock(),
-  ].join("\n");
+  );
+
+  return body.join("\n");
 }
 
 // ─── 2. Kick-off / "recipe" email (the plan) ─────────────────────────────────

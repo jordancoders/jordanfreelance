@@ -916,7 +916,24 @@ function AdminDashboardInner() {
     const balance = calculateClientBalance(inv);
     const pct = inv.depositPercent ?? 50;
     const docTitle = inv.documentType === "Quote" ? "Official Quotation" : "Invoice";
-    const text = `Hi ${inv.clientName},\n\nHere is your ${docTitle} ${inv.invoiceNumber} from ${SITE_CONFIG.brandLine}:\n\nProject: ${inv.items[0]?.description || "Custom Web App"}\nTotal Amount: ${symbol} ${total.toLocaleString()}\nKick-off Deposit (${pct}%): ${symbol} ${deposit.toLocaleString()}\nFinal Balance Due: ${symbol} ${balance.toLocaleString()}\n\nPayable via PayPal or Direct EFT (Bank Transfer). Thank you!`;
+
+    let text = `Hi ${inv.clientName},\n\nHere is your ${docTitle} ${inv.invoiceNumber} from ${SITE_CONFIG.brandLine}:\n\nProject: ${inv.items[0]?.description || "Custom Web App"}\nTotal Amount: ${symbol} ${total.toLocaleString()}\nKick-off Deposit (${pct}%): ${symbol} ${deposit.toLocaleString()}\nFinal Balance Due: ${symbol} ${balance.toLocaleString()}`;
+
+    // Append proposal sections for quotes
+    if (inv.documentType === "Quote") {
+      if (inv.proposalSummary) text += `\n\n🎯 *Your Project:*\n${inv.proposalSummary}`;
+      if (inv.proposalSolution) text += `\n\n💡 *Proposed Solution:*\n${inv.proposalSolution}`;
+      if (inv.proposalDeliverables && inv.proposalDeliverables.length > 0) {
+        text += `\n\n📦 *What You Get:*`;
+        inv.proposalDeliverables.forEach((d) => { text += `\n✓ ${d}`; });
+      }
+      if (inv.proposalTimeline) text += `\n\n⏱️ *Timeline:*\n${inv.proposalTimeline}`;
+      if (inv.proposalGuarantee) text += `\n\n🛡️ *Guarantee:*\n${inv.proposalGuarantee}`;
+      if (inv.proposalSocialProof) text += `\n\n⭐ *Why Us:*\n${inv.proposalSocialProof}`;
+      if (inv.proposalNextSteps) text += `\n\n🚀 *Next Steps:*\n${inv.proposalNextSteps}`;
+    }
+
+    text += `\n\nPayable via PayPal or Direct EFT (Bank Transfer). Thank you!`;
     return `https://wa.me/${inv.clientPhone.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(text)}`;
   };
 

@@ -230,6 +230,14 @@ export interface InvoiceLike {
   depositPaid?: number;
   items?: { description?: string; quantity?: number; rate?: number }[];
   declaration?: InvoiceDeclaration;
+  // Quote proposal fields
+  proposalSummary?: string;
+  proposalSolution?: string;
+  proposalDeliverables?: string[];
+  proposalTimeline?: string;
+  proposalGuarantee?: string;
+  proposalSocialProof?: string;
+  proposalNextSteps?: string;
 }
 
 // ─── Site Config ──────────────────────────────────────────────────────────────
