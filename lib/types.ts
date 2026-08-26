@@ -40,6 +40,22 @@ export interface Invoice {
   createdAt: string;
   updatedAt: string;
   declaration?: InvoiceDeclaration;
+
+  // ─── Quote-only proposal fields ────────────────────────────────────────
+  /** Plain-English summary of the client's problem / what they need. */
+  proposalSummary?: string;
+  /** Your proposed solution — what you'll build and the approach. */
+  proposalSolution?: string;
+  /** Key deliverables the client receives (lines). */
+  proposalDeliverables?: string[];
+  /** Timeline overview — when they'll see staging, final delivery, etc. */
+  proposalTimeline?: string;
+  /** Risk reversal: guarantee, refund policy, warranty, etc. */
+  proposalGuarantee?: string;
+  /** Trust signals: testimonials, case studies, stats. */
+  proposalSocialProof?: string;
+  /** Clear next-step CTA: what happens when they accept. */
+  proposalNextSteps?: string;
 }
 
 // ─── Project ──────────────────────────────────────────────────────────────────

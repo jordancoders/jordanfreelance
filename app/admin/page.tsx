@@ -97,7 +97,7 @@ export default function AdminDashboardPage() {
 
 function AdminDashboardInner() {
   const data = useAdminData();
-  // Passcode security state — verified server-side via an httpOnly session cookie
+  // Passcode security state - verified server-side via an httpOnly session cookie
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [pinInput, setPinInput] = useState("");
   const [pinError, setPinError] = useState("");
@@ -139,7 +139,7 @@ function AdminDashboardInner() {
     try {
       localStorage.setItem(NOTIF_SEEN_KEY, String(now));
     } catch {
-      // private mode — ignore
+      // private mode - ignore
     }
     setNotifOpen(false);
   }, []);
@@ -155,7 +155,7 @@ function AdminDashboardInner() {
 
   // Live sync: while the studio is open, silently re-pull from MongoDB so client
   // activity (signatures, replies, payment reports) lands in the bell and lists
-  // without a manual refresh. Visibility-aware — never polls in a hidden tab.
+  // without a manual refresh. Visibility-aware - never polls in a hidden tab.
   const reloadAllRef = useRef(data.reloadAll);
   reloadAllRef.current = data.reloadAll;
   useEffect(() => {
@@ -175,7 +175,7 @@ function AdminDashboardInner() {
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [isEditingInvoice, setIsEditingInvoice] = useState(false);
 
-  // Signed declaration — captured on-screen, embedded in the printed document
+  // Signed declaration - captured on-screen, embedded in the printed document
   // and the full legal PDF bundle (/admin/export). Persisted on the invoice
   // record itself so it survives refreshes and travels with backups.
   const [signatureDataUrl, setSignatureDataUrl] = useState("");
@@ -194,7 +194,7 @@ function AdminDashboardInner() {
       };
       data.updateInvoice(selectedInvoice.id, { declaration: merged }).catch((err) => {
         console.error("[admin] declaration save failed:", err);
-        showToast("Signature save failed — MongoDB unreachable.");
+        showToast("Signature save failed - MongoDB unreachable.");
       });
       // Keep the local selection in sync so a later "Save" never overwrites the
       // freshly captured signature with a stale timestamp / actor.
@@ -238,6 +238,15 @@ function AdminDashboardInner() {
   const [invDepositPaid, setInvDepositPaid] = useState(0);
   const [invNotes, setInvNotes] = useState("Payable via PayPal or Direct EFT (Bank Transfer). Full source code delivered upon final payment.");
 
+  // Quote proposal fields (shown only when documentType === "Quote")
+  const [proposalSummary, setProposalSummary] = useState("");
+  const [proposalSolution, setProposalSolution] = useState("");
+  const [proposalDeliverables, setProposalDeliverables] = useState<string[]>([]);
+  const [proposalTimeline, setProposalTimeline] = useState("");
+  const [proposalGuarantee, setProposalGuarantee] = useState("14-day bug-fix warranty. 7-day data erasure. You own the source code.");
+  const [proposalSocialProof, setProposalSocialProof] = useState("");
+  const [proposalNextSteps, setProposalNextSteps] = useState("Reply YES to this quote to get started. I will send your deposit invoice within 24 hours.");
+
   // API Tracker State
   const [apiModels, setApiModels] = useState<ApiPricingModel[]>(LIVE_API_MODELS);
   const [isSyncingPricing, setIsSyncingPricing] = useState(false);
@@ -278,15 +287,15 @@ function AdminDashboardInner() {
         setSyncFailed(false);
         const liveN = data.liveModelsUpdated ?? 0;
         showToast(liveN > 0
-          ? `Live pricing synced — ${liveN} models updated from OpenRouter. ${data.models.length} total.`
-          : `Reference pricing loaded — ${data.models.length} models. Verify rates before quoting.`);
+          ? `Live pricing synced - ${liveN} models updated from OpenRouter. ${data.models.length} total.`
+          : `Reference pricing loaded - ${data.models.length} models. Verify rates before quoting.`);
       } else {
         setSyncFailed(true);
         showToast("Reference pricing snapshot refreshed.");
       }
     } catch (err) {
       setSyncFailed(true);
-      showToast("Could not load reference pricing — using snapshot.");
+      showToast("Could not load reference pricing - using snapshot.");
       if (process.env.NODE_ENV === "development") console.error("[API Tracker] sync failed:", err);
     } finally {
       isSyncingPricingRef.current = false;
@@ -465,7 +474,17 @@ function AdminDashboardInner() {
               signedAt: selectedInvoice?.declaration?.signedAt || new Date().toISOString(),
               signedBy: selectedInvoice?.declaration?.signedBy,
             }
-          : selectedInvoice?.declaration
+          : selectedInvoice?.declaration,
+      // Proposal fields (quotes only)
+      ...(invDocType === "Quote" && {
+        proposalSummary: proposalSummary.trim() || undefined,
+        proposalSolution: proposalSolution.trim() || undefined,
+        proposalDeliverables: proposalDeliverables.length > 0 ? proposalDeliverables : undefined,
+        proposalTimeline: proposalTimeline.trim() || undefined,
+        proposalGuarantee: proposalGuarantee.trim() || undefined,
+        proposalSocialProof: proposalSocialProof.trim() || undefined,
+        proposalNextSteps: proposalNextSteps.trim() || undefined,
+      }),
     };
 
     try {
@@ -482,7 +501,7 @@ function AdminDashboardInner() {
       }
     } catch (err) {
       console.error("[admin] invoice save failed:", err);
-      showToast("Save failed — MongoDB unreachable. Your changes were not saved.");
+      showToast("Save failed - MongoDB unreachable. Your changes were not saved.");
       return;
     }
     setSelectedInvoice(updatedInvoice);
@@ -507,6 +526,14 @@ function AdminDashboardInner() {
     setInvDepositPercent(50);
     setInvDepositPaid(0);
     setInvNotes("Payable via PayPal or Direct EFT (Bank Transfer). 48-Hour Staging Guarantee applied.");
+    // Reset proposal fields for new quotes
+    setProposalSummary("");
+    setProposalSolution("");
+    setProposalDeliverables([]);
+    setProposalTimeline("");
+    setProposalGuarantee("14-day bug-fix warranty. 7-day data erasure. You own the source code.");
+    setProposalSocialProof("");
+    setProposalNextSteps("Reply \"YES\" to this quote to get started - I'll send your deposit invoice within 24 hours.");
   };
 
   const handleEditInvoiceClick = (inv: Invoice) => {
@@ -526,6 +553,13 @@ function AdminDashboardInner() {
     setInvDepositPercent(inv.depositPercent ?? 50);
     setInvDepositPaid(inv.depositPaid);
     setInvNotes(inv.notes);
+    setProposalSummary(inv.proposalSummary || "");
+    setProposalSolution(inv.proposalSolution || "");
+    setProposalDeliverables(inv.proposalDeliverables || []);
+    setProposalTimeline(inv.proposalTimeline || "");
+    setProposalGuarantee(inv.proposalGuarantee || "");
+    setProposalSocialProof(inv.proposalSocialProof || "");
+    setProposalNextSteps(inv.proposalNextSteps || "");
   };
 
   const handleDeleteInvoice = async (id: string) => {
@@ -555,7 +589,7 @@ function AdminDashboardInner() {
     return (inv.items || []).reduce((sum, item) => sum + (item.quantity || 0) * (item.rate || 0), 0);
   };
 
-  // No tax (VAT/GST) is ever applied — the total always equals the subtotal.
+  // No tax (VAT/GST) is ever applied - the total always equals the subtotal.
   const calculateInvoiceTotal = (inv: Invoice) => {
     return calculateInvoiceSubtotal(inv);
   };
@@ -617,7 +651,7 @@ function AdminDashboardInner() {
       }
     } catch (err) {
       console.error("[admin] project save failed:", err);
-      showToast("Save failed — MongoDB unreachable. Your changes were not saved.");
+      showToast("Save failed - MongoDB unreachable. Your changes were not saved.");
       return;
     }
     setSelectedProject(updatedProject);
@@ -685,7 +719,7 @@ function AdminDashboardInner() {
       return;
     }
     if (file.size > 1024 * 1024) {
-      showToast("Image too large — keep it under 1 MB (local browser storage).");
+      showToast("Image too large - keep it under 1 MB (local browser storage).");
       return;
     }
     const reader = new FileReader();
@@ -724,7 +758,7 @@ function AdminDashboardInner() {
       }
     } catch (err) {
       console.error("[admin] review save failed:", err);
-      showToast("Save failed — MongoDB unreachable. Your changes were not saved.");
+      showToast("Save failed - MongoDB unreachable. Your changes were not saved.");
       return;
     }
     setSelectedReview(updatedReview);
@@ -802,7 +836,7 @@ function AdminDashboardInner() {
         };
 
         if (!backup.invoices && !backup.projects && !backup.reviews && !backup.clients) {
-          showToast("Invalid backup — expected { invoices: [], projects: [], reviews: [], clients: [] }.");
+          showToast("Invalid backup - expected { invoices: [], projects: [], reviews: [], clients: [] }.");
           return;
         }
 
@@ -812,17 +846,17 @@ function AdminDashboardInner() {
         setSelectedReview(null);
         showToast("JSON backup imported & restored!");
       } catch {
-        showToast("Could not read that file — please choose a valid JSON backup.");
+        showToast("Could not read that file - please choose a valid JSON backup.");
       }
     };
     reader.onerror = () => {
-      showToast("Could not read that file — please choose a valid JSON backup.");
+      showToast("Could not read that file - please choose a valid JSON backup.");
     };
     reader.readAsText(file);
   };
 
   const handleClearCache = async () => {
-    // Source of truth is MongoDB — "resetting the cache" means re-fetching
+    // Source of truth is MongoDB - "resetting the cache" means re-fetching
     // everything from the database, never seeding or overwriting live data.
     await data.reloadAll();
     setSelectedInvoice(null);
@@ -882,40 +916,40 @@ function AdminDashboardInner() {
       const ok = document.execCommand("copy");
       document.body.removeChild(ta);
       if (ok) showToast(okLabel);
-      else showToast(failLabel || "Could not copy automatically — long-press to select & copy.");
+      else showToast(failLabel || "Could not copy automatically - long-press to select & copy.");
     }
   };
 
   const handleCopyEmailDraft = async (inv: Invoice) => {
     await copyTextToClipboard(
       buildQuoteEmailDraft(inv),
-      `Quote email copied — paste it into Gmail to send to ${inv.clientName}.`
+      `Quote email copied - paste it into Gmail to send to ${inv.clientName}.`
     );
   };
 
   const handleCopyKickoffEmail = async (inv: Invoice) => {
     await copyTextToClipboard(
       buildKickoffEmailDraft(inv),
-      `Kick-off email copied — paste it into Gmail to send to ${inv.clientName}.`
+      `Kick-off email copied - paste it into Gmail to send to ${inv.clientName}.`
     );
   };
 
   const handleCopyHandoverEmail = async (inv: Invoice) => {
     await copyTextToClipboard(
       buildHandoverEmailDraft(inv),
-      `Final handover email copied — paste it into Gmail to send to ${inv.clientName}.`
+      `Final handover email copied - paste it into Gmail to send to ${inv.clientName}.`
     );
   };
 
   const handleCopySignRequestEmail = async (inv: Invoice) => {
     await copyTextToClipboard(
       buildSignRequestEmailDraft(inv),
-      `Sign-request email copied — attach the PDF and send it to ${inv.clientName}.`
+      `Sign-request email copied - attach the PDF and send it to ${inv.clientName}.`
     );
   };
 
   const getMailtoShareUrl = (inv: Invoice) => {
-    // Keep the mailto body concise — the full draft (buildEmailDraft) percent-encodes to
+    // Keep the mailto body concise - the full draft (buildEmailDraft) percent-encodes to
     // ~3x its size and can exceed mail clients' mailto: URL length limits, truncating it.
     // Use the "Copy Email" button for the complete draft.
     const symbol = inv.currency === "ZAR" ? "R" : "$";
@@ -1090,7 +1124,7 @@ function AdminDashboardInner() {
                                 />
                                 <span className="min-w-0">
                                   <span className="block text-xs font-bold text-slate-900 dark:text-white truncate">
-                                    {n.clientName} — {n.action}
+                                    {n.clientName} - {n.action}
                                   </span>
                                   {n.detail && <span className="block text-[10px] text-slate-500 truncate">{n.detail}</span>}
                                   <span className="block text-[10px] text-slate-400 font-mono mt-0.5">
@@ -1534,12 +1568,12 @@ function AdminDashboardInner() {
                           </div>
                         </div>
 
-                        {/* Deposit & Payment — per-document deposit % */}
+                        {/* Deposit & Payment - per-document deposit % */}
                         <div className="space-y-4 pt-4 border-t border-slate-200 dark:border-slate-800">
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <div>
                               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                                Deposit Percentage (%) — unique to this {invDocType.toLowerCase()}
+                                Deposit Percentage (%) - unique to this {invDocType.toLowerCase()}
                               </label>
                               <input
                                 type="number"
@@ -1583,7 +1617,7 @@ function AdminDashboardInner() {
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                                Deposit Received ({invCurrency === "ZAR" ? "R" : "$"}) — tracking only
+                                Deposit Received ({invCurrency === "ZAR" ? "R" : "$"}) - tracking only
                               </label>
                               <input
                                 type="number"
@@ -1606,6 +1640,111 @@ function AdminDashboardInner() {
                             </div>
                           </div>
                         </div>
+
+                        {/* ── PROPOSAL FIELDS (quotes only) ── */}
+                        {invDocType === "Quote" && (
+                          <div className="space-y-6 pt-4 border-t border-slate-200 dark:border-slate-800">
+                            <div className="flex items-center gap-2 mb-2">
+                              <FileText className="w-5 h-5 text-orange-500" />
+                              <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">Proposal Builder - Win the Client</h3>
+                              <span className="text-[10px] text-slate-400 font-mono ml-auto">These sections appear on the printed quote to make it compelling, not just a price list.</span>
+                            </div>
+
+                            {/* Project Understanding */}
+                            <div>
+                              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                                🎯 Client Problem / What They Need
+                              </label>
+                              <textarea
+                                value={proposalSummary}
+                                onChange={(e) => setProposalSummary(e.target.value)}
+                                rows={3}
+                                placeholder={"e.g. We need a dispatch dashboard to replace spreadsheets - it's costing us 10+ hours a week."}
+                                className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs text-slate-900 dark:text-white resize-none"
+                              />
+                            </div>
+
+                            {/* Solution */}
+                            <div>
+                              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                                💡 Your Proposed Solution
+                              </label>
+                              <textarea
+                                value={proposalSolution}
+                                onChange={(e) => setProposalSolution(e.target.value)}
+                                rows={3}
+                                placeholder={"e.g. A custom web dashboard with real-time GPS tracking and notifications."}
+                                className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs text-slate-900 dark:text-white resize-none"
+                              />
+                            </div>
+
+                            {/* Deliverables */}
+                            <div>
+                              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                                📦 What You Deliver (one per line)
+                              </label>
+                              <textarea
+                                value={proposalDeliverables.join("\n")}
+                                onChange={(e) => setProposalDeliverables(e.target.value.split("\n").filter((l) => l.trim()))}
+                                rows={4}
+                                placeholder="Custom web dashboard (6 pages)&#10;WhatsApp driver notification engine&#10;Staging demo link (live, clickable)&#10;Full source code ownership&#10;14-day bug-fix warranty"
+                                className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs text-slate-900 dark:text-white resize-none font-mono"
+                              />
+                            </div>
+
+                            {/* Timeline */}
+                            <div>
+                              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                                ⏱️ Timeline - When They'll See Results
+                              </label>
+                              <textarea
+                                value={proposalTimeline}
+                                onChange={(e) => setProposalTimeline(e.target.value)}
+                                rows={2}
+                                placeholder={"e.g. Kick-off Monday. Staging demo by Wednesday. Final delivery within 10 business days."}
+                                className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs text-slate-900 dark:text-white resize-none"
+                              />
+                            </div>
+
+                            {/* Guarantee + Social Proof + Next Steps */}
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                              <div>
+                                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                                  🛡️ Guarantee / Risk Reversal
+                                </label>
+                                <textarea
+                                  value={proposalGuarantee}
+                                  onChange={(e) => setProposalGuarantee(e.target.value)}
+                                  rows={3}
+                                  className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs text-slate-900 dark:text-white resize-none"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                                  ⭐ Social Proof / Trust Signals
+                                </label>
+                                <textarea
+                                  value={proposalSocialProof}
+                                  onChange={(e) => setProposalSocialProof(e.target.value)}
+                                  rows={3}
+                                  placeholder={"e.g. Built 12 dashboards for SA SMEs. 4.9 star rating. POPIA-aligned."}
+                                  className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs text-slate-900 dark:text-white resize-none"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                                  🚀 Next Steps / CTA
+                                </label>
+                                <textarea
+                                  value={proposalNextSteps}
+                                  onChange={(e) => setProposalNextSteps(e.target.value)}
+                                  rows={3}
+                                  className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs text-slate-900 dark:text-white resize-none"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        )}
 
                         <div className="flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
                           <button
@@ -1751,7 +1890,7 @@ function AdminDashboardInner() {
                                 <button
                                   onClick={() => handleCopySignRequestEmail(selectedInvoice)}
                                   className="p-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold transition-colors flex items-center gap-1"
-                                  title="Copy the sign-request email — attach the PDF and ask the client to sign it"
+                                  title="Copy the sign-request email - attach the PDF and ask the client to sign it"
                                 >
                                   <PenLine className="w-3.5 h-3.5" />
                                   Sign Req
@@ -1850,7 +1989,7 @@ function AdminDashboardInner() {
                               </table>
                             </div>
 
-                            {/* Totals Summary — no tax, deposit % split */}
+                            {/* Totals Summary - no tax, deposit % split */}
                             <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl space-y-2 text-xs font-mono">
                               <div className="flex justify-between text-slate-600 dark:text-slate-400">
                                 <span>Subtotal (Total):</span>
@@ -1881,7 +2020,7 @@ function AdminDashboardInner() {
                               </div>
                             </div>
 
-                            {/* SIGNED DECLARATION — captured here, printed on the document */}
+                            {/* SIGNED DECLARATION - captured here, printed on the document */}
                             <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border-2 border-dashed border-slate-300 dark:border-slate-600 space-y-4">
                               <div className="flex items-center gap-2">
                                 <PenLine className="w-4 h-4 text-orange-500" />
@@ -2003,7 +2142,7 @@ function AdminDashboardInner() {
                             {isSyncingPricing
                               ? "Syncing…"
                               : syncFailed
-                              ? "Sync failed — showing last rates"
+                              ? "Sync failed - showing last rates"
                               : `${syncSource} · ${lastSyncedTime}`}
                           </span>
                         </div>
@@ -2487,8 +2626,8 @@ function AdminDashboardInner() {
                               onChange={(e) => setProjStatus(e.target.value as "draft" | "published")}
                               className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm font-bold text-slate-900 dark:text-white"
                             >
-                              <option value="published">Published — live on the site</option>
-                              <option value="draft">Draft — hidden from public site</option>
+                              <option value="published">Published - live on the site</option>
+                              <option value="draft">Draft - hidden from public site</option>
                             </select>
                           </div>
                         </div>
@@ -2506,7 +2645,7 @@ function AdminDashboardInner() {
                             />
                             <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">
                               Paste a deployed site URL to embed it <strong>live</strong> in the homepage showcase room (replaces the sample Tourism demo).
-                              Works best with Vercel / Netlify deployments. Sites that block iframes (Google, GitHub, Facebook) will show a blank frame — use the &ldquo;Open in New Tab&rdquo; button for those. Leave empty to keep the current demo.
+                              Works best with Vercel / Netlify deployments. Sites that block iframes (Google, GitHub, Facebook) will show a blank frame - use the &ldquo;Open in New Tab&rdquo; button for those. Leave empty to keep the current demo.
                             </p>
                         </div>
 
@@ -2717,8 +2856,8 @@ function AdminDashboardInner() {
                               onChange={(e) => setRevStatus(e.target.value as "draft" | "published")}
                               className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm font-bold text-slate-900 dark:text-white"
                             >
-                              <option value="published">Published — live on the site</option>
-                              <option value="draft">Draft — hidden from public site</option>
+                              <option value="published">Published - live on the site</option>
+                              <option value="draft">Draft - hidden from public site</option>
                             </select>
                           </div>
                         </div>
@@ -2760,7 +2899,7 @@ function AdminDashboardInner() {
                                 </button>
                               )}
                             </div>
-                            <p className="text-[10px] text-slate-400 mt-1">Stored in your browser (local-first) — keep under 1 MB.</p>
+                            <p className="text-[10px] text-slate-400 mt-1">Stored in your browser (local-first) - keep under 1 MB.</p>
                           </div>
 
                           <div>
@@ -2816,7 +2955,7 @@ function AdminDashboardInner() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {data.reviews.length === 0 && (
                         <div className="md:col-span-2 lg:col-span-3 p-12 text-center rounded-3xl bg-white dark:bg-[#0D1A2D] border border-dashed border-slate-300 dark:border-slate-700 text-slate-400">
-                          No reviews yet. Create your first verified client review above — published reviews show on /testimonials and the homepage.
+                          No reviews yet. Create your first verified client review above - published reviews show on /testimonials and the homepage.
                         </div>
                       )}
                       {data.reviews.map((r) => (
@@ -3107,7 +3246,7 @@ function AdminDashboardInner() {
                           </div>
                           <div>
                             <h3 className="text-sm font-bold text-slate-900 dark:text-white">Site Logo</h3>
-                            <p className="text-xs text-slate-500">Upload your logo image — appears in the header, footer, and printed invoices. Leave blank to use the default SVG mark.</p>
+                            <p className="text-xs text-slate-500">Upload your logo image - appears in the header, footer, and printed invoices. Leave blank to use the default SVG mark.</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-4 pt-2">
@@ -3165,7 +3304,7 @@ function AdminDashboardInner() {
                           </div>
                           <div>
                             <h3 className="text-sm font-bold text-slate-900 dark:text-white">Social Profile Links</h3>
-                            <p className="text-xs text-slate-500">Paste your profile URLs below — each icon appears site-wide (Footer, About) the moment it is saved. Leave blank to hide an icon.</p>
+                            <p className="text-xs text-slate-500">Paste your profile URLs below - each icon appears site-wide (Footer, About) the moment it is saved. Leave blank to hide an icon.</p>
                           </div>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
@@ -3174,7 +3313,7 @@ function AdminDashboardInner() {
                             { key: "linkedinUrl" as const, label: "LinkedIn", placeholder: "https://linkedin.com/in/yourname" },
                             { key: "facebookUrl" as const, label: "Facebook", placeholder: "https://facebook.com/yourname" },
                             { key: "discordUrl" as const, label: "Discord", placeholder: "https://discord.gg/yourinvite or profile" },
-                            { key: "repoUrl" as const, label: "Portfolio Repo (GitHub)", placeholder: "https://github.com/yourname/portfolio — shown in About + Footer" }
+                            { key: "repoUrl" as const, label: "Portfolio Repo (GitHub)", placeholder: "https://github.com/yourname/portfolio - shown in About + Footer" }
                           ].map((field) => (
                             <label key={field.key} className="block">
                               <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">{field.label}</span>
@@ -3208,7 +3347,7 @@ function AdminDashboardInner() {
         </div>
       </main>
 
-      {/* PRINT-ONLY INVOICE / QUOTE DOCUMENT — shown on paper only, so printing
+      {/* PRINT-ONLY INVOICE / QUOTE DOCUMENT - shown on paper only, so printing
           from the admin never dumps the entire dashboard onto the page. */}
       {selectedInvoice && (
         <div className="hidden print:block print-exact bg-white text-slate-900">
@@ -3228,7 +3367,7 @@ function AdminDashboardInner() {
 
               <div className="text-right font-mono text-xs bg-slate-50 border border-slate-300 p-4 rounded-xl">
                 <div className="text-sm font-bold text-orange-600 uppercase tracking-widest font-sans">
-                  {selectedInvoice.documentType || "Invoice"}
+                  {selectedInvoice.documentType === "Quote" ? "Proposal / Quotation" : selectedInvoice.documentType || "Invoice"}
                 </div>
                 <div className="font-bold text-slate-900 text-sm mt-1"># {selectedInvoice.invoiceNumber}</div>
                 <div>Issue: {selectedInvoice.issueDate}</div>
@@ -3314,6 +3453,73 @@ function AdminDashboardInner() {
               </div>
             </div>
 
+            {/* ── PROPOSAL SECTIONS (quotes only) ── */}
+            {selectedInvoice.documentType === "Quote" && (
+              <div className="mt-8 space-y-6 break-inside-avoid">
+                {selectedInvoice.proposalSummary && (
+                  <div className="p-5 rounded-xl border-2 border-orange-200 bg-orange-50">
+                    <h4 className="font-black text-orange-700 text-xs uppercase tracking-widest mb-2">
+                      🎯 Your Project
+                    </h4>
+                    <p className="text-sm text-slate-800 leading-relaxed whitespace-pre-wrap">{selectedInvoice.proposalSummary}</p>
+                  </div>
+                )}
+                {selectedInvoice.proposalSolution && (
+                  <div className="p-5 rounded-xl border-2 border-emerald-200 bg-emerald-50">
+                    <h4 className="font-black text-emerald-700 text-xs uppercase tracking-widest mb-2">
+                      💡 Proposed Solution
+                    </h4>
+                    <p className="text-sm text-slate-800 leading-relaxed whitespace-pre-wrap">{selectedInvoice.proposalSolution}</p>
+                  </div>
+                )}
+                {selectedInvoice.proposalDeliverables && selectedInvoice.proposalDeliverables.length > 0 && (
+                  <div className="p-5 rounded-xl border border-slate-200 bg-slate-50">
+                    <h4 className="font-black text-slate-900 text-xs uppercase tracking-widest mb-2">
+                      📦 What You Get
+                    </h4>
+                    <ul className="space-y-1.5">
+                      {selectedInvoice.proposalDeliverables.map((d, i) => (
+                        <li key={i} className="flex items-start gap-2 text-sm text-slate-800">
+                          <span className="text-emerald-600 mt-0.5">✓</span>
+                          <span>{d}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {selectedInvoice.proposalTimeline && (
+                  <div className="p-5 rounded-xl border border-blue-200 bg-blue-50">
+                    <h4 className="font-black text-blue-700 text-xs uppercase tracking-widest mb-2">
+                      ⏱️ Timeline
+                    </h4>
+                    <p className="text-sm text-slate-800 leading-relaxed whitespace-pre-wrap">{selectedInvoice.proposalTimeline}</p>
+                  </div>
+                )}
+                {(selectedInvoice.proposalGuarantee || selectedInvoice.proposalSocialProof || selectedInvoice.proposalNextSteps) && (
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    {selectedInvoice.proposalGuarantee && (
+                      <div className="p-4 rounded-xl bg-slate-900 text-white">
+                        <h4 className="font-bold text-xs text-orange-400 uppercase mb-2">🛡️ Guarantee</h4>
+                        <p className="text-xs text-slate-300 leading-relaxed whitespace-pre-wrap">{selectedInvoice.proposalGuarantee}</p>
+                      </div>
+                    )}
+                    {selectedInvoice.proposalSocialProof && (
+                      <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                        <h4 className="font-bold text-xs text-slate-900 uppercase mb-2">⭐ Trust Signals</h4>
+                        <p className="text-xs text-slate-600 leading-relaxed whitespace-pre-wrap">{selectedInvoice.proposalSocialProof}</p>
+                      </div>
+                    )}
+                    {selectedInvoice.proposalNextSteps && (
+                      <div className="p-4 rounded-xl bg-orange-50 border-2 border-orange-300">
+                        <h4 className="font-bold text-xs text-orange-700 uppercase mb-2">🚀 Next Steps</h4>
+                        <p className="text-xs text-orange-900 leading-relaxed font-semibold whitespace-pre-wrap">{selectedInvoice.proposalNextSteps}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
             {selectedInvoice.notes && (
               <div className="mt-6 text-xs text-slate-600 border-t border-slate-300 pt-3 break-inside-avoid">
                 <strong className="text-slate-900 block mb-1">Notes:</strong>
@@ -3325,10 +3531,10 @@ function AdminDashboardInner() {
               Payment of this {selectedInvoice.documentType.toLowerCase()} constitutes acceptance of the Master Services
               Agreement, Privacy Policy, POPIA Compliance Policy, and the No-Gamble Guarantee. Source code is released only
               upon final payment. All confidential client datasets are permanently destroyed within 7 calendar days of
-              handover — a voluntary commitment that exceeds the statutory duty under Section 14 of POPIA.
+              handover - a voluntary commitment that exceeds the statutory duty under Section 14 of POPIA.
             </div>
 
-            {/* SIGNED DECLARATION — print block */}
+            {/* SIGNED DECLARATION - print block */}
             {(signatureDataUrl || signerName) && (
               <div className="mt-8 border-2 border-slate-900 p-6 break-inside-avoid">
                 <h4 className="font-black text-slate-900 text-sm uppercase tracking-widest mb-3">
