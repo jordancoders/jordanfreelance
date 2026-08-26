@@ -87,9 +87,10 @@ export function computePercentComplete(acc: ClientPortalAccount): number {
   if (typeof acc.percentComplete === "number" && acc.percentComplete >= 0 && acc.percentComplete <= 100) {
     return Math.round(acc.percentComplete);
   }
-  const total = acc.progress.length;
+  const progress = acc.progress || [];
+  const total = progress.length;
   if (!total) return 0;
-  return Math.round((acc.progress.filter((p) => p.status === "completed").length / total) * 100);
+  return Math.round((progress.filter((p) => p.status === "completed").length / total) * 100);
 }
 
 /** Sum of every recorded payment for a project. */

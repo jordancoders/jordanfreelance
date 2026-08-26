@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { fetchClients, addClient, editClient, removeClient } from "@/app/actions/clients";
+import { normalizeClientAccount } from "@/lib/clientPortal";
 import type { ClientPortalAccount } from "@/lib/types";
 
 export function useClients() {
@@ -15,7 +16,7 @@ export function useClients() {
     setError(null);
     try {
       const data = await fetchClients();
-      setClients(data);
+      setClients(data.map(normalizeClientAccount));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load clients");
     } finally {
