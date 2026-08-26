@@ -511,7 +511,7 @@ function AdminDashboardInner() {
     setInvIssueDate(inv.issueDate);
     setInvDueDate(inv.dueDate);
     setInvStatus(inv.status);
-    setInvItems(inv.items);
+    setInvItems(inv.items || [{ id: "1", description: "", quantity: 1, rate: 0 }]);
     setInvDepositPercent(inv.depositPercent ?? 50);
     setInvDepositPaid(inv.depositPaid);
     setInvNotes(inv.notes);
@@ -541,7 +541,7 @@ function AdminDashboardInner() {
   };
 
   const calculateInvoiceSubtotal = (inv: Invoice) => {
-    return inv.items.reduce((sum, item) => sum + item.quantity * item.rate, 0);
+    return (inv.items || []).reduce((sum, item) => sum + (item.quantity || 0) * (item.rate || 0), 0);
   };
 
   // No tax (VAT/GST) is ever applied — the total always equals the subtotal.
@@ -1541,7 +1541,7 @@ function AdminDashboardInner() {
                             </div>
 
                             {(() => {
-                              const sub = invItems.reduce((sum, item) => sum + item.quantity * item.rate, 0);
+                              const sub = (invItems || []).reduce((sum, item) => sum + (item.quantity || 0) * (item.rate || 0), 0);
                               const pct = Number(invDepositPercent) || 50;
                               const dep = Math.round((sub * pct) / 100);
                               const bal = Math.max(0, sub - dep);

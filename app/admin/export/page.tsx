@@ -66,7 +66,7 @@ function ExportContent() {
 
   const symbol = invoice?.currency === "USD" ? "$" : "R";
   const subtotal = invoice
-    ? invoice.items.reduce((sum, it) => sum + it.quantity * it.rate, 0)
+    ? (invoice.items || []).reduce((sum, it) => sum + (it.quantity || 0) * (it.rate || 0), 0)
     : 0;
   const depositPct = invoice?.depositPercent ?? 50;
   const deposit = (subtotal * depositPct) / 100;
