@@ -10,7 +10,7 @@
 
 import { SITE_CONFIG } from "@/data/portfolioData";
 import type { ClientPortalAccount, InvoiceLike } from "./clientPortal";
-import { buildInviteCard } from "./clientPortal";
+
 
 // ─── Date helpers ────────────────────────────────────────────────────────────
 
@@ -190,12 +190,10 @@ const portalUrl = () => `${SITE_CONFIG.siteUrl}/client`;
 /** The invite text. `channel` tweaks formatting for WhatsApp vs email. */
 export function buildCPInviteMessage(
   account: ClientPortalAccount,
-  channel: "email" | "whatsapp" = "email",
-  inviteCode?: string
+  channel: "email" | "whatsapp" = "email"
 ): string {
   const name = account.clientName || account.username;
   const project = account.document?.projectTitle || "your project";
-  const card = buildInviteCard(account);
   const divider = channel === "whatsapp" ? "──────────────" : "━━━━━━━━━━━━━━━━━━━━";
 
   const body = [
@@ -208,19 +206,13 @@ export function buildCPInviteMessage(
     `${divider}`,
     `🔗 PORTAL: ${portalUrl()}`,
     `👤 USERNAME: ${account.username}`,
-    ...(inviteCode ? [`🎫 INVITE CODE: ${inviteCode}`] : [`🔑 PASSWORD: ${account.password}`]),
+    `🔑 PASSWORD: ${account.password}`,
     `${divider}`,
     ``,
     `How to log in:`,
     `1. Open the portal link above.`,
-    ...(inviteCode
-      ? [`2. Enter your username and the invite code above.`]
-      : [`2. Paste your access card (below) into the "Have an invite card?" box — this loads your dashboard on your device.`, `3. Log in with the username and password above.`]),
-    ``,
-    `Keep this card private — it's your personal access. When I send you an updated card, just paste it again to refresh your tracker.`,
-    ``,
-    `Here is your access card:`,
-    `${card}`,
+    `2. Enter your username and password.`,
+    `3. You're in — your dashboard is live.`,
     ``,
     `If you have any questions, WhatsApp me on ${SITE_CONFIG.whatsappFormatted}.`,
     ``,
@@ -269,6 +261,6 @@ export function buildWhatsAppAssetShare(account: ClientPortalAccount, label: str
 }
 
 /** Pre-filled WhatsApp share link for the CP invite. */
-export function buildCPWhatsAppUrl(account: ClientPortalAccount, inviteCode?: string): string {
-  return buildWhatsAppShareUrl(account, buildCPInviteMessage(account, "whatsapp", inviteCode));
+export function buildCPWhatsAppUrl(account: ClientPortalAccount): string {
+  return buildWhatsAppShareUrl(account, buildCPInviteMessage(account, "whatsapp"));
 }

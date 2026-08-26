@@ -109,8 +109,14 @@ const faqJsonLd = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="dark scroll-smooth">
+    <html lang="en" className="scroll-smooth" suppressHydrationWarning>
       <head>
+        {/* Inline script: apply saved theme before paint to prevent flash */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(()=>{try{var t=localStorage.getItem('theme');if(t==='dark'||(!t&&matchMedia('(prefers-color-scheme:dark)').matches))document.documentElement.classList.add('dark');else if(t==='light')document.documentElement.classList.remove('dark');else if(matchMedia('(prefers-color-scheme:dark)').matches)document.documentElement.classList.add('dark');}catch(e){}})();`,
+          }}
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -120,7 +126,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
         />
       </head>
-      <body suppressHydrationWarning className="min-h-screen bg-slate-50 dark:bg-[#070D17] text-slate-900 dark:text-slate-100 font-sans antialiased selection:bg-orange-500 selection:text-white">
+      <body className="min-h-screen bg-slate-50 dark:bg-[#070D17] text-slate-900 dark:text-slate-100 font-sans antialiased selection:bg-orange-500 selection:text-white">
+        <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:rounded-xl focus:bg-orange-500 focus:text-white focus:font-bold focus:text-sm focus:shadow-lg focus:outline-none">
+          Skip to main content
+        </a>
+        <div id="main-content" tabIndex={-1} />
         {children}
         <CookieConsent />
       </body>

@@ -65,7 +65,7 @@ export default function Header() {
       />
 
       {/* Solid Opaque Drawer Sheet */}
-      <div className="relative w-[85vw] max-w-xs sm:max-w-sm bg-white dark:bg-[#080F1D] h-full shadow-2xl border-l border-slate-200 dark:border-slate-800 flex flex-col justify-between z-10 transition-transform duration-200">
+      <div role="dialog" aria-modal="true" aria-label="Navigation menu" className="relative w-[85vw] max-w-xs sm:max-w-sm bg-white dark:bg-[#080F1D] h-full shadow-2xl border-l border-slate-200 dark:border-slate-800 flex flex-col justify-between z-10 transition-transform duration-200">
         {/* Drawer Header */}
         <div>
           <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/90">
@@ -94,7 +94,7 @@ export default function Header() {
           </div>
 
           {/* Drawer Links */}
-          <nav className="p-4 space-y-1.5 overflow-y-auto max-h-[calc(100vh-230px)]">
+          <nav aria-label="Mobile navigation" className="p-4 space-y-1.5 overflow-y-auto max-h-[calc(100vh-230px)]">
             {navLinks.map((link) => {
               const Icon = link.icon;
               const active = isActive(link.href);
@@ -171,7 +171,7 @@ export default function Header() {
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden lg:flex items-center gap-1">
+        <nav aria-label="Main navigation" className="hidden lg:flex items-center gap-1">
           {navLinks.map((link) => (
             <Link
               key={link.href}

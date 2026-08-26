@@ -12,21 +12,6 @@ import type {
   ActivityEntry,
 } from "./types";
 
-// ─── Invite Code (random one-time tokens) ────────────────────────────────────
-
-/** Generate a random 12-char alphanumeric invite code. Works in browser + Node. */
-export function generateInviteCode(): string {
-  const chars = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
-  const array = new Uint8Array(12);
-  // Web Crypto API (browser) or Node.js crypto global
-  if (typeof globalThis.crypto?.getRandomValues === "function") {
-    globalThis.crypto.getRandomValues(array);
-  } else {
-    for (let i = 0; i < 12; i++) array[i] = Math.floor(Math.random() * 256);
-  }
-  return Array.from(array, (b) => chars[b % chars.length]).join("");
-}
-
 export type { InvoiceLike, ClientPortalAccount, ProgressUpdate, PaymentRecord, SharedAsset } from "./types";
 
 /** localStorage key — kept for backward compatibility with old invite cards. */

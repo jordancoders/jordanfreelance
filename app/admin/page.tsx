@@ -58,7 +58,8 @@ import type { Invoice, ClientPortalAccount, InvoiceItem } from "@/lib/types";
 interface OfficialPricingLink {
   provider: string;
   url: string;
-  examplePriceNote: string;
+  examplePriceNote?: string;
+  note?: string;
 }
 
 const OFFICIAL_PRICING_LINKS: OfficialPricingLink[] = [
@@ -240,6 +241,9 @@ function AdminDashboardInner() {
   const [apiModels, setApiModels] = useState<ApiPricingModel[]>(LIVE_API_MODELS);
   const [isSyncingPricing, setIsSyncingPricing] = useState(false);
   const [lastSyncedTime, setLastSyncedTime] = useState<string>("Just now");
+  const [syncSource, setSyncSource] = useState<string>("Static snapshot");
+  const [officialLinks, setOfficialLinks] = useState<OfficialPricingLink[]>(OFFICIAL_PRICING_LINKS);
+  const [comparisonTools, setComparisonTools] = useState<OfficialPricingLink[]>(LIVE_COMPARISON_TOOLS);
   const [apiSearchQuery, setApiSearchQuery] = useState("");
   const [selectedProvider, setSelectedProvider] = useState<string>("All");
   const [sortBy, setSortBy] = useState<"input-low" | "input-high" | "output-low" | "context-high">("input-low");
@@ -267,8 +271,14 @@ function AdminDashboardInner() {
       if (data.success && data.models) {
         setApiModels(data.models);
         setLastSyncedTime(formatSyncTime(new Date()));
+        setSyncSource(data.source || "OpenRouter live");
+        if (data.officialPricingPages) setOfficialLinks(data.officialPricingPages);
+        if (data.comparisonTools) setComparisonTools(data.comparisonTools);
         setSyncFailed(false);
-        showToast(`Reference pricing loaded - ${data.models.length} models. Verify current rates on the official pages before quoting.`);
+        const liveN = data.liveModelsUpdated ?? 0;
+        showToast(liveN > 0
+          ? `Live pricing synced — ${liveN} models updated from OpenRouter. ${data.models.length} total.`
+          : `Reference pricing loaded — ${data.models.length} models. Verify rates before quoting.`);
       } else {
         setSyncFailed(true);
         showToast("Reference pricing snapshot refreshed.");
@@ -1993,7 +2003,7 @@ function AdminDashboardInner() {
                               ? "Syncing…"
                               : syncFailed
                               ? "Sync failed — showing last rates"
-                              : `Last synced: ${lastSyncedTime}`}
+                              : `${syncSource} · ${lastSyncedTime}`}
                           </span>
                         </div>
                         <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
@@ -2028,20 +2038,27 @@ function AdminDashboardInner() {
                           <Globe className="w-4 h-4 text-orange-500" />
                           Official AI Model Pricing Documentation Pages
                         </h3>
-                        <span className="text-[11px] text-slate-400 font-mono">15 Official Endpoints + 2 Live Comparison Portals</span>
+                        <span className="text-[11px] text-slate-400 font-mono">{officialLinks.length} Official Endpoints + {comparisonTools.length} Live Comparison Portals</span>
                       </div>
 
                       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 pt-1">
-                        {OFFICIAL_PRICING_LINKS.map((link) => (
+                        {officialLinks.map((link) => (
                           <a
                             key={link.provider}
                             href={link.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 hover:border-orange-500 text-xs font-medium text-slate-800 dark:text-slate-200 hover:text-orange-500 transition-all flex items-center justify-between group shadow-2xs"
+                            className="p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 hover:border-orange-500 text-xs font-medium text-slate-800 dark:text-slate-200 hover:text-orange-500 transition-all group shadow-2xs space-y-1"
                           >
-                            <span className="truncate font-semibold">{link.provider}</span>
-                            <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-orange-500 shrink-0 ml-1" />
+                            <div className="flex items-center justify-between">
+                              <span className="truncate font-semibold">{link.provider}</span>
+                              <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-orange-500 shrink-0 ml-1" />
+                            </div>
+                            {link.note && (
+                              <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-snug font-mono line-clamp-2">
+                                {link.note}
+                              </p>
+                            )}
                           </a>
                         ))}
                       </div>
@@ -2049,7 +2066,7 @@ function AdminDashboardInner() {
                       {/* Comparison matrix links */}
                       <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-slate-200 dark:border-slate-700/50 text-xs">
                         <span className="font-bold text-slate-500">Live Comparison Tools:</span>
-                        {LIVE_COMPARISON_TOOLS.map((tool) => (
+                        {comparisonTools.map((tool) => (
                           <a
                             key={tool.provider}
                             href={tool.url}
@@ -2074,12 +2091,13 @@ function AdminDashboardInner() {
                           placeholder="Search model, feature, or provider..."
                           value={apiSearchQuery}
                           onChange={(e) => setApiSearchQuery(e.target.value)}
+                          aria-label="Search AI models by name, feature, or provider"
                           className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-medium text-slate-900 dark:text-white"
                         />
                       </div>
 
                       {/* Provider Filter Tabs */}
-                      <div className="md:col-span-6 flex items-center gap-1 overflow-x-auto pb-1">
+                      <div role="tablist" aria-label="Filter models by provider" className="md:col-span-6 flex items-center gap-1 overflow-x-auto pb-1">
                         {[
                           "All",
                           "OpenAI",
@@ -2101,6 +2119,8 @@ function AdminDashboardInner() {
                         ].map((prov) => (
                           <button
                             key={prov}
+                            role="tab"
+                            aria-selected={selectedProvider === prov}
                             onClick={() => setSelectedProvider(prov)}
                             className={`px-3 py-2 rounded-lg text-[11px] font-bold transition-all whitespace-nowrap ${
                               selectedProvider === prov
@@ -2118,6 +2138,7 @@ function AdminDashboardInner() {
                         <select
                           value={sortBy}
                           onChange={(e) => setSortBy(e.target.value as "input-low" | "input-high" | "output-low" | "context-high")}
+                          aria-label="Sort AI models by pricing"
                           className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-bold text-slate-900 dark:text-white"
                         >
                           <option value="input-low">Cheapest Input</option>

@@ -50,11 +50,8 @@ export async function loginClient(
   if (!account) {
     return { success: false, error: "Invalid username or password." };
   }
-  // Accept either: (a) matching password, or (b) matching invite code.
-  // The invite code is sent as the password field when the client uses it.
   const passwordOk = account.password === password;
-  const inviteOk = account.inviteCode ? account.inviteCode === password : false;
-  if (!passwordOk && !inviteOk) {
+  if (!passwordOk) {
     return { success: false, error: "Invalid username or password." };
   }
   if (account.status !== "approved") {
