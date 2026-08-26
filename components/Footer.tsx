@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ShieldCheck, Mail, Phone, Lock, FileText } from "lucide-react";
 import { SITE_CONFIG } from "@/data/portfolioData";
+import Logo from "./Logo";
 import SocialLinks from "./SocialLinks";
 
 export default function Footer() {
@@ -11,17 +12,14 @@ export default function Footer() {
           
           {/* Brand Col */}
           <div className="lg:col-span-2 space-y-4">
-            <Link id="footer-logo-link" href="/" className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-slate-800 text-orange-500 flex items-center justify-center font-bold text-xl border border-slate-700">
-                JP
-              </div>
-              <div>
-                <span className="font-bold text-xl text-white block">
-                  {SITE_CONFIG.tradingName}
-                </span>
-                <span className="text-xs text-slate-400">
-                  by <span className="text-orange-400 font-semibold">{SITE_CONFIG.developerName}</span>
-                </span>
+            <Link id="footer-logo-link" href="/">
+              <div className="text-white">
+                <Logo
+                  variant="full"
+                  iconSize={40}
+                  text={SITE_CONFIG.tradingName}
+                  subtext={`by ${SITE_CONFIG.developerName}`}
+                />
               </div>
             </Link>
 

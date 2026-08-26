@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X, ShieldCheck, ArrowRight, Phone, MessageSquareQuote, FileCode, Layers, Info, Star, Home, Sparkles } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
+import Logo from "./Logo";
 import { SITE_CONFIG } from "@/data/portfolioData";
 
 export default function Header() {
@@ -69,18 +70,13 @@ export default function Header() {
         {/* Drawer Header */}
         <div>
           <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/90">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-orange-500 text-white font-bold flex items-center justify-center text-sm shadow">
-                JP
-              </div>
-              <div>
-                <span className="font-bold text-sm text-slate-900 dark:text-white block leading-tight">
-                  {SITE_CONFIG.tradingName}
-                </span>
-                <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium block leading-tight">
-                  by {SITE_CONFIG.developerName}
-                </span>
-              </div>
+            <div className="text-slate-900 dark:text-white">
+              <Logo
+                variant="full"
+                iconSize={32}
+                text={SITE_CONFIG.tradingName}
+                subtext={`by ${SITE_CONFIG.developerName}`}
+              />
             </div>
 
             <button
@@ -155,18 +151,9 @@ export default function Header() {
     <header className="sticky top-0 z-40 w-full border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-[#070D17]/95 backdrop-blur-md transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
         {/* Logo Section */}
-        <Link id="header-logo-link" href="/" className="flex items-center gap-3 group">
-          <div className="w-10 h-10 rounded-xl bg-slate-900 dark:bg-slate-800 text-orange-500 flex items-center justify-center font-bold text-xl shadow-md border border-slate-700/50 group-hover:scale-105 transition-transform">
-            JP
-          </div>
-          <div className="flex flex-col">
-            <span className="font-bold text-lg text-slate-900 dark:text-white leading-tight flex items-center gap-1.5">
-              {SITE_CONFIG.brandLine}
-              <ShieldCheck className="w-4 h-4 text-emerald-500" />
-            </span>
-            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-              by <span className="text-orange-500 font-semibold">{SITE_CONFIG.developerName}</span>
-            </span>
+        <Link id="header-logo-link" href="/" className="group">
+          <div className="text-slate-900 dark:text-white group-hover:scale-105 transition-transform">
+            <Logo variant="full" iconSize={40} />
           </div>
         </Link>
 

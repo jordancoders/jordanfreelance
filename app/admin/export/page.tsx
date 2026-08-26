@@ -6,6 +6,7 @@ import { Printer, ShieldCheck, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import SignaturePad from "@/components/SignaturePad";
 import { SITE_CONFIG } from "@/data/portfolioData";
+import Logo from "@/components/Logo";
 import { fetchInvoice } from "@/app/actions/invoices";
 import type { Invoice } from "@/lib/types";
 
@@ -249,10 +250,13 @@ function ExportContent() {
             <div className="p-10 print:p-8 border-b border-slate-300">
               <div className="flex flex-col sm:flex-row justify-between items-start gap-6 border-b-2 border-slate-900 pb-6">
                 <div>
-                  <div className="text-2xl font-black">
-                    {SITE_CONFIG.tradingName} <span className="text-orange-600 font-normal">by {SITE_CONFIG.developerName}</span>
-                  </div>
-                  <div className="text-xs text-slate-500 mt-1 font-mono">
+                  <Logo
+                    variant="full"
+                    iconSize={48}
+                    text={SITE_CONFIG.tradingName}
+                    subtext={`by ${SITE_CONFIG.developerName}`}
+                  />
+                  <div className="text-xs text-slate-500 mt-2 font-mono">
                     Email: {SITE_CONFIG.email} • WhatsApp: {SITE_CONFIG.whatsappFormatted} • Location: South Africa
                   </div>
                 </div>

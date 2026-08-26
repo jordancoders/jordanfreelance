@@ -7,6 +7,7 @@ import WhatsAppButton from "@/components/WhatsAppButton";
 import Link from "next/link";
 import { ShieldCheck, Printer, CreditCard, ArrowLeft, Lock } from "lucide-react";
 import { SITE_CONFIG } from "@/data/portfolioData";
+import Logo from "@/components/Logo";
 
 export default function InvoiceTemplatePage() {
   const [clientName, setClientName] = useState("Sample Client — e.g. Your Company Name");
@@ -91,10 +92,13 @@ export default function InvoiceTemplatePage() {
             {/* Invoice Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 border-b border-slate-300 pb-6">
               <div>
-                <div className="text-2xl font-black text-slate-900">
-                  {SITE_CONFIG.tradingName} <span className="text-orange-600 font-normal">by {SITE_CONFIG.developerName}</span>
-                </div>
-                <div className="text-xs text-slate-500 space-y-0.5 mt-1 font-mono">
+                <Logo
+                  variant="full"
+                  iconSize={48}
+                  text={SITE_CONFIG.tradingName}
+                  subtext={`by ${SITE_CONFIG.developerName}`}
+                />
+                <div className="text-xs text-slate-500 space-y-0.5 mt-2 font-mono">
                   <div>Email: {SITE_CONFIG.email}</div>
                   <div>WhatsApp: {SITE_CONFIG.whatsappFormatted}</div>
                   <div>PayPal Account: {SITE_CONFIG.paypalEmail}</div>
