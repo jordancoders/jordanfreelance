@@ -85,7 +85,7 @@ export default function AccessibilityPanel() {
       {/* Floating trigger button */}
       <button
         onClick={() => setOpen(!open)}
-        className="fixed bottom-6 right-6 z-[90] p-3 rounded-full bg-orange-500 hover:bg-orange-600 text-white shadow-xl transition-all hover:scale-110"
+        className="fixed bottom-20 right-6 z-[90] p-3 rounded-full bg-orange-500 hover:bg-orange-600 text-white shadow-xl transition-all hover:scale-110"
         aria-label="Open accessibility settings"
         aria-expanded={open}
         aria-controls="a11y-panel"
@@ -99,7 +99,7 @@ export default function AccessibilityPanel() {
           id="a11y-panel"
           role="dialog"
           aria-label="Accessibility settings"
-          className="fixed bottom-20 right-6 z-[90] w-72 bg-white dark:bg-[#0D1A2D] border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-4"
+          className="fixed bottom-34 right-6 z-[90] w-72 bg-white dark:bg-[#0D1A2D] border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-4"
         >
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-700">
