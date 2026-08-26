@@ -24,6 +24,7 @@ export async function fetchClient(id: string): Promise<ClientPortalAccount | nul
 }
 
 export async function fetchClientByUsername(username: string): Promise<ClientPortalAccount | null> {
+  if (!(await requireAdmin())) return null;
   return getClientByUsername(username);
 }
 
