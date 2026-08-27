@@ -189,15 +189,24 @@ function AdminDashboardInner() {
 
   // Print mode — controls which sections render in the print-only invoice
   type PrintMode = "invoice" | "invoice-declaration" | "declaration" | "cover-letter" | "full-package";
-  const [printMode, setPrintMode] = useState<PrintMode>("invoice");
   const [printMenuOpen, setPrintMenuOpen] = useState(false);
   const printMenuRef = useRef<HTMLDivElement>(null);
 
   const handlePrint = (mode: PrintMode) => {
-    setPrintMode(mode);
     setPrintMenuOpen(false);
+    // Set the body attribute so CSS shows the right print sections
+    document.body.dataset.printMode = mode;
     // Small delay so React re-renders the print sections, then trigger print
-    requestAnimationFrame(() => requestAnimationFrame(() => window.print()));
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        window.print();
+        // Clean up after print dialog closes
+        const cleanup = () => { delete document.body.dataset.printMode; };
+        window.addEventListener("afterprint", cleanup, { once: true });
+        // Fallback cleanup after 5s in case afterprint doesn't fire
+        setTimeout(cleanup, 5000);
+      });
+    });
   };
 
   // Close print menu on outside click
@@ -3540,7 +3549,6 @@ function AdminDashboardInner() {
       {selectedInvoice && (
         <div
           className="hidden print:block print-exact bg-white text-slate-900"
-          ref={(el) => { if (el) document.body.dataset.printMode = printMode; }}
         >
           <div className="p-8">
             <div data-print-mode="invoice">

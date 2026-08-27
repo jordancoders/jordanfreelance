@@ -171,54 +171,162 @@ html {
 }
 
 /* ============ PRINT STYLES ============ */
-/* Hide site chrome (header, footer, floating buttons, toasts) and force clean white paper. */
+/* Full-page print overhaul — produces clean, professional PDF output.
+   Site chrome is hidden, the print-only document fills the page,
+   and background colours are preserved where marked. */
 @media print {
-  header,
-  footer,
-  .fixed {
+  /* Hide everything that isn't print content */
+  header, footer, nav, .fixed, .print-hidden,
+  [role="dialog"], [role="alert"], [role="status"],
+  .fixed.bottom-6, .fixed.bottom-20, .fixed.bottom-34 {
     display: none !important;
   }
 
-  body {
+  /* Reset body for clean white paper */
+  html, body {
     background: #ffffff !important;
+    color: #0f172a !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
-}
 
-/* Elements marked .print-exact keep their background colors on paper
-   (e.g. the dark Payment Options box on the invoice). */
-@media print {
-  .print-exact,
-  .print-exact * {
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+  /* Page setup — A4 with sensible margins */
+  @page {
+    size: A4;
+    margin: 15mm 18mm 15mm 18mm;
+  }
+  @page :first {
+    margin-top: 12mm;
+  }
+
+  /* Kill all shadows and rounded corners on paper */
+  * {
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+
+  /* Links: show URL after text for clickability in PDFs */
+  a[href^="http"]::after {
+    content: none !important;
+  }
+
+  /* Ensure images don't overflow */
+  img {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+
+  /* Tables: always break inside avoid, full width */
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    page-break-inside: avoid;
+  }
+  tr {
+    page-break-inside: avoid;
+  }
+  thead {
+    display: table-header-group;
+  }
+
+  /* Prevent orphans and widows */
+  p, li, h1, h2, h3, h4 {
+    orphans: 3;
+    widows: 3;
+  }
+  h1, h2, h3, h4 {
+    page-break-after: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Section breaks */
+  .break-inside-avoid {
+    page-break-inside: avoid;
+  }
+  .break-before {
+    page-break-before: always;
+  }
+
+  /* Show the print-only document container */
+  .print-exact, .print-exact * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Fill the page with the print document */
+  .print\:block {
+    display: block !important;
+  }
+  .print\:hidden {
+    display: none !important;
+  }
+  .print\:w-full {
+    width: 100% !important;
+  }
+  .print\:max-w-none {
+    max-width: none !important;
+  }
+  .print\:px-0 {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+  .print\:py-0 {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+  .print\:p-8 {
+    padding: 2rem !important;
+  }
+  .print\:p-10 {
+    padding: 2.5rem !important;
+  }
+  .print\:bg-white {
+    background-color: #ffffff !important;
+  }
+  .print\:text-slate-900 {
+    color: #0f172a !important;
+  }
+  .print\:border-none {
+    border: none !important;
+  }
+  .print\:shadow-none {
+    box-shadow: none !important;
+  }
+  .print\:space-y-0 > * + * {
+    margin-top: 0 !important;
   }
 }
 
 /* ── PRINT MODE SECTIONS ───────────────────────────────────────────────────────
-   Each print section has a data-print-mode attribute. On print, only the section
-   whose attribute matches the body's data-print-mode is shown.
-   In screen mode (no attribute on body), everything hidden stays hidden.
-   On print, we show the matching section. */
+   Each print section has a data-print-mode attribute. On screen, these sections
+   live inside a .print:block parent (which is hidden on screen). During print,
+   only the section whose attribute matches body's data-print-mode is shown.
+   The body gets its data-print-mode set in handlePrint() before window.print(). */
 
-/* Screen: hide all print-mode sections (they live in .print:block parent) */
-[data-print-mode] {
+/* Screen: hide print-mode sections inside the .print:block container */
+body:not([data-print-mode]) [data-print-mode] {
   display: none;
 }
 
-/* Print: show everything by default (no body attribute) */
+/* Print: hide all first, then show matching sections */
 @media print {
   [data-print-mode] { display: none !important; }
 }
 
-/* Print: show only the matching section */
 @media print {
   body[data-print-mode="invoice"] [data-print-mode="invoice"] { display: block !important; }
-  body[data-print-mode="invoice-declaration"] [data-print-mode="invoice-declaration"] { display: block !important; }
+  body[data-print-mode="invoice-declaration"] [data-print-mode="invoice"] { display: block !important; }
+  body[data-print-mode="invoice-declaration"] [data-print-mode="declaration"] { display: block !important; }
   body[data-print-mode="declaration"] [data-print-mode="declaration"] { display: block !important; }
   body[data-print-mode="cover-letter"] [data-print-mode="cover-letter"] { display: block !important; }
   body[data-print-mode="full-package"] [data-print-mode="full-package"] { display: block !important; }
   body[data-print-mode="full-package"] [data-print-mode="invoice"] { display: block !important; }
   body[data-print-mode="full-package"] [data-print-mode="declaration"] { display: block !important; }
   body[data-print-mode="full-package"] [data-print-mode="cover-letter"] { display: block !important; }
+  /* Monthly statement modes */
+  body[data-print-mode="current"] [data-print-mode="monthly-statement"] { display: block !important; }
+  body[data-print-mode="year"] [data-print-mode="ytd-summary"] { display: block !important; }
 }
 

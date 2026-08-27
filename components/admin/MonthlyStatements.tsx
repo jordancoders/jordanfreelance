@@ -78,7 +78,15 @@ export default function MonthlyStatements({ invoices, expenses }: MonthlyStateme
 
   const doPrint = (target: "current" | "year") => {
     setPrintTarget(target);
-    requestAnimationFrame(() => requestAnimationFrame(() => window.print()));
+    document.body.dataset.printMode = target;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        window.print();
+        const cleanup = () => { delete document.body.dataset.printMode; };
+        window.addEventListener("afterprint", cleanup, { once: true });
+        setTimeout(cleanup, 5000);
+      });
+    });
   };
 
   const now = new Date().toLocaleDateString("en-ZA", { day: "2-digit", month: "long", year: "numeric" });
