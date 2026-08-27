@@ -32,9 +32,11 @@ Each client gets a private portal (unique username + password) linked to their q
 - **Auto-approved on creation** — portals start as "approved" so clients can log in immediately. No manual approval step.
 - **Live build tracker** — dated milestone timeline with overall % progress, overdue highlighting, and stage badges.
 - **Live document snapshot** — the quote/invoice (items, totals, deposit split, status) is kept in sync with the studio: any invoice edit **rebuilds the client's view automatically**.
+- **Pay with PayPal button** — prominent PayPal button in the payment section that opens `paypal.me/JordanPetersCapeTown` in a new tab for one-tap payments.
+- **Payment proof upload** — clients can attach a receipt screenshot (image or PDF, max 5 MB) when reporting a payment. Proof is stored on the `PaymentRecord` and visible in the payment history with a "View proof" link.
 - **Signed Declaration** — clients draw their signature in the portal; it is stamped `signedBy: "client"` server-side, pushed instantly to the linked invoice, and flips the document status to **Accepted** (signing *is* accepting). The admin sees a "✍ Signed" chip and the PDF bundle becomes export-ready.
 - **Printable declaration page** — `/client/declaration`: a clean, print/PDF-ready copy of the signed declaration with the document breakdown, signature, and legal references.
-- **Payments** — clients see confirmed payments, pending confirmations, and can **report a payment** (amount/method/date) which the admin confirms or declines.
+- **Payments** — clients see confirmed payments, pending confirmations, running totals, and can **report a payment** (amount/method/date/proof) which the admin confirms or declines.
 - **Messages** — two-way threaded updates between client and developer.
 - **Links & deliverables** — staging URLs, repos, and documents shared by the studio.
 - **Auto-refresh** — the dashboard polls while visible and refreshes the moment the tab regains focus, so studio updates appear without a manual reload.
@@ -53,13 +55,19 @@ Each client gets a private portal (unique username + password) linked to their q
   - ⭐ **Social Proof** — trust signals, stats, ratings
   - 🚀 **Next Steps / CTA** — clear "reply YES" path to close
   - On print, these render as **color-coded cards** (orange=problem, green=solution, blue=timeline, dark=guarantee). Invoices show none of these fields.
+  - Proposal specs are included in **email**, **WhatsApp share**, and **printed** outputs — not just the on-screen form.
+- **5 PDF Export Modes** — click the Export dropdown on any document:
+  - 📄 **Clean Invoice** — line items, totals, payment options, legal terms — no declaration, no admin chrome
+  - 🛡️ **Invoice + Declaration** — full invoice with signed declaration block appended
+  - ✍️ **Declaration Only** — standalone signature page
+  - 📧 **Cover Letter** — professional transmittal letter with branding, client name, project scope, and total value
+  - 📦 **Full Package** — cover letter + invoice + declaration combined in one print
 - **Share straight to clients**:
   - 🟣 **Copy Email** — polished quote email (auto-calculated next-Monday kickoff + Wednesday staging dates)
   - ✍️ **Kickoff** — the build "recipe" email (plan, timeline, deposit, what's needed from the client)
   - 🏁 **Handover** — final handover email (source code, export bundle, 7-day erasure, 14-day warranty)
   - 🔵 **Email** — opens Gmail with recipient/subject/body pre-filled
-  - 🟢 **WhatsApp** — opens a WhatsApp chat with the document summary pre-filled
-  - 🖨️ **Print / Export PDF** — clean white-paper output of just the document
+  - 🟢 **WhatsApp** — opens a WhatsApp chat with the document summary pre-filled (including proposal specs for quotes)
 - **Signed Declaration + PDF Bundle** — capture a signature in the studio (stamped `signedBy: "admin"` and mirrored to the linked portal) or receive the client's own signature, then export the full legal bundle (signed declaration → invoice/quote → terms → privacy → POPIA → DPA) via `/admin/export`.
 - **Client Portals tab** — create a portal, link it to a quote/invoice (the snapshot is pre-built), and it's **auto-approved** so you can send the invite immediately. WhatsApp opens automatically with the invite pre-filled. Manage milestones, payments, messages, and links; **pending client-reported payments get ✓ Confirm / ✗ Decline** controls that apply the money to the linked invoice (status moves Sent → Accepted → Paid).
 - **Notification bell** — unread badge fed live from client activity (signed, replied, payment reported); clicking a notification jumps to that client's Manage panel.
@@ -68,8 +76,29 @@ Each client gets a private portal (unique username + password) linked to their q
 - **Client Reviews Manager** — add, edit, delete, publish reviews (rating, avatar, linked project); published reviews appear on `/testimonials` and the homepage with dates.
 - **Self-editable site logo** — upload a custom logo image (max 2MB) from the Settings section. It saves to MongoDB + localStorage and appears instantly across the site: header, footer, mobile drawer, invoice template, and document exports. Remove button resets to the default SVG mark.
 - **API Pricing Reference** — searchable, filterable, sortable model pricing with live-sync from OpenRouter and a last-synced indicator showing the data source.
-- **JSON Backup & Restore** — export the full dataset (invoices, projects, reviews, clients, config) to JSON and import it on any device.
+- **Duplicate Invoice/Quote** — one-click clone that copies all fields, generates a new document number, and sets Draft status.
+- **Quick Status Filters** — above the document list: All, Draft, Sent, Accepted, Paid, Overdue — each shows the count. Click to jump to the first matching document.
+- **JSON Backup & Restore** — export the full dataset (invoices, projects, reviews, clients, expenses, config) to JSON and import it on any device.
 - **Re-sync From MongoDB** — re-fetches every collection from the database (never seeds or destroys data).
+
+### Expense Ledger (new tab)
+
+- **Track all business expenses** with 16 categories: Hosting, Domains, API Costs, Software, Hardware, Marketing, Travel, Legal, Accounting, Subscriptions, Office, Training, Insurance, Taxes, Contractors, Other.
+- **Add/edit/delete expenses** with description, amount, currency (ZAR/USD), category, date, vendor, invoice reference, note, and receipt upload.
+- **Receipt upload** — attach images or PDFs (max 5 MB) stored as base64 data-URLs.
+- **Search & filter** — by text, category, and month.
+- **Category breakdown** — visual bars showing spend per category.
+- **MongoDB-backed** — expenses persist across sessions and are included in JSON backup/restore.
+
+### Monthly Statements (new tab)
+
+- **Month selector** with income vs expenses breakdown.
+- **Quick stats** — total income (ZAR + USD), total expenses, net profit/loss.
+- **Expense category visualization** — visual bars with item counts.
+- **Invoices this month** — list of invoices with status badges.
+- **Print Statement** — printable monthly summary with income table + expense table + totals.
+- **Year-to-Date Summary** — printable YTD breakdown by month with cumulative profit/loss.
+- All data auto-generated from invoices and expenses — no manual entry needed.
 
 ### Accessibility
 
@@ -92,15 +121,6 @@ Each client gets a private portal (unique username + password) linked to their q
 - **Flash-free** — inline `<script>` in `<head>` reads `localStorage('theme')` and `prefers-color-scheme` before paint, applying the correct class immediately.
 - **Theme toggle** — `role="switch"` with `aria-checked`, screen-reader announcements, and smooth transitions.
 
-### Anti-DevTools Protection
-
-- **Debugger timing detection** — fires a `debugger` statement every 3 seconds; if DevTools is open the pause exceeds 100ms and triggers a warning overlay.
-- **Keyboard shortcut blocking** — F12, Ctrl+Shift+I/J/C, Ctrl+U (view source), Ctrl+S all suppressed.
-- **Right-click disabled** — context menu blocked on all pages.
-- **Console monitoring** — warns after 50 log calls.
-- **Window resize detection** — catches docked DevTools panels (width/height drop >150px).
-- Full-screen orange warning overlay when triggered (auto-dismisses after 5 seconds).
-
 ### Security & Privacy
 
 - **Content-Security-Policy + security headers** on every response — `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Permissions-Policy` (camera/mic/geo/payment/usb off), and a CSP that allows Google Fonts (Lexend dyslexia font), project embeds, and the Google Form iframe. Dev builds add `unsafe-eval` for hot reload; production stays strict.
@@ -110,6 +130,7 @@ Each client gets a private portal (unique username + password) linked to their q
 - **CSRF protection** — same-origin (Origin/Referer) checks on all state-changing client API routes, on top of SameSite=strict cookies.
 - **Cookie consent banner** — an honest, essential-cookies-only banner (no tracking/ads/analytics) with a link to the Privacy Policy's cookie section.
 - **Email notifications** — when a client signs, replies, or reports a payment, the studio owner gets an email via **Resend** (fire-and-forget; silently no-ops without `RESEND_API_KEY`).
+- **Receipt/proof validation** — all base64 uploads (payment proofs, expense receipts, site logo) are size-checked at the API level (max 5–6 MB) to prevent database bloat.
 
 ### Legal & Compliance
 
@@ -129,7 +150,7 @@ Each client gets a private portal (unique username + password) linked to their q
 | Framework | Next.js 15 (App Router, React 19) |
 | Styling | Tailwind CSS v4, Lucide icons |
 | CI | GitHub Actions (ESLint + strict TypeScript on push/PR) |
-| API | Next.js Server Actions + Route Handlers (`/api/contact`, `/api/client/*`, `/api/pricing/live`) |
+| API | Next.js Server Actions + Route Handlers (`/api/contact`, `/api/client/*`, `/api/pricing/live`, `/api/expenses`) |
 | Auth | Server Actions + httpOnly session cookies (`lib/auth.ts`, `app/actions/auth.ts`) |
 | Data | MongoDB Atlas (free M0 tier) — all data persisted server-side |
 | Email | Resend API (contact leads + portal notifications) |
@@ -169,7 +190,7 @@ MONGODB_URI=
 
 | Variable | Required | Purpose |
 |---|---|---|
-| `MONGODB_URI` | Yes | MongoDB Atlas connection string — all site data (invoices, projects, reviews, client portals, config) |
+| `MONGODB_URI` | Yes | MongoDB Atlas connection string — all site data (invoices, projects, reviews, client portals, expenses, config) |
 | `ADMIN_PIN` | Yes | Passcode for the `/admin` studio (set a strong value in production) |
 | `RESEND_API_KEY` | No* | Live email delivery for contact leads + portal notifications (*optional; falls back to in-app/logging) |
 | `SESSION_SECRET` | No* | HMAC key for client session cookies (*optional; falls back to `ADMIN_PIN`) |
@@ -225,7 +246,8 @@ All site data is stored in MongoDB Atlas (free M0 tier) using the **official Mon
 | `invoices` | Invoices & quotes (including signed declarations, proposal fields for quotes) |
 | `projects` | Case studies / portfolio items |
 | `reviews` | Client testimonials |
-| `clients` | Client portal accounts (progress, payments, messages, assets, activity) |
+| `clients` | Client portal accounts (progress, payments with proof uploads, messages, assets, activity) |
+| `expenses` | Business expenses (category, vendor, receipt uploads, invoice references) |
 | `config` | Site config (social links, Google Form URL, **site logo**) — single document |
 
 ### Create the cluster & copy the connection string
@@ -266,12 +288,40 @@ app/
   guarantee/  terms/  privacy/  popia/  dpa/   # Legal & compliance pages
   api/contact/          # Lead dispatch route (Resend + server logging)
   api/client/           # Portal auth, account, and payment-report endpoints
+  api/expenses/         # Expense CRUD (admin-only, authenticated)
   api/pricing/live/     # Live AI pricing endpoint (OpenRouter fetch + static fallback)
   actions/              # Server Actions (auth, invoices, projects, reviews, clients, config, backup)
-components/             # Shared UI (Header, Footer, Logo, AccessibilityPanel, AntiDevTools, ThemeToggle, demos, admin tabs…)
+components/
+  Header.tsx            # Site header with logo, nav, mobile drawer
+  Footer.tsx            # Site footer
+  Logo.tsx              # Dynamic logo (custom image from MongoDB or default SVG mark)
+  AccessibilityPanel.tsx # Floating accessibility settings panel
+  ThemeToggle.tsx       # Dark/light mode toggle
+  CookieConsent.tsx     # Essential-cookies-only consent banner
+  WhatsAppButton.tsx    # Floating WhatsApp contact button
+  admin/
+    AdminDataProvider.tsx  # Central data provider (invoices, projects, reviews, clients, expenses)
+    OverviewTab.tsx        # Dashboard quick stats
+    ExpenseLedger.tsx      # Expense tracking with categories, filters, receipt upload
+    MonthlyStatements.tsx  # Income/expense statements, profit/loss, printable summaries
+    ClientPortalsTab.tsx   # Client portal management
 data/portfolioData.ts   # SITE_CONFIG + static content + type re-exports
-lib/                    # Database, auth, CSRF, rate limiting, email templates, portal utils, live pricing fetcher, admin notifications
-hooks/                  # Client-side data hooks (useSiteConfig, useInvoices, etc.)
+lib/
+  types.ts              # All TypeScript interfaces (Invoice, ExpenseEntry, SiteConfig, etc.)
+  db.ts                 # MongoDB connection + CRUD for all collections
+  auth.ts               # Admin + client session management (server-only)
+  emailTemplates.ts     # Email drafts (quote, kickoff, handover, sign-request)
+  clientPortal.ts       # Portal utilities (progress computation, payment totals)
+  fetchLivePricing.ts   # OpenRouter API fetcher for live model pricing
+  rateLimit.ts          # In-memory sliding window rate limiter (server-only)
+  notifyAdmin.ts        # Resend email notifications (server-only)
+  csrf.ts               # Same-origin CSRF checks
+hooks/
+  useSiteConfig.ts      # Client-side hook for site config (MongoDB + localStorage)
+  useInvoices.ts        # Client-side hook for invoice CRUD
+  useProjects.ts        # Client-side hook for project CRUD
+  useReviews.ts         # Client-side hook for review CRUD
+  useClients.ts         # Client-side hook for client portal CRUD
 ```
 
 ---
@@ -294,7 +344,3 @@ This project is developed with an **AI-orchestrated workflow and a human quality
 - **POPIA Policy** — `/popia` (Act 4 of 2013)
 - **DPA Template** — `/dpa` (GDPR Article 28 for EU/UK clients)
 - **Invoice template** — `/invoice-template`
-
----
-
-© Jordan Peters Coder Freelancing. Built with Next.js 15 · React 19 · Tailwind CSS v4.
