@@ -240,8 +240,9 @@ export async function getClient(id: string): Promise<ClientPortalAccount | null>
 }
 
 export async function getClientByUsername(username: string): Promise<ClientPortalAccount | null> {
+  // Use exact lowercase match — no regex to prevent injection / ReDoS.
   const doc = await (await getCollection<ClientPortalAccount>(COLLECTIONS.clients)).findOne({
-    username: { $regex: new RegExp(`^${username}$`, "i") },
+    username: username.toLowerCase(),
   });
   return doc ? (stripId<ClientPortalAccount>(doc)) : null;
 }

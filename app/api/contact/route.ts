@@ -1,5 +1,6 @@
 export const runtime = "nodejs";
 import { NextRequest, NextResponse } from "next/server";
+import { checkRateLimit } from "@/lib/rateLimit";
 
 /** Escapes user-supplied text for safe interpolation into the HTML email body
  *  (prevents injected markup from rendering in the received email). */
@@ -35,6 +36,12 @@ export async function POST(req: NextRequest) {
       allowPortfolioShowcase,
       website, // honeypot — bots fill hidden fields
     } = body;
+
+    // Rate limit: 5 submissions per 15 minutes per IP.
+    const rl = await checkRateLimit("contact-form", 5);
+    if (!rl.ok) {
+      return NextResponse.json({ success: true, message: "Lead recorded." });
+    }
 
     // Honeypot: silently accept but drop bot submissions.
     if (typeof website === "string" && website.length > 0) {

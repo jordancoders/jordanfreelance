@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getExpenses, createExpense, updateExpense, deleteExpense } from "@/lib/db";
 import { getClientSessionUsername } from "@/lib/auth";
 import { isSameOrigin } from "@/lib/csrf";
-import type { ExpenseEntry } from "@/lib/types";
+import { checkRateLimit } from "@/lib/rateLimit";
+import { EXPENSE_CATEGORIES } from "@/lib/types";
+import type { ExpenseEntry, ExpenseCategory } from "@/lib/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -38,12 +40,19 @@ export async function POST(req: NextRequest) {
   const currencies = ["ZAR", "USD"] as const;
   const currency = currencies.includes(body.currency) ? body.currency : "ZAR";
 
+  // Rate limit: 30 writes per 15 minutes per IP.
+  const rl = await checkRateLimit("expenses-write", 30);
+  if (!rl.ok) return NextResponse.json({ error: "rate-limited" }, { status: 429 });
+
+  const allowedCategories = EXPENSE_CATEGORIES.map((c) => c.value);
+  const category: ExpenseCategory = allowedCategories.includes(body.category) ? body.category : "other";
+
   const expense: ExpenseEntry = {
     id: `exp-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
     description: typeof body.description === "string" ? body.description.trim() : "",
     amount,
     currency,
-    category: body.category || "other",
+    category,
     date: typeof body.date === "string" ? body.date : new Date().toISOString().slice(0, 10),
     invoiceRef: typeof body.invoiceRef === "string" ? body.invoiceRef.trim() || undefined : undefined,
     vendor: typeof body.vendor === "string" ? body.vendor.trim() || undefined : undefined,

@@ -64,6 +64,9 @@ export function middleware(req: NextRequest) {
   res.headers.set("X-Content-Type-Options", "nosniff");
   res.headers.set("X-Frame-Options", "DENY");
   res.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=(), usb=(), autoplay=(), battery=(), display-capture=(), keyboard-map=(), magnetometer=(), midi=(), Picture-in-Picture=(), screen-wake-lock=(), sync-xhr=(), web-share=()=");
+  res.headers.set("Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload");
+  res.headers.set("X-XSS-Protection", "0"); // Modern browsers; CSP is the real defence
   return res;
 }
 

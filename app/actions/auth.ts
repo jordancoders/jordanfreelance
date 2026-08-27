@@ -1,5 +1,6 @@
 "use server";
 
+import { timingSafeEqual } from "node:crypto";
 import {
   createAdminSession,
   destroyAdminSession,
@@ -20,7 +21,11 @@ export async function loginAdmin(pin: string): Promise<{ success: boolean; error
   if (!rl.ok) {
     return { success: false, error: `Too many attempts — try again in ${Math.ceil((rl.retryAfterSeconds || 0) / 60)} minutes.` };
   }
-  if (!pin || pin !== adminPin) {
+  // Timing-safe comparison to prevent brute-force timing attacks.
+  if (!pin) return { success: false, error: "Invalid passcode." };
+  const stored = Buffer.from(adminPin);
+  const supplied = Buffer.from(pin);
+  if (stored.length !== supplied.length || !timingSafeEqual(stored, supplied)) {
     return { success: false, error: "Invalid passcode." };
   }
   await createAdminSession();
@@ -50,7 +55,13 @@ export async function loginClient(
   if (!account) {
     return { success: false, error: "Invalid username or password." };
   }
-  const passwordOk = account.password === password;
+  // Timing-safe comparison to prevent brute-force timing attacks.
+  const stored = Buffer.from(account.password);
+  const supplied = Buffer.from(password);
+  if (stored.length !== supplied.length) {
+    return { success: false, error: "Invalid username or password." };
+  }
+  const passwordOk = timingSafeEqual(stored, supplied);
   if (!passwordOk) {
     return { success: false, error: "Invalid username or password." };
   }
