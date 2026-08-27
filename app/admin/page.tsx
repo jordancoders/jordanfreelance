@@ -933,7 +933,9 @@ function AdminDashboardInner() {
       if (inv.proposalNextSteps) text += `\n\n🚀 *Next Steps:*\n${inv.proposalNextSteps}`;
     }
 
-    text += `\n\nPayable via PayPal or Direct EFT (Bank Transfer). Thank you!`;
+    text += `\n\nPayable via PayPal or Direct EFT (Bank Transfer).`;
+    text += `\nPayPal.me: ${SITE_CONFIG.paypalMeUrl}`;
+    text += `\nThank you!`;
     return `https://wa.me/${inv.clientPhone.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(text)}`;
   };
 
@@ -1003,6 +1005,7 @@ function AdminDashboardInner() {
       `Final Balance Due: ${symbol} ${balance.toLocaleString()}`, 
       ``, 
       `Payable via PayPal (${SITE_CONFIG.paypalEmail}) or Direct EFT (Bank Transfer).`,
+      `PayPal.me: ${SITE_CONFIG.paypalMeUrl}`,
       ``, 
       `Kind regards,`, 
       `${SITE_CONFIG.developerName}`, 
@@ -3431,7 +3434,7 @@ function AdminDashboardInner() {
                 <div className="text-xs text-slate-500 font-mono mt-1 space-y-0.5">
                   <div>Email: {SITE_CONFIG.email}</div>
                   <div>WhatsApp: {SITE_CONFIG.whatsappFormatted}</div>
-                  <div>PayPal: {SITE_CONFIG.paypalEmail}</div>
+                  <div>PayPal: <a href={SITE_CONFIG.paypalMeUrl} target="_blank" rel="noopener noreferrer" className="text-emerald-600 underline">{SITE_CONFIG.paypalEmail}</a></div>
                   <div>Location: South Africa</div>
                 </div>
               </div>
@@ -3511,6 +3514,9 @@ function AdminDashboardInner() {
                   <strong className="block font-bold">Option 1: PayPal</strong>
                   <div>
                     PayPal Email: <strong className="text-emerald-400 font-mono">{SITE_CONFIG.paypalEmail}</strong>
+                  </div>
+                  <div>
+                    <a href={SITE_CONFIG.paypalMeUrl} target="_blank" rel="noopener noreferrer" className="text-emerald-400 underline">paypal.me/JordanPetersCapeTown</a>
                   </div>
                   <div className="text-slate-400">Instant, secure transfer</div>
                 </div>

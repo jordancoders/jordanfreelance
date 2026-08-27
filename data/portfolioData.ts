@@ -36,6 +36,7 @@ export const SITE_CONFIG = {
   // Public price anchor — edit the amount here; shown on the Services page.
   priceAnchor: "Custom dashboards typically start from R 15,000 (excl. VAT).",
   paypalEmail: "jordancodefreelancer@protonmail.com",
+  paypalMeUrl: "https://www.paypal.com/paypalme/JordanPetersCapeTown",
   // Canonical public URL used for metadata, sitemap, robots.txt, and JSON-LD.
   siteUrl: "https://jpfreelance.dpdns.org",
   location: "South Africa (Remote)",

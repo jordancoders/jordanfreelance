@@ -101,7 +101,7 @@ export default function InvoiceTemplatePage() {
                 <div className="text-xs text-slate-500 space-y-0.5 mt-2 font-mono">
                   <div>Email: {SITE_CONFIG.email}</div>
                   <div>WhatsApp: {SITE_CONFIG.whatsappFormatted}</div>
-                  <div>PayPal Account: {SITE_CONFIG.paypalEmail}</div>
+                  <div>PayPal: <a href={SITE_CONFIG.paypalMeUrl} target="_blank" rel="noopener noreferrer" className="text-emerald-600 underline">{SITE_CONFIG.paypalEmail}</a></div>
                   <div>Location: South Africa</div>
                 </div>
               </div>
@@ -192,6 +192,7 @@ export default function InvoiceTemplatePage() {
                 <div className="p-3 bg-slate-800 rounded-xl border border-slate-700 space-y-1">
                   <strong className="text-white block font-bold text-xs">Option 1: PayPal</strong>
                   <div>PayPal Email: <strong className="text-emerald-400 font-mono">{SITE_CONFIG.paypalEmail}</strong></div>
+                  <div><a href={SITE_CONFIG.paypalMeUrl} target="_blank" rel="noopener noreferrer" className="text-emerald-400 underline text-[11px]">paypal.me/JordanPetersCapeTown</a></div>
                   <div className="text-slate-400 text-[11px]">Instant, secure transfer</div>
                 </div>
 

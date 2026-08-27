@@ -29,6 +29,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import SignaturePad from "@/components/SignaturePad";
+import { SITE_CONFIG } from "@/data/portfolioData";
 import type { ClientPortalAccount, ProgressUpdate, PaymentRecord } from "@/lib/types";
 import { computePercentComplete, totalPaymentsReceived, appendActivity } from "@/lib/clientPortal";
 
@@ -503,6 +504,7 @@ export default function ClientDashboardPage() {
 
                       <p className="text-xs text-slate-500 mt-4">
                         Payable via PayPal or Direct EFT (Bank Transfer). Full source code is yours on final payment.
+                        <a href={SITE_CONFIG.paypalMeUrl} target="_blank" rel="noopener noreferrer" className="text-emerald-500 underline ml-1">paypal.me/JordanPetersCapeTown</a>
                       </p>
                     </div>
                   )}

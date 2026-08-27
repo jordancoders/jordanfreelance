@@ -319,6 +319,8 @@ function ExportContent() {
               <div className="mt-8 text-xs text-slate-600 border-t border-slate-300 pt-3">
                 <strong className="text-slate-900 block mb-1">Payment:</strong>
                 Payable via PayPal ({SITE_CONFIG.paypalEmail}) or Direct EFT (bank transfer) — details provided on confirmation.
+                <br />
+                PayPal.me: <a href={SITE_CONFIG.paypalMeUrl} target="_blank" rel="noopener noreferrer" className="text-emerald-600 underline">paypal.me/JordanPetersCapeTown</a>
                 {invoice.notes && (
                   <>
                     <strong className="text-slate-900 block mt-3 mb-1">Notes:</strong>
