@@ -7,7 +7,7 @@ import { useReviews } from "@/hooks/useReviews";
 import { useClients } from "@/hooks/useClients";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { exportData, importData } from "@/app/actions/backup";
-import type { Invoice, Project, ClientReview, ClientPortalAccount, BackupPayload } from "@/lib/types";
+import type { Invoice, Project, ClientReview, ClientPortalAccount, ExpenseEntry, BackupPayload } from "@/lib/types";
 import { SITE_CONFIG } from "@/data/portfolioData";
 
 interface AdminDataContextType {
@@ -19,6 +19,9 @@ interface AdminDataContextType {
   reviewsLoading: boolean;
   clients: ClientPortalAccount[];
   clientsLoading: boolean;
+  expenses: ExpenseEntry[];
+  expensesLoading: boolean;
+  reloadExpenses: () => void;
   configLoading: boolean;
   googleFormUrl: string;
   logoUrl: string;
@@ -110,6 +113,23 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
   const cli = useClients();
   const { config: cloudConfig, save: saveConfig } = useSiteConfig();
 
+  // Expenses — fetched directly from API (no dedicated hook needed)
+  const [expenses, setExpenses] = useState<ExpenseEntry[]>([]);
+  const [expensesLoading, setExpensesLoading] = useState(true);
+  const loadExpenses = useCallback(async () => {
+    try {
+      setExpensesLoading(true);
+      const res = await fetch("/api/expenses");
+      if (res.ok) {
+        const json = await res.json();
+        setExpenses(json.expenses || []);
+      }
+    } catch { /* ignore */ }
+    finally { setExpensesLoading(false); }
+  }, []);
+  // Load expenses on mount
+  useState(() => { loadExpenses(); });
+
   // Derive initial state from cloud config when available (no useEffect setState)
   const [googleFormUrl, setGoogleFormUrl] = useState(
     cloudConfig.googleFormUrl || SITE_CONFIG.googleFormUrl
@@ -148,14 +168,16 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
     proj.reload();
     rev.reload();
     cli.reload();
-  }, [inv, proj, rev, cli]);
+    loadExpenses();
+  }, [inv, proj, rev, cli, loadExpenses]);
 
   const reloadAll = useCallback(() => {
     inv.reload();
     proj.reload();
     rev.reload();
     cli.reload();
-  }, [inv, proj, rev, cli]);
+    loadExpenses();
+  }, [inv, proj, rev, cli, loadExpenses]);
 
   return (
     <AdminDataContext.Provider
@@ -168,6 +190,9 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
         reviewsLoading: rev.loading,
         clients: cli.clients,
         clientsLoading: cli.loading,
+        expenses,
+        expensesLoading,
+        reloadExpenses: loadExpenses,
         configLoading: cloudConfig.googleFormUrl === undefined,
         googleFormUrl,
         logoUrl,

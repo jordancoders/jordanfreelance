@@ -39,7 +39,9 @@ import {
   Users,
   Bell,
   CheckCheck,
-  ImageIcon
+  ImageIcon,
+  Receipt,
+  Calendar,
 } from "lucide-react";
 import { SITE_CONFIG, Project, ClientReview } from "@/data/portfolioData";
 import SignaturePad from "@/components/SignaturePad";
@@ -52,6 +54,8 @@ import {
 } from "@/lib/emailTemplates";
 import ClientPortalsTab from "@/components/admin/ClientPortalsTab";
 import OverviewTab from "@/components/admin/OverviewTab";
+import ExpenseLedger from "@/components/admin/ExpenseLedger";
+import MonthlyStatements from "@/components/admin/MonthlyStatements";
 import { API_PRICING_MODELS as LIVE_API_MODELS, type ApiPricingModel } from "@/data/apiPricingData";
 import { loginAdmin, logoutAdmin, checkAdminAuth } from "@/app/actions/auth";
 import { AdminDataProvider, useAdminData } from "@/components/admin/AdminDataProvider";
@@ -105,7 +109,7 @@ function AdminDashboardInner() {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   // Active Tab
-  const [activeTab, setActiveTab] = useState<"overview" | "invoices" | "api-tracker" | "projects-manager" | "reviews-manager" | "clients-manager" | "cost-calculator" | "upgrades">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "invoices" | "api-tracker" | "projects-manager" | "reviews-manager" | "clients-manager" | "cost-calculator" | "expenses" | "statements" | "upgrades">("overview");
 
   // ─── Client activity notification bell ──────────────────────────────────────
   // Derived live from client portal activity (signed declaration, replies,
@@ -283,7 +287,7 @@ function AdminDashboardInner() {
   const [sortBy, setSortBy] = useState<"input-low" | "input-high" | "output-low" | "context-high">("input-low");
   const [syncFailed, setSyncFailed] = useState(false);
   const isSyncingPricingRef = useRef(false);
-  const prevTabRef = useRef<"overview" | "invoices" | "api-tracker" | "projects-manager" | "reviews-manager" | "clients-manager" | "cost-calculator" | "upgrades">("overview");
+  const prevTabRef = useRef<"overview" | "invoices" | "api-tracker" | "projects-manager" | "reviews-manager" | "clients-manager" | "cost-calculator" | "expenses" | "statements" | "upgrades">("overview");
 
   const formatSyncTime = (d: Date) =>
     d.toLocaleString([], {
@@ -875,10 +879,11 @@ function AdminDashboardInner() {
           projects: Array.isArray(parsed.projects) ? parsed.projects : Array.isArray(parsed.data?.projects) ? parsed.data.projects : undefined,
           reviews: Array.isArray(parsed.reviews) ? parsed.reviews : Array.isArray(parsed.data?.reviews) ? parsed.data.reviews : undefined,
           clients: Array.isArray(parsed.clients) ? parsed.clients : Array.isArray(parsed.data?.clients) ? parsed.data.clients : undefined,
+          expenses: Array.isArray(parsed.expenses) ? parsed.expenses : Array.isArray(parsed.data?.expenses) ? parsed.data.expenses : undefined,
           config: parsed.config || parsed.data?.config || undefined,
         };
 
-        if (!backup.invoices && !backup.projects && !backup.reviews && !backup.clients) {
+        if (!backup.invoices && !backup.projects && !backup.reviews && !backup.clients && !backup.expenses) {
           showToast("Invalid backup - expected { invoices: [], projects: [], reviews: [], clients: [] }.");
           return;
         }
@@ -1318,6 +1323,42 @@ function AdminDashboardInner() {
                 </button>
 
                 <button
+                  id="tab-expenses-btn"
+                  onClick={() => {
+                    setActiveTab("expenses");
+                    setIsEditingInvoice(false);
+                    setIsEditingProject(false);
+                    setIsEditingReview(false);
+                  }}
+                  className={`px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center gap-2 whitespace-nowrap ${
+                    activeTab === "expenses"
+                      ? "bg-orange-500 text-white shadow-md"
+                      : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80"
+                  }`}
+                >
+                  <Receipt className="w-4 h-4" />
+                  Expenses ({data.expenses.length})
+                </button>
+
+                <button
+                  id="tab-statements-btn"
+                  onClick={() => {
+                    setActiveTab("statements");
+                    setIsEditingInvoice(false);
+                    setIsEditingProject(false);
+                    setIsEditingReview(false);
+                  }}
+                  className={`px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center gap-2 whitespace-nowrap ${
+                    activeTab === "statements"
+                      ? "bg-orange-500 text-white shadow-md"
+                      : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80"
+                  }`}
+                >
+                  <Calendar className="w-4 h-4" />
+                  Monthly Statements
+                </button>
+
+                <button
                   id="tab-cost-calculator-btn"
                   onClick={() => {
                     setActiveTab("cost-calculator");
@@ -1363,7 +1404,7 @@ function AdminDashboardInner() {
                   apiModels={apiModels}
                   onNavigate={(tab) =>
                     setActiveTab(
-                      tab as "overview" | "invoices" | "api-tracker" | "projects-manager" | "reviews-manager" | "clients-manager" | "cost-calculator" | "upgrades"
+                      tab as "overview" | "invoices" | "api-tracker" | "projects-manager" | "reviews-manager" | "clients-manager" | "cost-calculator" | "expenses" | "statements" | "upgrades"
                     )
                   }
                   onSelectInvoice={(inv) => {
@@ -3187,6 +3228,24 @@ function AdminDashboardInner() {
                   showToast={showToast}
                 />
               )}
+              {/* TAB: EXPENSE LEDGER */}
+              {activeTab === "expenses" && (
+                <div className="space-y-8 animate-in fade-in-50">
+                  <div className="bg-white dark:bg-[#0D1A2D] p-6 sm:p-10 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl">
+                    <ExpenseLedger expenses={data.expenses} onRefresh={data.reloadExpenses} />
+                  </div>
+                </div>
+              )}
+
+              {/* TAB: MONTHLY STATEMENTS */}
+              {activeTab === "statements" && (
+                <div className="space-y-8 animate-in fade-in-50">
+                  <div className="bg-white dark:bg-[#0D1A2D] p-6 sm:p-10 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl">
+                    <MonthlyStatements invoices={data.invoices} expenses={data.expenses} />
+                  </div>
+                </div>
+              )}
+
               {/* TAB 5: API COST ESTIMATOR */}
               {activeTab === "cost-calculator" && (
                 <div className="space-y-8 animate-in fade-in-50">

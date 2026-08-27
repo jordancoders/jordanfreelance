@@ -22,6 +22,7 @@ import type {
   ClientReview,
   ClientPortalAccount,
   SiteConfig,
+  ExpenseEntry,
 } from "./types";
 
 const URI = process.env.MONGODB_URI;
@@ -33,6 +34,7 @@ const COLLECTIONS = {
   reviews: "reviews",
   clients: "clients",
   config: "config",
+  expenses: "expenses",
 } as const;
 
 const CONFIG_ID = "site-config";
@@ -288,6 +290,37 @@ export async function saveConfig(config: SiteConfig): Promise<SiteConfig> {
   return doc;
 }
 
+// ─── Expenses ────────────────────────────────────────────────────────────────
+
+export async function getExpenses(): Promise<ExpenseEntry[]> {
+  const docs = await (await getCollection<ExpenseEntry>(COLLECTIONS.expenses))
+    .find()
+    .sort({ date: -1 })
+    .toArray();
+  return docs.map((d) => stripId<ExpenseEntry>(d));
+}
+
+export async function createExpense(expense: ExpenseEntry): Promise<ExpenseEntry> {
+  const doc = { ...expense, createdAt: expense.createdAt || now(), updatedAt: now() };
+  await (await getCollection<ExpenseEntry>(COLLECTIONS.expenses)).insertOne(doc as ExpenseEntry);
+  return doc;
+}
+
+export async function updateExpense(id: string, patch: Partial<ExpenseEntry>): Promise<ExpenseEntry | null> {
+  const updated = { ...patch, updatedAt: now() };
+  const res = await (await getCollection<ExpenseEntry>(COLLECTIONS.expenses)).findOneAndUpdate(
+    { id },
+    { $set: updated },
+    { returnDocument: "after" }
+  );
+  return res ? stripId<ExpenseEntry>(res) : null;
+}
+
+export async function deleteExpense(id: string): Promise<boolean> {
+  const res = await (await getCollection<ExpenseEntry>(COLLECTIONS.expenses)).deleteOne({ id });
+  return res.deletedCount === 1;
+}
+
 // ─── Backup / Restore ─────────────────────────────────────────────────────────
 
 export async function exportAll(): Promise<{
@@ -295,16 +328,18 @@ export async function exportAll(): Promise<{
   projects: Project[];
   reviews: ClientReview[];
   clients: ClientPortalAccount[];
+  expenses: ExpenseEntry[];
   config: SiteConfig | null;
 }> {
-  const [invoices, projects, reviews, clients, config] = await Promise.all([
+  const [invoices, projects, reviews, clients, expenses, config] = await Promise.all([
     getInvoices(),
     getProjects(),
     getReviews(),
     getClients(),
+    getExpenses(),
     getConfig(),
   ]);
-  return { invoices, projects, reviews, clients, config };
+  return { invoices, projects, reviews, clients, expenses, config };
 }
 
 export async function importAll(data: {
@@ -312,6 +347,7 @@ export async function importAll(data: {
   projects?: Project[];
   reviews?: ClientReview[];
   clients?: ClientPortalAccount[];
+  expenses?: ExpenseEntry[];
   config?: SiteConfig | null;
 }): Promise<void> {
   if (data.invoices?.length) {
@@ -329,6 +365,10 @@ export async function importAll(data: {
   if (data.clients?.length) {
     await (await getCollection<ClientPortalAccount>(COLLECTIONS.clients)).deleteMany({});
     await (await getCollection<ClientPortalAccount>(COLLECTIONS.clients)).insertMany(data.clients as ClientPortalAccount[]);
+  }
+  if (data.expenses?.length) {
+    await (await getCollection<ExpenseEntry>(COLLECTIONS.expenses)).deleteMany({});
+    await (await getCollection<ExpenseEntry>(COLLECTIONS.expenses)).insertMany(data.expenses as ExpenseEntry[]);
   }
   if (data.config) {
     await saveConfig(data.config);

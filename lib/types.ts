@@ -242,6 +242,65 @@ export interface InvoiceLike {
   proposalNextSteps?: string;
 }
 
+// ─── Expense Ledger ─────────────────────────────────────────────────────────
+
+export type ExpenseCategory =
+  | "hosting"
+  | "domains"
+  | "api-costs"
+  | "software"
+  | "hardware"
+  | "marketing"
+  | "travel"
+  | "legal"
+  | "accounting"
+  | "subscriptions"
+  | "office"
+  | "training"
+  | "insurance"
+  | "taxes"
+  | "contractors"
+  | "other";
+
+export const EXPENSE_CATEGORIES: { value: ExpenseCategory; label: string; emoji: string }[] = [
+  { value: "hosting", label: "Hosting & Infrastructure", emoji: "☁️" },
+  { value: "domains", label: "Domains & DNS", emoji: "🌐" },
+  { value: "api-costs", label: "API Costs", emoji: "🔌" },
+  { value: "software", label: "Software & Licences", emoji: "💻" },
+  { value: "hardware", label: "Hardware & Peripherals", emoji: "🖥️" },
+  { value: "marketing", label: "Marketing & Ads", emoji: "📣" },
+  { value: "travel", label: "Travel & Transport", emoji: "🚗" },
+  { value: "legal", label: "Legal & Compliance", emoji: "⚖️" },
+  { value: "accounting", label: "Accounting & Bookkeeping", emoji: "📊" },
+  { value: "subscriptions", label: "Subscriptions & SaaS", emoji: "🔁" },
+  { value: "office", label: "Office & Supplies", emoji: "📎" },
+  { value: "training", label: "Training & Courses", emoji: "📚" },
+  { value: "insurance", label: "Insurance", emoji: "🛡️" },
+  { value: "taxes", label: "Tax & VAT", emoji: "🏛️" },
+  { value: "contractors", label: "Contractors & Freelancers", emoji: "🤝" },
+  { value: "other", label: "Other", emoji: "📦" },
+];
+
+export interface ExpenseEntry {
+  _id?: DocId;
+  id: string;
+  description: string;
+  amount: number;
+  currency: "ZAR" | "USD";
+  category: ExpenseCategory;
+  date: string;
+  /** Optional linked invoice number for project expenses */
+  invoiceRef?: string;
+  /** Optional vendor / supplier name */
+  vendor?: string;
+  /** Optional receipt image (base64 data-URL) */
+  receiptUrl?: string;
+  /** Optional note */
+  note?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // ─── Site Config ──────────────────────────────────────────────────────────────
 
 export interface SiteSocialLinks {
@@ -268,6 +327,7 @@ export interface BackupPayload {
   projects: Project[];
   reviews: ClientReview[];
   clients: ClientPortalAccount[];
+  expenses: ExpenseEntry[];
   config: SiteConfig | null;
   exportedAt: string;
 }

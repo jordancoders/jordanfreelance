@@ -3,7 +3,6 @@ import './globals.css';
 import { FAQ_DATA, SITE_CONFIG } from '@/data/portfolioData';
 import CookieConsent from '@/components/CookieConsent';
 import AccessibilityPanel from '@/components/AccessibilityPanel';
-import AntiDevTools from '@/components/AntiDevTools';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_CONFIG.siteUrl),
@@ -145,7 +144,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {children}
         <CookieConsent />
         <AccessibilityPanel />
-        <AntiDevTools />
       </body>
     </html>
   );
