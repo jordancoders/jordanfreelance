@@ -316,7 +316,7 @@ export default function ClientDashboardPage() {
           ) : (
             <>
               {/* Header row */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 print:hidden">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 text-xs font-bold border border-emerald-200 dark:border-emerald-800 flex items-center gap-1.5">
@@ -407,7 +407,7 @@ export default function ClientDashboardPage() {
               </div>
 
               {notice && (
-                <div className="flex items-start gap-2 text-xs text-emerald-700 dark:text-emerald-400 font-medium bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900 rounded-xl p-3">
+                <div className="flex items-start gap-2 text-xs text-emerald-700 dark:text-emerald-400 font-medium bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900 rounded-xl p-3 print:hidden">
                   <Sparkles className="w-4 h-4 shrink-0 mt-0.5" />
                   {notice}
                 </div>
@@ -417,7 +417,7 @@ export default function ClientDashboardPage() {
                 {/* Left: tracker + documents + payments + links */}
                 <div className="lg:col-span-7 space-y-8">
                   {/* Live progress tracker */}
-                  <div className="bg-white dark:bg-[#0D1A2D] p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-md">
+                  <div className="bg-white dark:bg-[#0D1A2D] p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-md print:hidden">
                     <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4 mb-5">
                       <h2 className="text-lg font-bold flex items-center gap-2">
                         <Loader className="w-5 h-5 text-orange-500" />
@@ -538,8 +538,8 @@ export default function ClientDashboardPage() {
                     </div>
                   )}
 
-                  {/* Payments */}
-                  <div className="bg-white dark:bg-[#0D1A2D] p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-md space-y-4">
+              {/* Payments */}
+              <div className="bg-white dark:bg-[#0D1A2D] p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-md space-y-4 print:hidden">
                     <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
                       <h2 className="text-lg font-bold flex items-center gap-2">
                         <Wallet className="w-5 h-5 text-emerald-500" />
@@ -725,7 +725,7 @@ export default function ClientDashboardPage() {
                   </div>
 
                   {/* Shared links */}
-                  <div className="bg-white dark:bg-[#0D1A2D] p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-md space-y-4">
+                  <div className="bg-white dark:bg-[#0D1A2D] p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-md space-y-4 print:hidden">
                     <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
                       <h2 className="text-lg font-bold flex items-center gap-2">
                         <Link2 className="w-5 h-5 text-blue-500" />
@@ -768,7 +768,7 @@ export default function ClientDashboardPage() {
                 </div>
 
                 {/* Right: declaration + messages */}
-                <div className="lg:col-span-5 space-y-6">
+                <div className="lg:col-span-5 space-y-6 print:hidden">
                   <div className="bg-white dark:bg-[#0D1A2D] p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-md space-y-5 sticky top-24">
                     <div className="flex items-center gap-3 border-b border-slate-200 dark:border-slate-800 pb-4">
                       <div className="p-3 rounded-xl bg-orange-500/10 text-orange-500">
@@ -886,7 +886,7 @@ export default function ClientDashboardPage() {
                   </div>
 
                   {/* Messages */}
-                  <div className="bg-white dark:bg-[#0D1A2D] p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-md space-y-4">
+                  <div className="bg-white dark:bg-[#0D1A2D] p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-md space-y-4 print:hidden">
                     <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
                       <h2 className="text-base font-bold flex items-center gap-2">
                         <MessageSquare className="w-5 h-5 text-violet-500" />

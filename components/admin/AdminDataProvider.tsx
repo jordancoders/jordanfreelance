@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
 import { useInvoices } from "@/hooks/useInvoices";
 import { useProjects } from "@/hooks/useProjects";
 import { useReviews } from "@/hooks/useReviews";
@@ -128,7 +128,7 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
     finally { setExpensesLoading(false); }
   }, []);
   // Load expenses on mount
-  useState(() => { loadExpenses(); });
+  useEffect(() => { loadExpenses(); }, [loadExpenses]);
 
   // Derive initial state from cloud config when available (no useEffect setState)
   const [googleFormUrl, setGoogleFormUrl] = useState(
