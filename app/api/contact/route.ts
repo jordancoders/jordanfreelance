@@ -1,6 +1,7 @@
 export const runtime = "nodejs";
 import { NextRequest, NextResponse } from "next/server";
 import { checkRateLimit } from "@/lib/rateLimit";
+import { verifyTurnstile } from "@/lib/turnstile";
 
 /** Escapes user-supplied text for safe interpolation into the HTML email body
  *  (prevents injected markup from rendering in the received email). */
@@ -35,7 +36,17 @@ export async function POST(req: NextRequest) {
       type,
       allowPortfolioShowcase,
       website, // honeypot — bots fill hidden fields
+      turnstileToken, // Cloudflare Turnstile verification token
     } = body;
+
+    // Cloudflare Turnstile verification.
+    const captcha = await verifyTurnstile(
+      turnstileToken,
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || undefined,
+    );
+    if (!captcha.success) {
+      return NextResponse.json({ success: false, error: captcha.error || "Captcha failed." }, { status: 403 });
+    }
 
     // Rate limit: 5 submissions per 15 minutes per IP.
     const rl = await checkRateLimit("contact-form", 5);

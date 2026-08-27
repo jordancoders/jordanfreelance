@@ -22,7 +22,7 @@ const securityHeaders = [
       "default-src 'self'",
       // JSON-LD scripts in <head> + Next runtime need inline scripts;
       // dev additionally needs 'unsafe-eval' for webpack hot reload
-      `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
+      `script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com${isDev ? " 'unsafe-eval'" : ""}`,
       // Inline styles are used throughout (React style props, signature pad)
       // fonts.googleapis.com for Lexend (accessibility dyslexia font)
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
@@ -33,7 +33,7 @@ const securityHeaders = [
       "connect-src 'self'",
       "media-src 'self'",
       // Project embeds (staging demos, Google Form on /contact) are https iframes
-      "frame-src 'self' https:",
+      "frame-src 'self' https://challenges.cloudflare.com https:",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",

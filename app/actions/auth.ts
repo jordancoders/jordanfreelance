@@ -10,8 +10,15 @@ import {
 } from "@/lib/auth";
 import { getClientByUsername } from "@/lib/db";
 import { checkRateLimit } from "@/lib/rateLimit";
+import { verifyTurnstile } from "@/lib/turnstile";
 
-export async function loginAdmin(pin: string): Promise<{ success: boolean; error?: string }> {
+export async function loginAdmin(pin: string, turnstileToken?: string): Promise<{ success: boolean; error?: string }> {
+  // Cloudflare Turnstile verification (skipped if TURNSTILE_SECRET_KEY not set).
+  const captcha = await verifyTurnstile(turnstileToken);
+  if (!captcha.success) {
+    return { success: false, error: captcha.error || "Captcha failed." };
+  }
+
   const adminPin = process.env.ADMIN_PIN;
   if (!adminPin) {
     console.warn("[auth] ADMIN_PIN is not configured — admin login rejected.");
@@ -42,8 +49,15 @@ export async function checkAdminAuth(): Promise<boolean> {
 
 export async function loginClient(
   username: string,
-  password: string
+  password: string,
+  turnstileToken?: string,
 ): Promise<{ success: boolean; error?: string }> {
+  // Cloudflare Turnstile verification (skipped if TURNSTILE_SECRET_KEY not set).
+  const captcha = await verifyTurnstile(turnstileToken);
+  if (!captcha.success) {
+    return { success: false, error: captcha.error || "Captcha failed." };
+  }
+
   if (!username.trim() || !password.trim()) {
     return { success: false, error: "Please enter your username and password." };
   }

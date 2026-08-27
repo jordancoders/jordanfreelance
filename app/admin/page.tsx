@@ -58,6 +58,7 @@ import ExpenseLedger from "@/components/admin/ExpenseLedger";
 import MonthlyStatements from "@/components/admin/MonthlyStatements";
 import { API_PRICING_MODELS as LIVE_API_MODELS, type ApiPricingModel } from "@/data/apiPricingData";
 import { loginAdmin, logoutAdmin, checkAdminAuth } from "@/app/actions/auth";
+import Turnstile from "@/components/Turnstile";
 import { AdminDataProvider, useAdminData } from "@/components/admin/AdminDataProvider";
 import type { Invoice, ClientPortalAccount, InvoiceItem } from "@/lib/types";
 
@@ -107,6 +108,7 @@ function AdminDashboardInner() {
   const [pinInput, setPinInput] = useState("");
   const [pinError, setPinError] = useState("");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState("");
 
   // Active Tab
   const [activeTab, setActiveTab] = useState<"overview" | "invoices" | "api-tracker" | "projects-manager" | "reviews-manager" | "clients-manager" | "cost-calculator" | "expenses" | "statements" | "upgrades">("overview");
@@ -454,7 +456,7 @@ function AdminDashboardInner() {
     setIsLoggingIn(true);
     setPinError("");
     try {
-      const result = await loginAdmin(pinInput);
+      const result = await loginAdmin(pinInput, turnstileToken || undefined);
       if (result.success) {
         setIsAuthenticated(true);
         setPinInput("");
@@ -1100,6 +1102,8 @@ function AdminDashboardInner() {
                   />
                   {pinError && <p className="text-xs text-red-500 font-medium mt-1.5">{pinError}</p>}
                 </div>
+
+                <Turnstile onSuccess={(t) => setTurnstileToken(t)} theme="dark" size="normal" className="flex justify-center" />
 
                 <button
                   id="admin-unlock-btn"

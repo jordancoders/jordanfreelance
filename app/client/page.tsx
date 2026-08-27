@@ -8,6 +8,7 @@ import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import { SITE_CONFIG } from "@/data/portfolioData";
 import { loginClient } from "@/app/actions/auth";
+import Turnstile from "@/components/Turnstile";
 import { parseInviteCard, CLIENT_SESSION_KEY } from "@/lib/clientPortal";
 
 export default function ClientLoginPage() {
@@ -17,6 +18,7 @@ export default function ClientLoginPage() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState("");
 
   // "Have an invite card?" box — paste the card to fill in your login
   const [cardOpen, setCardOpen] = useState(false);
@@ -67,7 +69,7 @@ export default function ClientLoginPage() {
     }
     setLoading(true);
     try {
-      const result = await loginClient(username.trim(), password);
+      const result = await loginClient(username.trim(), password, turnstileToken || undefined);
       if (result.success) {
         router.push("/client/dashboard");
       } else {
@@ -181,6 +183,8 @@ export default function ClientLoginPage() {
                       {notice}
                     </p>
                   )}
+
+                  <Turnstile onSuccess={(t) => setTurnstileToken(t)} theme="auto" size="normal" className="flex justify-center" />
 
                   <button
                     id="client-login-submit"
