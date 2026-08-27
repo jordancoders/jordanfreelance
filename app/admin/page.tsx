@@ -200,11 +200,14 @@ function AdminDashboardInner() {
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         window.print();
-        // Clean up after print dialog closes
+        // Clean up after print dialog closes.
+        // NEVER use beforeprint — it fires BEFORE the dialog opens,
+        // deleting the attribute mid-preview and blanking the PDF.
         const cleanup = () => { delete document.body.dataset.printMode; };
         window.addEventListener("afterprint", cleanup, { once: true });
-        // Fallback cleanup after 5s in case afterprint doesn't fire
-        setTimeout(cleanup, 5000);
+        // Fallback: if afterprint never fires (some browsers), clean up
+        // after 120 seconds (long enough for any print dialog).
+        setTimeout(cleanup, 120_000);
       });
     });
   };

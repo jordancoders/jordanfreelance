@@ -84,7 +84,7 @@ export default function MonthlyStatements({ invoices, expenses }: MonthlyStateme
         window.print();
         const cleanup = () => { delete document.body.dataset.printMode; };
         window.addEventListener("afterprint", cleanup, { once: true });
-        setTimeout(cleanup, 5000);
+        setTimeout(cleanup, 120_000);
       });
     });
   };
