@@ -132,6 +132,8 @@ export interface PaymentRecord {
   status?: "pending" | "confirmed";
   /** Who reported the payment: the client via their portal, or the admin in the studio. */
   reportedBy?: "client" | "admin";
+  /** Base64 data-URL of a receipt / proof-of-payment screenshot. */
+  proofUrl?: string;
 }
 
 export interface ClientMessage {

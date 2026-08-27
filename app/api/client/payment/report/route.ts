@@ -42,6 +42,10 @@ export async function POST(req: NextRequest) {
   const method = methods.includes(body.method) ? body.method : "Other";
   const date = typeof body.date === "string" && body.date ? body.date : new Date().toISOString().slice(0, 10);
   const note = typeof body.note === "string" ? body.note.trim() : "";
+  // Proof-of-payment: accept base64 data-URL (image or PDF), max ~6 MB.
+  const proofUrl = typeof body.proofUrl === "string" && body.proofUrl.startsWith("data:") && body.proofUrl.length < 6_000_000
+    ? body.proofUrl
+    : undefined;
 
   const payment: PaymentRecord = {
     id: `pay-${Date.now()}`,
@@ -51,6 +55,7 @@ export async function POST(req: NextRequest) {
     note: note || undefined,
     status: "pending",
     reportedBy: "client",
+    ...(proofUrl ? { proofUrl } : {}),
   };
 
   if (!account.id) {

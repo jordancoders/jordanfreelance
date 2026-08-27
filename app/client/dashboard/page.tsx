@@ -73,6 +73,8 @@ export default function ClientDashboardPage() {
   const [repNote, setRepNote] = useState("");
   const [repError, setRepError] = useState("");
   const [repSubmitting, setRepSubmitting] = useState(false);
+  const [repProof, setRepProof] = useState<string | null>(null);
+  const [repProofName, setRepProofName] = useState("");
 
   // True once the user starts drawing/typing their signature — auto-refresh
   // must never clobber an in-progress signature with stale server state.
@@ -146,6 +148,7 @@ export default function ClientDashboardPage() {
           method: repMethod,
           date: repDate || undefined,
           note: repNote.trim() || undefined,
+          proofUrl: repProof || undefined,
         }),
       });
       const json = await res.json().catch(() => ({}));
@@ -157,12 +160,29 @@ export default function ClientDashboardPage() {
       setRepAmount("");
       setRepNote("");
       setRepDate("");
+      setRepProof(null);
+      setRepProofName("");
       setNotice("Payment reported — your developer will confirm it shortly.");
     } catch {
       setRepError("Could not reach the server — please try again.");
     } finally {
       setRepSubmitting(false);
     }
+  };
+
+  const handleProofUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      setRepError("Proof image must be under 5 MB.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setRepProof(reader.result as string);
+      setRepProofName(file.name);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleLogout = async () => {
@@ -504,8 +524,17 @@ export default function ClientDashboardPage() {
 
                       <p className="text-xs text-slate-500 mt-4">
                         Payable via PayPal or Direct EFT (Bank Transfer). Full source code is yours on final payment.
-                        <a href={SITE_CONFIG.paypalMeUrl} target="_blank" rel="noopener noreferrer" className="text-emerald-500 underline ml-1">paypal.me/JordanPetersCapeTown</a>
                       </p>
+                      <a
+                        href={SITE_CONFIG.paypalMeUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0070ba] hover:bg-[#005ea6] text-white font-bold text-sm transition-all shadow-md hover:shadow-lg"
+                      >
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c-.013.076-.026.175-.041.254-.93 4.778-4.005 7.201-9.138 7.201h-2.19a.563.563 0 0 0-.556.479l-1.187 7.527h-.506l-.24 1.516a.56.56 0 0 0 .554.647h3.882c.46 0 .85-.334.922-.788.06-.26.76-4.852.816-5.09a.932.932 0 0 1 .923-.788h.58c3.76 0 6.705-1.528 7.565-5.946.36-1.847.174-3.388-.777-4.471z"/></svg>
+                        Pay with PayPal
+                      </a>
+                      <p className="text-[10px] text-slate-400 mt-1">Opens paypal.me in a new tab — send any amount</p>
                     </div>
                   )}
 
@@ -569,6 +598,14 @@ export default function ClientDashboardPage() {
                                     <span className="text-[10px] font-mono text-slate-400">
                                       Total: {symbol} {running.toLocaleString()}
                                     </span>
+                                  )}
+                                  {p.proofUrl && (
+                                    <button
+                                      onClick={() => window.open(p.proofUrl, "_blank")}
+                                      className="text-[10px] text-blue-500 hover:text-blue-600 underline"
+                                    >
+                                      View proof
+                                    </button>
                                   )}
                                   {pending ? (
                                     <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-600 dark:text-amber-400">
@@ -645,6 +682,36 @@ export default function ClientDashboardPage() {
                           {repSubmitting ? "Reporting…" : "Report Payment"}
                         </button>
                       </div>
+                      {/* Proof of payment upload */}
+                      <div className="flex items-center gap-3">
+                        <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-dashed border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 hover:border-emerald-500 dark:hover:border-emerald-500 text-[11px] font-medium text-slate-500 dark:text-slate-400 transition-colors">
+                          <FileText className="w-3.5 h-3.5" />
+                          {repProofName || "Attach receipt / proof"}
+                          <input
+                            type="file"
+                            accept="image/*,.pdf"
+                            className="sr-only"
+                            onChange={handleProofUpload}
+                          />
+                        </label>
+                        {repProof && (
+                          <button
+                            onClick={() => { setRepProof(null); setRepProofName(""); }}
+                            className="text-[10px] text-red-500 hover:text-red-600 underline"
+                          >
+                            Remove
+                          </button>
+                        )}
+                      </div>
+                      {repProof && (
+                        <div className="mt-2">
+                          {repProof.startsWith("data:image") ? (
+                            <img src={repProof} alt="Proof of payment" className="h-16 rounded-xl border border-slate-200 dark:border-slate-700 object-cover" />
+                          ) : (
+                            <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">✓ PDF attached</span>
+                          )}
+                        </div>
+                      )}
                       {repError && (
                         <p className="flex items-start gap-2 text-xs text-red-600 dark:text-red-400 font-medium bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-900 rounded-xl p-3">
                           <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
