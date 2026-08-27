@@ -194,3 +194,31 @@ html {
   }
 }
 
+/* ── PRINT MODE SECTIONS ───────────────────────────────────────────────────────
+   Each print section has a data-print-mode attribute. On print, only the section
+   whose attribute matches the body's data-print-mode is shown.
+   In screen mode (no attribute on body), everything hidden stays hidden.
+   On print, we show the matching section. */
+
+/* Screen: hide all print-mode sections (they live in .print:block parent) */
+[data-print-mode] {
+  display: none;
+}
+
+/* Print: show everything by default (no body attribute) */
+@media print {
+  [data-print-mode] { display: none !important; }
+}
+
+/* Print: show only the matching section */
+@media print {
+  body[data-print-mode="invoice"] [data-print-mode="invoice"] { display: block !important; }
+  body[data-print-mode="invoice-declaration"] [data-print-mode="invoice-declaration"] { display: block !important; }
+  body[data-print-mode="declaration"] [data-print-mode="declaration"] { display: block !important; }
+  body[data-print-mode="cover-letter"] [data-print-mode="cover-letter"] { display: block !important; }
+  body[data-print-mode="full-package"] [data-print-mode="full-package"] { display: block !important; }
+  body[data-print-mode="full-package"] [data-print-mode="invoice"] { display: block !important; }
+  body[data-print-mode="full-package"] [data-print-mode="declaration"] { display: block !important; }
+  body[data-print-mode="full-package"] [data-print-mode="cover-letter"] { display: block !important; }
+}
+
