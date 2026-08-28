@@ -1,8 +1,10 @@
 import Link from "next/link";
-import { CheckCircle2, Layers, Code, Zap, Wrench, Database } from "lucide-react";
+import { CheckCircle2, Layers, Code, Zap, Wrench, Database, ShoppingCart, Rocket, HeartHandshake } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
+import CostEstimator from "@/components/CostEstimator";
+import PitchQualifier from "@/components/PitchQualifier";
 import { SERVICES_DATA, Service, SITE_CONFIG } from "@/data/portfolioData";
 
 export const metadata = {
@@ -82,27 +84,27 @@ export default function ServicesPage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {SERVICES_DATA.map((service: Service, idx) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+              {SERVICES_DATA.map((service: Service, idx) => {
+                const icons = [Layers, Code, Zap, ShoppingCart, Rocket, HeartHandshake];
+                const Icon = icons[idx % icons.length];
+                return (
                 <div
                   key={service.id}
-                  className="rounded-2xl p-8 bg-slate-50 dark:bg-[#0D1A2D] border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-xl hover:border-orange-500/50 transition-all flex flex-col justify-between space-y-6"
+                  className="group relative rounded-2xl p-[1px] bg-gradient-to-br from-orange-500/0 via-transparent to-emerald-500/0 hover:from-orange-500/40 hover:to-emerald-500/30 transition-all"
                 >
+                  <div className="rounded-[15px] p-6 sm:p-7 bg-slate-50 dark:bg-[#0D1A2D] border border-slate-200 dark:border-slate-800 shadow-sm group-hover:shadow-xl group-hover:border-orange-500/30 transition-all flex flex-col justify-between space-y-5 h-full backdrop-blur">
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <div className="p-3 rounded-xl bg-orange-500 text-white font-bold">
-                        {idx === 0 && <Layers className="w-6 h-6" />}
-                        {idx === 1 && <Code className="w-6 h-6" />}
-                        {idx === 2 && <Zap className="w-6 h-6" />}
-                        {idx === 3 && <Wrench className="w-6 h-6" />}
-                        {idx === 4 && <Database className="w-6 h-6" />}
+                      <div className="p-3 rounded-xl bg-orange-500 text-white font-bold group-hover:scale-105 transition-transform">
+                        <Icon className="w-6 h-6" />
                       </div>
                       <span className="text-xs font-bold bg-orange-100 dark:bg-orange-950/80 text-orange-600 dark:text-orange-400 px-3 py-1 rounded-full border border-orange-200 dark:border-orange-800">
                         {service.priceTag}
                       </span>
                     </div>
 
-                    <h3 className="text-2xl font-bold text-slate-900 dark:text-white">
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-white leading-tight">
                       {service.title}
                     </h3>
 
@@ -138,8 +140,13 @@ export default function ServicesPage() {
                       Request a Quote →
                     </Link>
                   </div>
+                  </div>
                 </div>
-              ))}
+              )})}
+            </div>
+            <div className="pt-6 space-y-8">
+              <CostEstimator />
+              <PitchQualifier />
             </div>
 
           </div>

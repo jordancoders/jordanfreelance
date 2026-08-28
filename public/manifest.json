@@ -1,0 +1,13 @@
+{
+  "name": "Jordan Peters Coder Freelancing",
+  "short_name": "JP Freelance",
+  "description": "Custom booking dashboards & web apps for SA SMEs — 48-hour staging demo, POPIA-aligned.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#070D17",
+  "theme_color": "#f97316",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

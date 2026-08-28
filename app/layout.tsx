@@ -93,6 +93,17 @@ const jsonLd = {
     'Firebase',
     'Web Dashboards',
   ],
+  hasOfferCatalog: {
+    '@type': 'OfferCatalog',
+    name: 'Custom Development Services',
+    itemListElement: [
+      { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Booking & Operations Dashboard', description: 'Availability, deposits, dispatch and reporting' } },
+      { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Tourism & Guide Dispatch Portal', description: 'Vehicle allocation + POPIA vault' } },
+      { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'E-commerce Lite', description: 'Catalog & checkout you own' } },
+      { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Startup MVP Scaffold', description: 'Auth, DB, payments, deploy in 48h' } },
+    ],
+  },
+  aggregateRating: { '@type': 'AggregateRating', ratingValue: '5.0', reviewCount: '1', bestRating: '5' },
 };
 
 const faqJsonLd = {
@@ -116,6 +127,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&display=swap" rel="stylesheet" />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#f97316" />
         {/* Inline script: apply saved theme + a11y settings before paint to prevent flash */}
         <script
           dangerouslySetInnerHTML={{
@@ -144,6 +157,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {children}
         <CookieConsent />
         <AccessibilityPanel />
+        <script dangerouslySetInnerHTML={{ __html: `if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js').catch(()=>{});});}` }} />
       </body>
     </html>
   );

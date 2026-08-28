@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { ArrowRight, ShieldCheck, CheckCircle2, Sparkles, Clock, Lock, Mail, Globe } from "lucide-react";
-import TrustBadges from "@/components/TrustBadges";
 import StatsBar from "@/components/StatsBar";
 import ProcessSteps from "@/components/ProcessSteps";
 import LiveSiteEmbed from "@/components/LiveSiteEmbed";
@@ -9,7 +8,11 @@ import RecentReviews from "@/components/RecentReviews";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
-import DiscoveryCallButton from "@/components/DiscoveryCallButton";
+import AnimatedHero from "@/components/AnimatedHero";
+import LiveBuildTicker from "@/components/LiveBuildTicker";
+import BeforeAfterSlider from "@/components/BeforeAfterSlider";
+import SectionReveal from "@/components/SectionReveal";
+import PitchQualifier from "@/components/PitchQualifier";
 import { SITE_CONFIG } from "@/data/portfolioData";
 import { getPublishedReviews, getPublishedProjects } from "@/lib/db";
 import type { ClientReview, Project } from "@/lib/types";
@@ -36,81 +39,16 @@ export default async function HomePage() {
       <Header />
 
       <main className="flex-1">
+        <AnimatedHero />
 
-        {/* HERO SECTION */}
-        <section className="relative overflow-hidden pt-12 pb-20 lg:pt-20 lg:pb-28 border-b border-slate-200 dark:border-slate-800/80 bg-gradient-to-b from-white via-slate-50 to-slate-100 dark:from-[#070D17] dark:via-[#0A1628] dark:to-[#070D17]">
-          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-orange-500/10 dark:bg-orange-500/15 rounded-full blur-3xl pointer-events-none"></div>
-
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center space-y-8">
-
-            <div className="inline-flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-full bg-slate-900 text-white dark:bg-slate-800/90 text-[11px] sm:text-sm font-semibold border border-slate-700/80 shadow-md max-w-full">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
-              <span className="whitespace-nowrap">Available for New SA SME Projects</span>
-              <span className="hidden xs:inline text-slate-400">|</span>
-              <Link href="/guarantee" className="text-orange-400 font-bold hover:underline whitespace-nowrap">48-Hour Staging Guarantee</Link>
-            </div>
-
-            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-slate-900 dark:text-white tracking-tight max-w-5xl mx-auto leading-[1.1]">
-              Custom Booking Dashboards &{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600">
-                Web Apps
-              </span>{" "}
-              for SA SMEs
-            </h1>
-
-            <p className="text-lg sm:text-2xl text-slate-600 dark:text-slate-300 max-w-3xl mx-auto font-normal leading-relaxed">
-              Stop running your business on WhatsApp and spreadsheets. <strong className="text-slate-900 dark:text-white font-semibold">I build you a clickable, working version of your app in 48 hours — you test it live before you pay the balance, and you own 100% of the code.</strong>
-            </p>
-            <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 max-w-3xl mx-auto font-medium">
-              I orchestrate AI to ship your custom dashboard in 48 hours — without the bloat. Every line is human-reviewed, tested, and secure. You pay for results, not months of dev time.
-            </p>
-
-            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 pt-1">
-              <span className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 rounded-full px-3.5 py-1.5">
-                <Sparkles className="w-4 h-4" /> AI-Accelerated
-              </span>
-              <span className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/50 border border-purple-200 dark:border-purple-800 rounded-full px-3.5 py-1.5">
-                <ShieldCheck className="w-4 h-4" /> Human-Quality Gate
-              </span>
-              <span className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 rounded-full px-3.5 py-1.5">
-                <CheckCircle2 className="w-4 h-4" /> 100% Code Ownership
-              </span>
-            </div>
-
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
-              <Link
-                id="hero-primary-cta"
-                href="/contact"
-                className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-lg shadow-xl hover:shadow-2xl hover:scale-105 transition-all group"
-              >
-                Request a Quote
-                <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1.5 transition-transform" />
-              </Link>
-
-              <a
-                id="hero-email-cta"
-                href={`mailto:${SITE_CONFIG.email}`}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700 font-bold text-base border border-slate-300 dark:border-slate-700 shadow-sm transition-all"
-              >
-                <Mail className="w-4 h-4 text-orange-500" />
-                Email Me
-              </a>
-              <DiscoveryCallButton />
-            </div>
-
-            <div className="pt-6">
-              <TrustBadges />
-            </div>
-
-          </div>
-        </section>
-
-        {/* STATS BAR SECTION */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 relative z-20">
+        {/* STATS BAR + LIVE TICKER */}
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 relative z-20 space-y-4">
           <StatsBar />
+          <LiveBuildTicker />
         </section>
 
-        {/* CLIENT TRUST & TESTIMONIALS */}
+        {/* CLIENT TRUST & TESTIMONIALS — bento */}
+        <SectionReveal>
         <section className="py-16 bg-white dark:bg-[#080F1D] border-b border-slate-200 dark:border-slate-800">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
 
@@ -126,42 +64,53 @@ export default async function HomePage() {
               </p>
             </div>
 
-            <div className="p-8 rounded-2xl bg-slate-50 dark:bg-[#0D1A2D] border border-slate-200 dark:border-slate-800 text-center max-w-3xl mx-auto space-y-4">
-              <div className="w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 flex items-center justify-center mx-auto">
-                <CheckCircle2 className="w-6 h-6" />
-              </div>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white">
-                No empty stars. A working build in 48 hours.
-              </h3>
-              <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">
-                I won't publish fake or placeholder reviews — ever. Verified client reviews are featured on the Testimonials page after real project sign-offs. Until then, judge me by what you can actually test: your own staging demo in 48 hours, before you pay the balance.
-              </p>
-              <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
-                {SITE_CONFIG.loomUrl && (
-                  <a
-                    id="reviews-loom-btn"
-                    href={SITE_CONFIG.loomUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-slate-900 dark:bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm shadow transition-all"
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2 p-8 rounded-2xl bg-slate-50 dark:bg-[#0D1A2D] border border-slate-200 dark:border-slate-800 text-center space-y-4 backdrop-blur shadow-sm">
+                <div className="w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 flex items-center justify-center mx-auto">
+                  <CheckCircle2 className="w-6 h-6" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+                  No empty stars. A working build in 48 hours.
+                </h3>
+                <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">
+                  I won't publish fake or placeholder reviews — ever. Verified client reviews are featured on the Testimonials page after real project sign-offs. Until then, judge me by what you can actually test: your own staging demo in 48 hours, before you pay the balance.
+                </p>
+                <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+                  {SITE_CONFIG.loomUrl && (
+                    <a
+                      id="reviews-loom-btn"
+                      href={SITE_CONFIG.loomUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-slate-900 dark:bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm shadow transition-all"
+                    >
+                      ▶ Watch the Sample Build Teardown
+                    </a>
+                  )}
+                  <Link
+                    id="reviews-cta-btn"
+                    href="/contact"
+                    className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm shadow transition-all"
                   >
-                    ▶ Watch the Sample Build Teardown
-                  </a>
-                )}
-                <Link
-                  id="reviews-cta-btn"
-                  href="/contact"
-                  className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm shadow transition-all"
-                >
-                  Test It Yourself — 48-Hour Staging →
-                </Link>
-                <Link
-                  id="reviews-policy-link"
-                  href="/testimonials"
-                  className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 font-bold text-sm border border-slate-300 dark:border-slate-700 shadow transition-all"
-                >
-                  Verified Reviews Policy →
-                </Link>
+                    Test It Yourself — 48-Hour Staging →
+                  </Link>
+                  <Link
+                    id="reviews-policy-link"
+                    href="/testimonials"
+                    className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 font-bold text-sm border border-slate-300 dark:border-slate-700 shadow transition-all"
+                  >
+                    Verified Reviews Policy →
+                  </Link>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <div className="p-6 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-xl">
+                  <div className="text-3xl font-black">48h</div><div className="text-sm font-bold">Staging guarantee</div><div className="text-xs opacity-80 mt-1">Missed SLA = 100% deposit back + unused API credits</div>
+                </div>
+                <div className="p-6 rounded-2xl bg-slate-900 text-white border border-slate-800">
+                  <div className="text-lg font-black">POPIA ✓</div><div className="text-xs text-slate-400">7-day erasure • Certificate on request</div>
+                  <div className="text-xs text-slate-300 mt-2">Your data never trains AI. Ever.</div>
+                </div>
               </div>
             </div>
 
@@ -169,6 +118,7 @@ export default async function HomePage() {
 
           </div>
         </section>
+        </SectionReveal>
 
         {/* FEATURED PROJECT SHOWCASE */}
         <section className="py-20 bg-slate-100 dark:bg-[#070D17] border-b border-slate-200 dark:border-slate-800">
@@ -196,7 +146,8 @@ export default async function HomePage() {
             </div>
 
             <LiveSiteEmbed projects={projects} />
-
+            <BeforeAfterSlider />
+            <SectionReveal><PitchQualifier /></SectionReveal>
             <PromptEngineeringLog />
 
             <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -221,6 +172,7 @@ export default async function HomePage() {
         </section>
 
         {/* PROCESS TEASER SECTION */}
+        <SectionReveal>
         <section id="process-teaser" className="py-20 bg-slate-50 dark:bg-[#070D17] border-b border-slate-200 dark:border-slate-800">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
 
@@ -251,6 +203,7 @@ export default async function HomePage() {
             </div>
           </div>
         </section>
+        </SectionReveal>
 
         {/* INTERNATIONAL CLIENTS STRIP */}
         <section className="py-8 sm:py-12 bg-blue-50 dark:bg-[#0A1628] border-b border-slate-200 dark:border-slate-800">

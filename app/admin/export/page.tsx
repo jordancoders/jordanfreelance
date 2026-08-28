@@ -115,6 +115,26 @@ function ExportContent() {
               <Printer className="w-4 h-4" />
               Print PDF
             </button>
+            <button
+              onClick={async () => {
+                const html = contentRef.current?.innerHTML || document.documentElement.outerHTML;
+                const full = `<!doctype html><html><head><meta charset="utf-8"><style>@page{size:A4;margin:14mm}body{font-family:system-ui, sans-serif;color:#0f172a}</style></head><body>${html}</body></html>`;
+                try {
+                  const res = await fetch("/api/pdf", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ html: full, filename: invoice ? `${invoice.invoiceNumber}.pdf` : "bundle.pdf" }) });
+                  if (res.headers.get("Content-Type")?.includes("application/pdf")) {
+                    const blob = await res.blob();
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a"); a.href = url; a.download = invoice ? `${invoice.invoiceNumber}.pdf` : "bundle.pdf"; a.click(); URL.revokeObjectURL(url);
+                  } else {
+                    const j = await res.json(); if (j.fallback) window.print(); else alert(j.error || "PDF failed");
+                  }
+                } catch { window.print(); }
+              }}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs border border-slate-700"
+              title="Generate PDF via WeasyPrint (python) with fallback to browser print"
+            >
+              <FileText className="w-4 h-4" /> WeasyPrint PDF
+            </button>
 
           </div>
         </div>

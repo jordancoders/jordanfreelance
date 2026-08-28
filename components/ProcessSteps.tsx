@@ -1,5 +1,8 @@
+"use client";
+import { useEffect, useState } from "react";
 import { MessageSquareQuote, Wallet, Lock, SearchCheck, Monitor, CheckSquare, Key, Trash2, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 
 interface ProcessStepsProps {
   compact?: boolean;
@@ -67,22 +70,48 @@ export default function ProcessSteps({ compact = false }: ProcessStepsProps) {
 
   const displayedSteps = compact ? steps.slice(0, 3) : steps;
 
+  // stepper progress — show active step
+  const [activeIdx, setActiveIdx] = useState(0);
+  useEffect(() => {
+    if (compact) return;
+    const id = setInterval(() => setActiveIdx((v) => (v + 1) % steps.length), 2200);
+    return () => clearInterval(id);
+  }, [compact, steps.length]);
+
   return (
     <div className="space-y-8">
+      {/* horizontal stepper (desktop) */}
+      {!compact && (
+        <div className="hidden lg:block">
+          <div className="relative flex items-center justify-between gap-2 px-2">
+            <div className="absolute top-1/2 left-0 right-0 h-1 bg-slate-200 dark:bg-slate-800 rounded-full -translate-y-1/2" />
+            <motion.div className="absolute top-1/2 left-0 h-1 bg-gradient-to-r from-orange-500 to-emerald-500 rounded-full -translate-y-1/2" initial={{ width: "0%" }} animate={{ width: `${((activeIdx + 1) / steps.length) * 100}%` }} transition={{ duration: 0.6 }} />
+            {steps.map((s, idx) => (
+              <div key={s.num} className={`relative z-10 w-9 h-9 rounded-full flex items-center justify-center text-xs font-black border-2 transition-all ${idx <= activeIdx ? "bg-orange-500 text-white border-orange-500 shadow" : "bg-white dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700"}`}>{s.num}</div>
+            ))}
+          </div>
+          <div className="flex justify-between text-[10px] font-mono text-slate-400 mt-2 px-1"><span>Quote</span><span>Demo</span><span>Handover</span></div>
+        </div>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {displayedSteps.map((s) => {
+        {displayedSteps.map((s, idx) => {
           const Icon = s.icon;
+          const isActive = idx === activeIdx;
           return (
-            <div
+            <motion.div
               key={s.num}
-              className="relative group p-6 rounded-2xl bg-white dark:bg-[#0D1A2D] border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-xl hover:border-orange-500/50 transition-all duration-300 flex flex-col justify-between"
+              initial={{ opacity: 0, y: 12 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: idx * 0.06 }}
+              className={`relative group p-6 rounded-2xl bg-white dark:bg-[#0D1A2D] border shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between ${isActive ? "border-orange-400/60 shadow-orange-500/10" : "border-slate-200 dark:border-slate-800 hover:border-orange-500/50"}`}
             >
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-3xl font-black text-orange-500 font-mono">
+                  <span className={`text-3xl font-black font-mono ${isActive ? "text-orange-500" : "text-orange-500/80"}`}>
                     {s.num}
                   </span>
-                  <div className="p-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white group-hover:bg-orange-500 group-hover:text-white transition-colors">
+                  <div className={`p-3 rounded-xl transition-colors ${isActive ? "bg-orange-500 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white group-hover:bg-orange-500 group-hover:text-white"}`}>
                     <Icon className="w-6 h-6" />
                   </div>
                 </div>
@@ -109,7 +138,7 @@ export default function ProcessSteps({ compact = false }: ProcessStepsProps) {
                   {s.num !== "03" && s.num !== "04" && s.num !== "05" && s.num !== "08" && "Quality Standard"}
                 </div>
               )}
-            </div>
+            </motion.div>
           );
         })}
       </div>

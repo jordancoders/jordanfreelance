@@ -5,6 +5,7 @@ import { Mail, Phone, Clock, MapPin, Send, MessageSquare, Calendar, Globe } from
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
+import PitchQualifier from "@/components/PitchQualifier";
 import { SITE_CONFIG } from "@/data/portfolioData";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 
@@ -184,10 +185,10 @@ function ContactFormContent() {
             Schedule a 15-minute video walkthrough to discuss your project requirements, technical feasibility, and get instant pricing clarity.
           </p>
 
-          <div className="pt-2">
+          <div className="pt-2 space-y-3">
             <a
               id="book-discovery-call-trigger"
-              href={SITE_CONFIG.discoveryCallUrl}
+              href={(SITE_CONFIG as any).calUrl || SITE_CONFIG.discoveryCallUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white hover:bg-slate-200 dark:hover:bg-slate-700 font-bold text-sm transition-all border border-slate-300 dark:border-slate-700 shadow-sm"
@@ -195,6 +196,11 @@ function ContactFormContent() {
               <Calendar className="w-4 h-4 text-orange-500" />
               Book 15-Min Discovery Call
             </a>
+            {(SITE_CONFIG as any).calUrl && (
+              <div className="rounded-2xl overflow-hidden border border-white/20 bg-white mt-3">
+                <iframe src={(SITE_CONFIG as any).calUrl} className="w-full h-[520px] border-0" title="Book a call with Jordan Peters" loading="lazy" />
+              </div>
+            )}
           </div>
         </div>
 
@@ -222,6 +228,10 @@ export default function ContactPage() {
             <p className="text-slate-600 dark:text-slate-300 text-base sm:text-lg">
               Tell me about your project, and I&apos;ll get back to you within 2 hours during business hours with a custom quote.
             </p>
+          </div>
+
+          <div className="max-w-4xl mx-auto">
+            <PitchQualifier />
           </div>
 
           <Suspense fallback={<div className="text-center py-12 text-slate-400">Loading form...</div>}>

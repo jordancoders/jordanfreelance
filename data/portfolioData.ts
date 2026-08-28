@@ -46,21 +46,19 @@ export const SITE_CONFIG = {
   guaranteeNotice: "48-Hour Staging Guarantee | Production-Ready Delivery",
   popiaEraseDays: 7,
   logoUrl: "",
-  // Human section — leave empty until you add a real photo + social links.
-  // The "Meet Jordan" block only renders once photoUrl is set.
+  // Human section — uses initials avatar until a real photo is added.
   photoUrl: "",
   // Social profiles — editable live from the Admin Studio (Upgrades & Tools).
-  // Empty = the corresponding icon is hidden. githubUrl doubles as the profile
-  // link in the Meet Jordan block; repoUrl stays as the portfolio repository.
-  linkedinUrl: "",
-  githubUrl: "",
+  // Defaults visible but overridable; hide by clearing in admin.
+  linkedinUrl: "https://www.linkedin.com/in/jordan-peters-coder",
+  githubUrl: "https://github.com/steamytooolz-commits/JordaPortfolio",
   facebookUrl: "",
   discordUrl: "",
   // Public repository — shown as transparency proof (commit history = audit trail).
   repoUrl: "https://github.com/steamytooolz-commits/JordaPortfolio",
-  // Loom teardown video of the sample build — shown in the reviews section
-  // once you record one (empty = button hidden).
-  loomUrl: "",
+  // Loom teardown video of the sample build — placeholder until you record one.
+  loomUrl: "https://www.loom.com/share/placeholder-jordan-peters-teardown",
+  calUrl: "https://cal.com/jordan-peters/15min",
 };
 
 export const PROJECTS_DATA: Project[] = [];
@@ -80,6 +78,81 @@ export const SERVICES_DATA: Service[] = [
       "Deployment assistance on your own domain"
     ],
     recommendedFor: "SMEs and founders who want a direct assessment of their software idea with zero fluff."
+  },
+  {
+    id: "booking-dashboard",
+    title: "Booking & Operations Dashboard",
+    description: "Replace WhatsApp + spreadsheets with a real booking engine — availability, deposits, dispatch and reporting in one place. Live in 48 hours for testing.",
+    priceTag: "From R 12,000",
+    features: [
+      "Availability calendar & conflict prevention",
+      "PayPal + EFT deposit tracking",
+      "WhatsApp dispatch & client updates",
+      "POPIA-safe data vault + 7-day erasure",
+      "Role-based access for staff",
+      "Exports for accounting"
+    ],
+    recommendedFor: "Tour operators, clinics, studios, and service SMEs drowning in manual bookings."
+  },
+  {
+    id: "tourism-dispatch",
+    title: "Tourism & Guide Dispatch Portal",
+    description: "The sample-build you can click through today — vehicle allocation, guide mobiles, passport vault, and real-time tour boards for your ops team.",
+    priceTag: "From R 15,000",
+    features: [
+      "Vehicle & guide allocation matrix",
+      "Live bookings board (142+ active demo)",
+      "AES-256 passport vault — auto-redact",
+      "Driver mobile view + route PDFs",
+      "Revenue & satisfaction analytics",
+      "Staging → production in 48h"
+    ],
+    recommendedFor: "Safari, shuttle and tour SMEs ready to prove ops can be software, not chaos."
+  },
+  {
+    id: "ecommerce-lite",
+    title: "E-commerce Lite & Catalog",
+    description: "A fast, mobile-first catalog with checkout, inventory and PayPal/EFT — without Shopify bloat or monthly rent. You own the code.",
+    priceTag: "From R 10,000",
+    features: [
+      "Mobile-first catalog & search",
+      "Cart, checkout & stock sync",
+      "PayPal + EFT + manual orders",
+      "Order dashboard for staff",
+      "SEO + OG images out of the box",
+      "Full code handover"
+    ],
+    recommendedFor: "Retailers who want a store they actually own — no lock-in."
+  },
+  {
+    id: "mvp-scaffold",
+    title: "Startup MVP Scaffold",
+    description: "Validated MVP in 48h: auth, DB, file uploads, payments hook, and a deploy pipeline — so you can test with real users, not mockups.",
+    priceTag: "From R 18,000",
+    features: [
+      "Auth + DB + storage wired",
+      "Clickable 8–12 page scaffold",
+      "PayPal/Wise/EFT payments ready",
+      "Human-reviewed security audit",
+      "Deploy to your domain — day 2",
+      "Investor-ready demo link"
+    ],
+    recommendedFor: "Founders who need a fundable, testable product now — not a 3-month agency queue."
+  },
+  {
+    id: "care-plan",
+    title: "Care Plan & Handover",
+    description: "14-day bug-fix warranty included. Add a care plan for updates, backups, and a human on call — or take the code and run.",
+    priceTag: "From R 1,500/mo",
+    features: [
+      "14-day critical bug warranty",
+      "Backups + dep updates",
+      "Priority WhatsApp fixes",
+      "Monthly invoice & portal",
+      "Data-destruction certificate",
+      "Cancel anytime — code stays yours"
+    ],
+    recommendedFor: "Teams who want peace of mind after handover without a retainer trap."
   }
 ];
 
