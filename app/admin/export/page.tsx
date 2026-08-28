@@ -2,13 +2,12 @@
 
 import { useState, useEffect, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { Printer, ShieldCheck, ArrowLeft, FileText, Lock, Globe, Database, Scale, Download } from "lucide-react";
+import { Printer, ShieldCheck, ArrowLeft, FileText, Lock, Globe, Database, Scale } from "lucide-react";
 import Link from "next/link";
 import SignaturePad from "@/components/SignaturePad";
 import { SITE_CONFIG } from "@/data/portfolioData";
 import Logo from "@/components/Logo";
 import { fetchInvoice } from "@/app/actions/invoices";
-import { downloadElementAsPdf } from "@/lib/pdfDownload";
 import type { Invoice } from "@/lib/types";
 
 function ExportContent() {
@@ -19,7 +18,6 @@ function ExportContent() {
   const [signature, setSignature] = useState("");
   const [signerName, setSignerName] = useState("");
   const [acknowledged, setAcknowledged] = useState(false);
-  const [downloading, setDownloading] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
 
@@ -117,22 +115,7 @@ function ExportContent() {
               <Printer className="w-4 h-4" />
               Print PDF
             </button>
-            <button
-              onClick={async () => {
-                if (!contentRef.current || downloading) return;
-                setDownloading(true);
-                try {
-                  await downloadElementAsPdf(contentRef.current, `bundle-${invoice?.invoiceNumber || "legal"}.pdf`);
-                } finally {
-                  setDownloading(false);
-                }
-              }}
-              disabled={downloading}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm shadow transition-colors disabled:opacity-50"
-            >
-              <Download className="w-4 h-4" />
-              {downloading ? "Generating…" : "Download PDF"}
-            </button>
+
           </div>
         </div>
       </div>

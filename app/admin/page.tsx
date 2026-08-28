@@ -45,7 +45,6 @@ import {
 } from "lucide-react";
 import { SITE_CONFIG, Project, ClientReview } from "@/data/portfolioData";
 import SignaturePad from "@/components/SignaturePad";
-import { downloadElementAsPdf } from "@/lib/pdfDownload";
 import Logo from "@/components/Logo";
 import {
   buildQuoteEmailDraft,
@@ -194,36 +193,9 @@ function AdminDashboardInner() {
   type PrintMode = "invoice" | "invoice-declaration" | "declaration" | "cover-letter" | "full-package";
   const [printMenuOpen, setPrintMenuOpen] = useState(false);
   const printMenuRef = useRef<HTMLDivElement>(null);
-  const printContainerRef = useRef<HTMLDivElement>(null);
   // When set, the print-only container becomes visible via inline style,
   // bypassing any CSS layer/cascade issues with Tailwind's hidden class.
   const [activePrintMode, setActivePrintMode] = useState<PrintMode | null>(null);
-  const [isDownloading, setIsDownloading] = useState(false);
-
-  const handleDownload = async (mode: PrintMode) => {
-    setPrintMenuOpen(false);
-    if (isDownloading) return;
-    setIsDownloading(true);
-    try {
-      // Show the print container — set body attr for CSS section visibility
-      document.body.dataset.printMode = mode;
-      setActivePrintMode(mode);
-      // Wait for React to render the container visible, then browser to lay it out
-      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
-      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
-      const el = printContainerRef.current;
-      if (el) {
-        const label = selectedInvoice ? `${selectedInvoice.invoiceNumber}-${mode}` : `document-${mode}`;
-        await downloadElementAsPdf(el, `${label}.pdf`, mode);
-      }
-    } finally {
-      // Clean up
-      delete document.body.dataset.printMode;
-      setActivePrintMode(null);
-      setIsDownloading(false);
-    }
-  };
-
   const handlePrint = (mode: PrintMode) => {
     setPrintMenuOpen(false);
     // 1. Set body attribute so CSS shows the right SECTION inside the container
@@ -232,24 +204,20 @@ function AdminDashboardInner() {
     setActivePrintMode(mode);
   };
 
-  // After React renders the print container visible, trigger the browser print dialog.
-  // ONLY fires for print actions — skip if we're downloading.
+  // Trigger browser print dialog after React renders the container visible.
   useEffect(() => {
-    if (!activePrintMode || isDownloading) return;
-    // Wait for React to commit + browser to lay out the newly-visible container
-    const id = requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        window.print();
-        const cleanup = () => {
-          delete document.body.dataset.printMode;
-          setActivePrintMode(null);
-        };
-        window.addEventListener("afterprint", cleanup, { once: true });
-        // Fallback cleanup if afterprint doesn't fire
-        setTimeout(cleanup, 120_000);
-      });
-    });
-    return () => cancelAnimationFrame(id);
+    if (!activePrintMode) return;
+    // 300ms gives React time to commit the DOM + browser to paint the layout.
+    const timer = setTimeout(() => {
+      window.print();
+      const cleanup = () => {
+        delete document.body.dataset.printMode;
+        setActivePrintMode(null);
+      };
+      window.addEventListener("afterprint", cleanup, { once: true });
+      setTimeout(cleanup, 120_000);
+    }, 300);
+    return () => clearTimeout(timer);
   }, [activePrintMode]);
 
   // Close print menu on outside click
@@ -2072,23 +2040,7 @@ function AdminDashboardInner() {
                                         <Download className="w-3.5 h-3.5 text-amber-500" /> Full Package
                                         <span className="ml-auto text-[10px] text-slate-400">Letter + Invoice + Declaration</span>
                                       </button>
-                                      <div className="border-t border-slate-200 dark:border-slate-700 my-1" />
-                                      <p className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Download PDF</p>
-                                      <button onClick={() => handleDownload("invoice")} disabled={isDownloading} className="w-full text-left px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2 disabled:opacity-50">
-                                        <Download className="w-3.5 h-3.5 text-orange-500" /> Invoice.pdf
-                                      </button>
-                                      <button onClick={() => handleDownload("invoice-declaration")} disabled={isDownloading} className="w-full text-left px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2 disabled:opacity-50">
-                                        <Download className="w-3.5 h-3.5 text-emerald-500" /> Invoice + Declaration.pdf
-                                      </button>
-                                      <button onClick={() => handleDownload("declaration")} disabled={isDownloading} className="w-full text-left px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2 disabled:opacity-50">
-                                        <Download className="w-3.5 h-3.5 text-blue-500" /> Declaration.pdf
-                                      </button>
-                                      <button onClick={() => handleDownload("cover-letter")} disabled={isDownloading} className="w-full text-left px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2 disabled:opacity-50">
-                                        <Download className="w-3.5 h-3.5 text-violet-500" /> Cover Letter.pdf
-                                      </button>
-                                      <button onClick={() => handleDownload("full-package")} disabled={isDownloading} className="w-full text-left px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2 disabled:opacity-50">
-                                        <Download className="w-3.5 h-3.5 text-amber-500" /> Full Package.pdf
-                                      </button>
+
                                     </div>
                                   )}
                                 </div>
@@ -3611,7 +3563,7 @@ function AdminDashboardInner() {
            DOM order: Cover Letter (p1) → Invoice (p2) → Declaration (p3).
            Each section gets its own page break when printed together. */}
       {selectedInvoice && (
-        <div ref={printContainerRef} style={{ display: activePrintMode ? "block" : "none" }} className="print-exact bg-white text-slate-900">
+        <div style={{ display: activePrintMode ? "block" : "none" }} className="print-exact bg-white text-slate-900">
           <div className="p-8">
             {/* ── COVER LETTER (print-mode: cover-letter / full-package) — FIRST PAGE ── */}
             <div data-print-mode="cover-letter" className="pb-2">

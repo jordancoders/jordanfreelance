@@ -56,7 +56,7 @@ Each client gets a private portal (unique username + password) linked to their q
   - 🚀 **Next Steps / CTA** — clear "reply YES" path to close
   - On print, these render as **color-coded cards** (orange=problem, green=solution, blue=timeline, dark=guarantee). Invoices show none of these fields.
   - Proposal specs are included in **email**, **WhatsApp share**, and **printed** outputs — not just the on-screen form.
-- **5 PDF Export Modes** — click the Export dropdown on any document:
+- **5 PDF Export Modes** — click the Export dropdown on any document. Each opens the browser print dialog ("Save as PDF" for a clean A4 download):
   - 📄 **Clean Invoice** — line items, totals, payment options, legal terms — no declaration, no admin chrome
   - 🛡️ **Invoice + Declaration** — full invoice with signed declaration block appended
   - ✍️ **Declaration Only** — standalone signature page
