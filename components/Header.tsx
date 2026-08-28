@@ -66,7 +66,7 @@ export default function Header() {
       />
 
       {/* Solid Opaque Drawer Sheet */}
-      <div role="dialog" aria-modal="true" aria-label="Navigation menu" className="relative w-[85vw] max-w-xs sm:max-w-sm bg-white dark:bg-[#080F1D] h-full shadow-2xl border-l border-slate-200 dark:border-slate-800 flex flex-col justify-between z-10 transition-transform duration-200">
+      <div role="dialog" aria-modal="true" aria-label="Navigation menu" className="relative w-[85vw] max-w-xs sm:max-w-sm bg-white dark:bg-[#080F1D] h-[100dvh] shadow-2xl border-l border-slate-200 dark:border-slate-800 flex flex-col justify-between z-10 transition-transform duration-200">
         {/* Drawer Header */}
         <div>
           <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/90">
@@ -89,8 +89,8 @@ export default function Header() {
             </button>
           </div>
 
-          {/* Drawer Links */}
-          <nav aria-label="Mobile navigation" className="p-4 space-y-1.5 overflow-y-auto max-h-[calc(100vh-230px)]">
+          {/* Drawer Links — use dvh so iOS address bar doesn't cut off nav */}
+          <nav aria-label="Mobile navigation" className="p-4 space-y-1.5 overflow-y-auto max-h-[calc(100dvh-220px)] overscroll-contain">
             {navLinks.map((link) => {
               const Icon = link.icon;
               const active = isActive(link.href);
@@ -149,7 +149,7 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-[#070D17]/95 backdrop-blur-md transition-colors">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
         {/* Logo Section */}
         <Link id="header-logo-link" href="/" className="group">
           <div className="text-slate-900 dark:text-white group-hover:scale-105 transition-transform">

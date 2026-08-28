@@ -12,10 +12,10 @@ function ContactFormContent() {
   const { config } = useSiteConfig();
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
       
       {/* Google Form Container */}
-      <div className="lg:col-span-7 bg-white dark:bg-[#0D1A2D] p-8 sm:p-10 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl space-y-6">
+      <div className="lg:col-span-7 bg-white dark:bg-[#0D1A2D] p-5 sm:p-8 lg:p-10 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl space-y-6">
         
         <div className="space-y-3 border-b border-slate-200 dark:border-slate-800 pb-4">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-100 dark:bg-orange-950/60 text-orange-600 dark:text-orange-400 text-xs font-bold border border-orange-200 dark:border-orange-800">
@@ -77,7 +77,7 @@ function ContactFormContent() {
             </a>
           </div>
 
-          <div className="w-full h-[550px] rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 relative">
+          <div className="w-full h-[520px] sm:h-[600px] rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 relative">
             <iframe
               src={config.googleFormUrl}
               className="w-full h-full border-0"
@@ -98,7 +98,7 @@ function ContactFormContent() {
       <div className="lg:col-span-5 space-y-8">
         
         {/* Contact Info Cards */}
-        <div className="bg-slate-900 text-white p-8 rounded-3xl border border-slate-800 space-y-6 shadow-xl">
+        <div className="bg-slate-900 text-white p-5 sm:p-8 rounded-3xl border border-slate-800 space-y-6 shadow-xl">
           <h3 className="text-2xl font-bold text-white border-b border-slate-800 pb-3">
             Direct Contact Information
           </h3>
@@ -209,8 +209,8 @@ export default function ContactPage() {
     <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-[#070D17] text-slate-900 dark:text-slate-100 transition-colors">
       <Header />
 
-      <main className="flex-1 py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+      <main className="flex-1 py-10 sm:py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 sm:space-y-12">
           
           <div className="text-center space-y-3 max-w-3xl mx-auto">
             <span className="text-xs font-bold text-orange-500 uppercase tracking-widest bg-orange-50 dark:bg-orange-950/60 px-3 py-1 rounded-full border border-orange-200 dark:border-orange-800">

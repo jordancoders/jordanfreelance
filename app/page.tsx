@@ -43,11 +43,11 @@ export default async function HomePage() {
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center space-y-8">
 
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900 text-white dark:bg-slate-800/90 text-xs sm:text-sm font-semibold border border-slate-700/80 shadow-md">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span>Available for New SA SME Projects</span>
-              <span className="text-slate-400">|</span>
-              <Link href="/guarantee" className="text-orange-400 font-bold hover:underline">48-Hour Staging Guarantee</Link>
+            <div className="inline-flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-full bg-slate-900 text-white dark:bg-slate-800/90 text-[11px] sm:text-sm font-semibold border border-slate-700/80 shadow-md max-w-full">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
+              <span className="whitespace-nowrap">Available for New SA SME Projects</span>
+              <span className="hidden xs:inline text-slate-400">|</span>
+              <Link href="/guarantee" className="text-orange-400 font-bold hover:underline whitespace-nowrap">48-Hour Staging Guarantee</Link>
             </div>
 
             <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-slate-900 dark:text-white tracking-tight max-w-5xl mx-auto leading-[1.1]">
@@ -253,25 +253,25 @@ export default async function HomePage() {
         </section>
 
         {/* INTERNATIONAL CLIENTS STRIP */}
-        <section className="py-12 bg-blue-50 dark:bg-[#0A1628] border-b border-slate-200 dark:border-slate-800">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-4 text-center lg:text-left">
+        <section className="py-8 sm:py-12 bg-blue-50 dark:bg-[#0A1628] border-b border-slate-200 dark:border-slate-800">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row items-center justify-between gap-4 sm:gap-6">
+            <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 text-center sm:text-left w-full lg:w-auto">
               <div className="w-12 h-12 rounded-2xl bg-blue-500/15 text-blue-500 dark:text-blue-400 border border-blue-500/30 flex items-center justify-center shrink-0">
                 <Globe className="w-6 h-6" />
               </div>
-              <div>
-                <h3 className="font-bold text-slate-900 dark:text-white">
+              <div className="min-w-0">
+                <h3 className="font-bold text-slate-900 dark:text-white text-sm sm:text-base">
                   Building Worldwide — EU, UK, US, Canada & Australia
                 </h3>
-                <p className="text-sm text-slate-600 dark:text-slate-300">
-                  Quotes in USD / EUR / GBP • PayPal, Wise & card payments • GDPR-aligned Data Processing Agreement • Same 48-hour staging demo.
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                  Quotes in USD / EUR / GBP • PayPal, Wise & card payments • GDPR-aligned DPA • Same 48-hour demo.
                 </p>
               </div>
             </div>
             <Link
               id="international-strip-cta"
               href="/international"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md hover:shadow-lg transition-all shrink-0"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md hover:shadow-lg transition-all shrink-0"
             >
               <Globe className="w-4 h-4" />
               International Clients Page

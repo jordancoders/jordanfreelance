@@ -172,8 +172,8 @@ html {
 
 /* ============ PRINT STYLES ============ */
 /* Full-page print overhaul — produces clean, professional PDF output.
-   Site chrome is hidden, the print-only document fills the page,
-   and background colours are preserved where marked. */
+    Site chrome is hidden, the print-only document fills the page,
+    and background colours are preserved where marked. */
 @media print {
   /* Hide everything that isn't print content */
   header, footer, nav, .fixed, .print-hidden,
@@ -195,40 +195,54 @@ html {
   /* Page setup — A4 with sensible margins */
   @page {
     size: A4;
-    margin: 15mm 18mm 15mm 18mm;
+    margin: 14mm 16mm 14mm 16mm;
   }
   @page :first {
-    margin-top: 12mm;
+    margin-top: 10mm;
   }
 
-  /* Kill all shadows and rounded corners on paper */
+  /* Kill shadows; keep subtle borders for tables/cards */
   * {
     box-shadow: none !important;
+  }
+  /* Keep rounding off for print — cleaner edges, but preserve table header */
+  .rounded-xl, .rounded-2xl, .rounded-3xl, .rounded-full {
     border-radius: 0 !important;
   }
 
-  /* Links: show URL after text for clickability in PDFs */
+  /* Links: no URL echo */
   a[href^="http"]::after {
     content: none !important;
   }
 
-  /* Ensure images don't overflow */
+  /* Ensure images don't overflow; signatures crisp */
   img {
     max-width: 100% !important;
     height: auto !important;
   }
+  img[alt*="Signature" i], img[alt*="signature" i] {
+    max-height: 88px !important;
+    object-fit: contain !important;
+  }
 
-  /* Tables: always break inside avoid, full width */
+  /* Tables: full width, repeat header, avoid breaks */
   table {
     width: 100% !important;
     border-collapse: collapse !important;
-    page-break-inside: avoid;
-  }
-  tr {
-    page-break-inside: avoid;
+    page-break-inside: auto;
   }
   thead {
     display: table-header-group;
+  }
+  tfoot {
+    display: table-footer-group;
+  }
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+  tbody {
+    page-break-inside: auto;
   }
 
   /* Prevent orphans and widows */
@@ -243,10 +257,47 @@ html {
 
   /* Section breaks */
   .break-inside-avoid {
-    page-break-inside: avoid;
+    page-break-inside: avoid !important;
   }
   .break-before {
-    page-break-before: always;
+    page-break-before: always !important;
+  }
+  .avoid-break {
+    page-break-inside: avoid !important;
+  }
+
+  /* ── Ink-saving: dark payment boxes become light on paper ──
+     The admin invoice print uses bg-slate-900 / bg-slate-800 for payment
+     options — on screen it's a dark card with white text, on paper it
+     wastes ink and reduces readability. Invert to white with dark text. */
+  .bg-slate-900, .bg-slate-800,
+  [class*="bg-slate-900"], [class*="bg-slate-800"] {
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    border: 1.5px solid #334155 !important;
+  }
+  .bg-slate-900 *, .bg-slate-800 *,
+  [class*="bg-slate-900"] *, [class*="bg-slate-800"] * {
+    color: #0f172a !important;
+  }
+  .bg-slate-900 .text-emerald-400, .bg-slate-800 .text-emerald-400,
+  [class*="bg-slate-900"] .text-emerald-400 {
+    color: #047857 !important;
+  }
+  .bg-slate-900 .text-orange-400, .bg-slate-800 .text-orange-400 { color: #c2410c !important; }
+  .bg-slate-900 .text-slate-300, .bg-slate-800 .text-slate-300,
+  .bg-slate-900 .text-slate-400, .bg-slate-800 .text-slate-400 { color: #475569 !important; }
+  .bg-slate-900 a, .bg-slate-800 a { color: #0f172a !important; text-decoration: underline !important; }
+  /* Override dark badge spans inside payment box */
+  .bg-slate-900 .bg-slate-800, .bg-slate-800 .bg-slate-700 {
+    background-color: #f1f5f9 !important;
+    border: 1px solid #cbd5e1 !important;
+  }
+
+  /* Light cards (proposal orange/emerald/blue) keep their tint but with solid border */
+  .bg-orange-50, .bg-emerald-50, .bg-blue-50, .bg-slate-50 {
+    border: 1px solid #cbd5e1 !important;
   }
 
   /* Show the print-only document container */
@@ -318,13 +369,12 @@ body:not([data-print-mode]) [data-print-mode] {
 @media print {
   body[data-print-mode="invoice"] [data-print-mode="invoice"] { display: block !important; }
   body[data-print-mode="invoice-declaration"] [data-print-mode="invoice"] { display: block !important; }
-  body[data-print-mode="invoice-declaration"] [data-print-mode="declaration"] { display: block !important; }
+  body[data-print-mode="invoice-declaration"] [data-print-mode="declaration"] { display: block !important; page-break-before: always !important; }
   body[data-print-mode="declaration"] [data-print-mode="declaration"] { display: block !important; }
   body[data-print-mode="cover-letter"] [data-print-mode="cover-letter"] { display: block !important; }
-  body[data-print-mode="full-package"] [data-print-mode="full-package"] { display: block !important; }
-  body[data-print-mode="full-package"] [data-print-mode="invoice"] { display: block !important; }
-  body[data-print-mode="full-package"] [data-print-mode="declaration"] { display: block !important; }
   body[data-print-mode="full-package"] [data-print-mode="cover-letter"] { display: block !important; }
+  body[data-print-mode="full-package"] [data-print-mode="invoice"] { display: block !important; page-break-before: always !important; }
+  body[data-print-mode="full-package"] [data-print-mode="declaration"] { display: block !important; page-break-before: always !important; }
   /* Monthly statement modes */
   body[data-print-mode="current"] [data-print-mode="monthly-statement"] { display: block !important; }
   body[data-print-mode="year"] [data-print-mode="ytd-summary"] { display: block !important; }

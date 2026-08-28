@@ -76,7 +76,7 @@ export default function LiveSiteEmbed({ projects }: LiveSiteEmbedProps) {
             <button
               id="open-live-site-btn"
               onClick={() => setIsOpen(true)}
-              className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm shadow-lg transition-all group/btn"
+              className="w-full lg:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm shadow-lg transition-all group/btn"
             >
               <Eye className="w-5 h-5" />
               Launch Live Site
@@ -87,12 +87,12 @@ export default function LiveSiteEmbed({ projects }: LiveSiteEmbedProps) {
               href={url}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm border border-slate-700 transition-all"
+              className="w-full lg:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm border border-slate-700 transition-all"
             >
               <ExternalLink className="w-4 h-4" />
               Open in New Tab
             </a>
-            <span className="text-xs text-center text-slate-400">
+            <span className="text-[11px] sm:text-xs text-center text-slate-400 leading-snug">
               Real deployed build — this is what your 48h staging demo leads to
             </span>
           </div>
@@ -120,7 +120,7 @@ export default function LiveSiteEmbed({ projects }: LiveSiteEmbedProps) {
             id="live-site-embed-frame"
             src={url}
             title={`Live preview of ${embedProject.title}`}
-            className="w-full h-[420px] sm:h-[560px] border-0 bg-white"
+            className="w-full h-[360px] sm:h-[480px] lg:h-[560px] border-0 bg-white"
             loading="lazy"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
             allowFullScreen
