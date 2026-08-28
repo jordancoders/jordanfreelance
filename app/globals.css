@@ -380,4 +380,17 @@ body:not([data-print-mode]) [data-print-mode] {
   body[data-print-mode="year"] [data-print-mode="ytd-summary"] { display: block !important; }
 }
 
+/* ── PRINT CONTAINER (replaces React state toggle) ──────────────────────────────
+   .print-container is hidden on screen via CSS, visible only during print.
+   This avoids the React state timing race that caused blank PDFs.
+   The container is ALWAYS in the DOM — CSS handles visibility, not React. */
+.print-container {
+  display: none !important;
+}
+@media print {
+  .print-container {
+    display: block !important;
+  }
+}
+
 

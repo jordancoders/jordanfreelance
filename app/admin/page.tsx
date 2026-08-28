@@ -193,32 +193,24 @@ function AdminDashboardInner() {
   type PrintMode = "invoice" | "invoice-declaration" | "declaration" | "cover-letter" | "full-package";
   const [printMenuOpen, setPrintMenuOpen] = useState(false);
   const printMenuRef = useRef<HTMLDivElement>(null);
-  // When set, the print-only container becomes visible via inline style,
-  // bypassing any CSS layer/cascade issues with Tailwind's hidden class.
-  const [activePrintMode, setActivePrintMode] = useState<PrintMode | null>(null);
+
   const handlePrint = (mode: PrintMode) => {
     setPrintMenuOpen(false);
-    // 1. Set body attribute so CSS shows the right SECTION inside the container
+    // Set body attribute so CSS data-print-mode rules show the right section
     document.body.dataset.printMode = mode;
-    // 2. Make the print container visible via React state (inline display:block)
-    setActivePrintMode(mode);
-  };
-
-  // Trigger browser print dialog after React renders the container visible.
-  useEffect(() => {
-    if (!activePrintMode) return;
-    // 300ms gives React time to commit the DOM + browser to paint the layout.
+    // Brief delay so the browser applies the CSS before capturing for print.
+    // The .print-container class is hidden on screen, visible in @media print.
+    // No React state needed — CSS handles all visibility.
     const timer = setTimeout(() => {
       window.print();
-      const cleanup = () => {
-        delete document.body.dataset.printMode;
-        setActivePrintMode(null);
-      };
+      // Clean up after print dialog closes
+      const cleanup = () => { delete document.body.dataset.printMode; };
       window.addEventListener("afterprint", cleanup, { once: true });
       setTimeout(cleanup, 120_000);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [activePrintMode]);
+    }, 200);
+    // Store timer ref for potential cleanup
+    void timer;
+  };
 
   // Close print menu on outside click
   useEffect(() => {
@@ -3563,7 +3555,7 @@ function AdminDashboardInner() {
            DOM order: Cover Letter (p1) → Invoice (p2) → Declaration (p3).
            Each section gets its own page break when printed together. */}
       {selectedInvoice && (
-        <div style={{ display: activePrintMode ? "block" : "none" }} className="print-exact bg-white text-slate-900">
+        <div className="print-container print-exact bg-white text-slate-900">
           <div className="p-8">
             {/* ── COVER LETTER (print-mode: cover-letter / full-package) — FIRST PAGE ── */}
             <div data-print-mode="cover-letter" className="pb-2">
