@@ -91,7 +91,7 @@ export default function MonthlyStatements({ invoices, expenses }: MonthlyStateme
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
     const el = target === "current" ? monthlyRef.current : ytdRef.current;
     if (el) {
-      await downloadElementAsPdf(el, `statement-${selectedMonth}${target === "year" ? "-ytd" : ""}.pdf`);
+      await downloadElementAsPdf(el, `statement-${selectedMonth}${target === "year" ? "-ytd" : ""}.pdf`, target === "current" ? "monthly-statement" : "ytd-summary");
     }
     delete document.body.dataset.printMode;
     setActivePrintTarget(null);

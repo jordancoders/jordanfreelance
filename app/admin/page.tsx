@@ -214,7 +214,7 @@ function AdminDashboardInner() {
       const el = printContainerRef.current;
       if (el) {
         const label = selectedInvoice ? `${selectedInvoice.invoiceNumber}-${mode}` : `document-${mode}`;
-        await downloadElementAsPdf(el, `${label}.pdf`);
+        await downloadElementAsPdf(el, `${label}.pdf`, mode);
       }
     } finally {
       // Clean up
