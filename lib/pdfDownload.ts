@@ -1,15 +1,17 @@
 "use client";
 
-import html2pdf from "html2pdf.js";
-
 /**
  * Generate and download a PDF from a DOM element.
  * Used for invoice/declaration/statement exports.
+ * Uses dynamic import to avoid SSR issues (html2pdf.js references `self`).
  */
 export async function downloadElementAsPdf(
   element: HTMLElement,
   filename: string,
 ) {
+  // Dynamic import — html2pdf.js uses `self` which doesn't exist during SSR
+  const { default: html2pdf } = await import("html2pdf.js");
+
   // Clone the element so we can modify styles without affecting the page
   const clone = element.cloneNode(true) as HTMLElement;
 
