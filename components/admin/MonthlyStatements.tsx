@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Calendar, Printer, TrendingUp, TrendingDown, DollarSign, FileText } from "lucide-react";
 import { SITE_CONFIG } from "@/data/portfolioData";
 import Logo from "@/components/Logo";
@@ -76,18 +76,29 @@ export default function MonthlyStatements({ invoices, expenses }: MonthlyStateme
     count: monthExpenses.filter((e) => e.category === cat.value).length,
   })).filter((c) => c.total > 0);
 
+  const [activePrintTarget, setActivePrintTarget] = useState<"current" | "year" | null>(null);
+
   const doPrint = (target: "current" | "year") => {
     setPrintTarget(target);
     document.body.dataset.printMode = target;
-    requestAnimationFrame(() => {
+    setActivePrintTarget(target);
+  };
+
+  useEffect(() => {
+    if (!activePrintTarget) return;
+    const id = requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         window.print();
-        const cleanup = () => { delete document.body.dataset.printMode; };
+        const cleanup = () => {
+          delete document.body.dataset.printMode;
+          setActivePrintTarget(null);
+        };
         window.addEventListener("afterprint", cleanup, { once: true });
         setTimeout(cleanup, 120_000);
       });
     });
-  };
+    return () => cancelAnimationFrame(id);
+  }, [activePrintTarget]);
 
   const now = new Date().toLocaleDateString("en-ZA", { day: "2-digit", month: "long", year: "numeric" });
 
@@ -193,7 +204,7 @@ export default function MonthlyStatements({ invoices, expenses }: MonthlyStateme
       )}
 
       {/* PRINT-ONLY: Monthly Statement */}
-      <div className="hidden print:block bg-white text-slate-900" data-print-mode="monthly-statement">
+      <div style={{ display: activePrintTarget === "current" ? "block" : "none" }} className="bg-white text-slate-900" data-print-mode="monthly-statement">
         <div className="p-10">
           <div className="flex justify-between items-start border-b-2 border-slate-900 pb-6 mb-8">
             <Logo variant="full" iconSize={48} text={SITE_CONFIG.tradingName} subtext={`by ${SITE_CONFIG.developerName}`} />
@@ -291,7 +302,7 @@ export default function MonthlyStatements({ invoices, expenses }: MonthlyStateme
       </div>
 
       {/* PRINT-ONLY: Year-to-Date Summary */}
-      <div className="hidden print:block bg-white text-slate-900" data-print-mode="ytd-summary">
+      <div style={{ display: activePrintTarget === "year" ? "block" : "none" }} className="bg-white text-slate-900" data-print-mode="ytd-summary">
         <div className="p-10">
           <div className="flex justify-between items-start border-b-2 border-slate-900 pb-6 mb-8">
             <Logo variant="full" iconSize={48} text={SITE_CONFIG.tradingName} subtext={`by ${SITE_CONFIG.developerName}`} />

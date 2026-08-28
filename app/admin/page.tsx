@@ -193,26 +193,36 @@ function AdminDashboardInner() {
   type PrintMode = "invoice" | "invoice-declaration" | "declaration" | "cover-letter" | "full-package";
   const [printMenuOpen, setPrintMenuOpen] = useState(false);
   const printMenuRef = useRef<HTMLDivElement>(null);
+  // When set, the print-only container becomes visible via inline style,
+  // bypassing any CSS layer/cascade issues with Tailwind's hidden class.
+  const [activePrintMode, setActivePrintMode] = useState<PrintMode | null>(null);
 
   const handlePrint = (mode: PrintMode) => {
     setPrintMenuOpen(false);
-    // Set the body attribute so CSS shows the right print sections
+    // 1. Set body attribute so CSS shows the right SECTION inside the container
     document.body.dataset.printMode = mode;
-    // Small delay so React re-renders the print sections, then trigger print
-    requestAnimationFrame(() => {
+    // 2. Make the print container visible via React state (inline display:block)
+    setActivePrintMode(mode);
+  };
+
+  // After React renders the print container visible, trigger the browser print dialog.
+  useEffect(() => {
+    if (!activePrintMode) return;
+    // Wait for React to commit + browser to lay out the newly-visible container
+    const id = requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         window.print();
-        // Clean up after print dialog closes.
-        // NEVER use beforeprint — it fires BEFORE the dialog opens,
-        // deleting the attribute mid-preview and blanking the PDF.
-        const cleanup = () => { delete document.body.dataset.printMode; };
+        const cleanup = () => {
+          delete document.body.dataset.printMode;
+          setActivePrintMode(null);
+        };
         window.addEventListener("afterprint", cleanup, { once: true });
-        // Fallback: if afterprint never fires (some browsers), clean up
-        // after 120 seconds (long enough for any print dialog).
+        // Fallback cleanup if afterprint doesn't fire
         setTimeout(cleanup, 120_000);
       });
     });
-  };
+    return () => cancelAnimationFrame(id);
+  }, [activePrintMode]);
 
   // Close print menu on outside click
   useEffect(() => {
@@ -3556,7 +3566,7 @@ function AdminDashboardInner() {
            DOM order: Cover Letter (p1) → Invoice (p2) → Declaration (p3).
            Each section gets its own page break when printed together. */}
       {selectedInvoice && (
-        <div className="hidden print:block print-exact bg-white text-slate-900">
+        <div style={{ display: activePrintMode ? "block" : "none" }} className="print-exact bg-white text-slate-900">
           <div className="p-8">
             {/* ── COVER LETTER (print-mode: cover-letter / full-package) — FIRST PAGE ── */}
             <div data-print-mode="cover-letter" className="pb-2">
