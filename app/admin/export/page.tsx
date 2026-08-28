@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { Printer, ShieldCheck, ArrowLeft, FileText, Lock, Globe, Database, Scale } from "lucide-react";
+import { Printer, ShieldCheck, ArrowLeft, FileText, Lock, Globe, Database, Scale, Download } from "lucide-react";
 import Link from "next/link";
 import SignaturePad from "@/components/SignaturePad";
 import { SITE_CONFIG } from "@/data/portfolioData";
 import Logo from "@/components/Logo";
 import { fetchInvoice } from "@/app/actions/invoices";
+import { downloadElementAsPdf } from "@/lib/pdfDownload";
 import type { Invoice } from "@/lib/types";
 
 function ExportContent() {
@@ -18,6 +19,8 @@ function ExportContent() {
   const [signature, setSignature] = useState("");
   const [signerName, setSignerName] = useState("");
   const [acknowledged, setAcknowledged] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -112,7 +115,23 @@ function ExportContent() {
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm shadow transition-colors"
             >
               <Printer className="w-4 h-4" />
-              Export Full PDF Bundle
+              Print PDF
+            </button>
+            <button
+              onClick={async () => {
+                if (!contentRef.current || downloading) return;
+                setDownloading(true);
+                try {
+                  await downloadElementAsPdf(contentRef.current, `bundle-${invoice?.invoiceNumber || "legal"}.pdf`);
+                } finally {
+                  setDownloading(false);
+                }
+              }}
+              disabled={downloading}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm shadow transition-colors disabled:opacity-50"
+            >
+              <Download className="w-4 h-4" />
+              {downloading ? "Generating…" : "Download PDF"}
             </button>
           </div>
         </div>
@@ -197,7 +216,7 @@ function ExportContent() {
         </div>
 
         {/* ==== THE PRINTABLE DOCUMENT — A4 paper ==== */}
-        <div className="bg-white shadow-2xl border border-slate-300 print:border-none print:shadow-none print-exact text-slate-900 overflow-hidden">
+        <div ref={contentRef} className="bg-white shadow-2xl border border-slate-300 print:border-none print:shadow-none print-exact text-slate-900 overflow-hidden">
           {/* ── Page 1 — Signed declaration — always first page ── */}
           <div className="p-8 sm:p-10 print:p-8">
             {/* Official letterhead bar */}
@@ -318,7 +337,7 @@ function ExportContent() {
                   <div className="text-xs text-slate-500 mt-2 font-mono space-y-0.5">
                     <div>Email: {SITE_CONFIG.email} • WhatsApp: {SITE_CONFIG.whatsappFormatted}</div>
                     <div>Web: {SITE_CONFIG.siteUrl} • Location: South Africa (Remote)</div>
-                    <div>PayPal: {SITE_CONFIG.paypalEmail}</div>
+                    <div>PayPal: {SITE_CONFIG.paypalMeUrl}</div>
                   </div>
                 </div>
                 <div className="text-right font-mono text-xs bg-slate-50 border border-slate-300 p-4 min-w-[190px]">
@@ -454,7 +473,7 @@ function ExportContent() {
 
               <div className="mt-6 p-3 border border-slate-300 bg-white text-xs break-inside-avoid">
                 <strong className="text-slate-900 block mb-1 uppercase text-[11px] tracking-wider">Payment</strong>
-                <span className="text-slate-700">Payable via PayPal ({SITE_CONFIG.paypalEmail}) or Direct EFT (bank transfer) — details provided on confirmation.</span>
+                <span className="text-slate-700">Payable via PayPal.me or Direct EFT (bank transfer) — details provided on confirmation.</span>
                 <span className="block mt-1 font-mono text-xs">PayPal.me: {SITE_CONFIG.paypalMeUrl} • WhatsApp proof: {SITE_CONFIG.whatsappFormatted}</span>
                 {invoice.notes && (
                   <div className="mt-3 pt-3 border-t border-slate-200">

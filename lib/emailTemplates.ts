@@ -111,7 +111,7 @@ export function buildQuoteEmailDraft(inv: InvoiceLike): string {
 
   body.push(
     ``,
-    `Payment is via PayPal (${SITE_CONFIG.paypalEmail}) or Direct EFT (bank transfer) — proof of payment via WhatsApp ${SITE_CONFIG.whatsappFormatted}.`,
+    `Payment is via PayPal.me (${SITE_CONFIG.paypalMeUrl}) or Direct EFT (bank transfer) — proof of payment via WhatsApp ${SITE_CONFIG.whatsappFormatted}.`,
     `PayPal.me: ${SITE_CONFIG.paypalMeUrl}`,
     ...(notes ? [``, `Note: ${notes}`, ``] : [``]),
     `Reply to this email or WhatsApp me to approve, and I'll get your slot booked for ${prettyDate(start)}.`,
@@ -169,7 +169,7 @@ export function buildHandoverEmailDraft(inv: InvoiceLike): string {
     `3. Export bundle: your signed declaration plus the legal package (terms, privacy, POPIA, DPA) is exported from the studio as a PDF bundle — keep it with your records.`,
     `4. 7-day data erasure: any confidential staging data and credentials are permanently destroyed within 7 calendar days of this handover, and you'll receive written confirmation.`,
     ``,
-    `Final balance due: ${money(inv, balanceOf(inv))} — payable via PayPal (${SITE_CONFIG.paypalEmail}) or Direct EFT.`,
+    `Final balance due: ${money(inv, balanceOf(inv))} — payable via PayPal.me or Direct EFT.`,
     `PayPal.me: ${SITE_CONFIG.paypalMeUrl}`,
     ``,
     `Every project includes a 14-day bug-fix warranty: critical bugs found after handover are fixed at no charge (documented in the Refund & Guarantee Policy). Optional care plans are available if you'd like ongoing maintenance.`,

@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
-import { Calendar, Printer, TrendingUp, TrendingDown, DollarSign, FileText } from "lucide-react";
+import { useState, useMemo, useEffect, useRef } from "react";
+import { Calendar, Printer, TrendingUp, TrendingDown, DollarSign, FileText, Download } from "lucide-react";
 import { SITE_CONFIG } from "@/data/portfolioData";
 import Logo from "@/components/Logo";
+import { downloadElementAsPdf } from "@/lib/pdfDownload";
 import type { Invoice, ExpenseEntry } from "@/lib/types";
 import { EXPENSE_CATEGORIES } from "@/lib/types";
 
@@ -77,6 +78,25 @@ export default function MonthlyStatements({ invoices, expenses }: MonthlyStateme
   })).filter((c) => c.total > 0);
 
   const [activePrintTarget, setActivePrintTarget] = useState<"current" | "year" | null>(null);
+  const monthlyRef = useRef<HTMLDivElement>(null);
+  const ytdRef = useRef<HTMLDivElement>(null);
+  const [downloading, setDownloading] = useState(false);
+
+  const doDownload = async (target: "current" | "year") => {
+    if (downloading) return;
+    setDownloading(true);
+    setPrintTarget(target);
+    document.body.dataset.printMode = target;
+    setActivePrintTarget(target);
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    const el = target === "current" ? monthlyRef.current : ytdRef.current;
+    if (el) {
+      await downloadElementAsPdf(el, `statement-${selectedMonth}${target === "year" ? "-ytd" : ""}.pdf`);
+    }
+    delete document.body.dataset.printMode;
+    setActivePrintTarget(null);
+    setDownloading(false);
+  };
 
   const doPrint = (target: "current" | "year") => {
     setPrintTarget(target);
@@ -125,6 +145,12 @@ export default function MonthlyStatements({ invoices, expenses }: MonthlyStateme
           </button>
           <button onClick={() => doPrint("year")} className="px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-800 text-white font-bold text-xs flex items-center gap-1.5">
             <FileText className="w-4 h-4" /> YTD Summary
+          </button>
+          <button onClick={() => doDownload("current")} disabled={downloading} className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs flex items-center gap-1.5 disabled:opacity-50">
+            <Download className="w-4 h-4" /> {downloading ? "Generating…" : "Download"}
+          </button>
+          <button onClick={() => doDownload("year")} disabled={downloading} className="px-4 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center gap-1.5 disabled:opacity-50">
+            <Download className="w-4 h-4" /> YTD Download
           </button>
         </div>
       </div>
@@ -204,7 +230,7 @@ export default function MonthlyStatements({ invoices, expenses }: MonthlyStateme
       )}
 
       {/* PRINT-ONLY: Monthly Statement */}
-      <div style={{ display: activePrintTarget === "current" ? "block" : "none" }} className="bg-white text-slate-900" data-print-mode="monthly-statement">
+      <div ref={monthlyRef} style={{ display: activePrintTarget === "current" ? "block" : "none" }} className="bg-white text-slate-900" data-print-mode="monthly-statement">
         <div className="p-10">
           <div className="flex justify-between items-start border-b-2 border-slate-900 pb-6 mb-8">
             <Logo variant="full" iconSize={48} text={SITE_CONFIG.tradingName} subtext={`by ${SITE_CONFIG.developerName}`} />
@@ -302,7 +328,7 @@ export default function MonthlyStatements({ invoices, expenses }: MonthlyStateme
       </div>
 
       {/* PRINT-ONLY: Year-to-Date Summary */}
-      <div style={{ display: activePrintTarget === "year" ? "block" : "none" }} className="bg-white text-slate-900" data-print-mode="ytd-summary">
+      <div ref={ytdRef} style={{ display: activePrintTarget === "year" ? "block" : "none" }} className="bg-white text-slate-900" data-print-mode="ytd-summary">
         <div className="p-10">
           <div className="flex justify-between items-start border-b-2 border-slate-900 pb-6 mb-8">
             <Logo variant="full" iconSize={48} text={SITE_CONFIG.tradingName} subtext={`by ${SITE_CONFIG.developerName}`} />
