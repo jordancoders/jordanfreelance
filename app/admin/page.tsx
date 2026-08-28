@@ -204,20 +204,24 @@ function AdminDashboardInner() {
     setPrintMenuOpen(false);
     if (isDownloading) return;
     setIsDownloading(true);
-    // Show the print container
-    document.body.dataset.printMode = mode;
-    setActivePrintMode(mode);
-    // Wait for React to render the container visible
-    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
-    const el = printContainerRef.current;
-    if (el) {
-      const label = selectedInvoice ? `${selectedInvoice.invoiceNumber}-${mode}` : `document-${mode}`;
-      await downloadElementAsPdf(el, `${label}.pdf`);
+    try {
+      // Show the print container — set body attr for CSS section visibility
+      document.body.dataset.printMode = mode;
+      setActivePrintMode(mode);
+      // Wait for React to render the container visible, then browser to lay it out
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+      const el = printContainerRef.current;
+      if (el) {
+        const label = selectedInvoice ? `${selectedInvoice.invoiceNumber}-${mode}` : `document-${mode}`;
+        await downloadElementAsPdf(el, `${label}.pdf`);
+      }
+    } finally {
+      // Clean up
+      delete document.body.dataset.printMode;
+      setActivePrintMode(null);
+      setIsDownloading(false);
     }
-    // Clean up
-    delete document.body.dataset.printMode;
-    setActivePrintMode(null);
-    setIsDownloading(false);
   };
 
   const handlePrint = (mode: PrintMode) => {
@@ -229,8 +233,9 @@ function AdminDashboardInner() {
   };
 
   // After React renders the print container visible, trigger the browser print dialog.
+  // ONLY fires for print actions — skip if we're downloading.
   useEffect(() => {
-    if (!activePrintMode) return;
+    if (!activePrintMode || isDownloading) return;
     // Wait for React to commit + browser to lay out the newly-visible container
     const id = requestAnimationFrame(() => {
       requestAnimationFrame(() => {

@@ -6,85 +6,62 @@
  * Dynamic import avoids SSR issues (html2pdf.js references `self`).
  */
 
-interface PdfOptions {
-  filename: string;
-  /** A4 margins in mm [top, right, bottom, left] */
-  margin?: [number, number, number, number];
-  /** Override page size (default A4) */
-  format?: "a4" | "letter" | "legal";
-  /** Portrait or landscape */
-  orientation?: "portrait" | "landscape";
-}
-
 export async function downloadElementAsPdf(
   element: HTMLElement,
   filename: string,
-  opts?: Partial<PdfOptions>,
 ) {
   // Dynamic import — html2pdf.js uses `self` which doesn't exist during SSR
   const { default: html2pdf } = await import("html2pdf.js");
 
-  const {
-    margin = [14, 16, 14, 16],
-    format = "a4",
-    orientation = "portrait",
-  } = opts || {};
-
   // Clone the element so we don't modify the live DOM
   const clone = element.cloneNode(true) as HTMLElement;
 
-  // Reset any inline display:none from the print-mode toggle
-  clone.style.display = "block";
-  clone.style.position = "fixed";
-  clone.style.left = "0";
-  clone.style.top = "0";
-  clone.style.width = format === "a4" ? "210mm" : "215.9mm";
-  clone.style.zIndex = "-9999";
-  clone.style.background = "#ffffff";
-  clone.style.color = "#0f172a";
+  // Force the clone to be fully visible — strip ALL inline display:none,
+  // override CSS hiding rules, and make every child visible.
+  clone.style.cssText =
+    "display:block!important;position:fixed;left:0;top:0;width:210mm;" +
+    "z-index:-9999;background:#fff;color:#0f172a;visibility:visible!important;" +
+    "opacity:1!important;overflow:visible!important;height:auto!important;";
 
-  // Ensure all children are visible for capture
-  clone.querySelectorAll<HTMLElement>("[style*='display: none'], [style*='display:none']").forEach((el) => {
-    el.style.display = "block";
+  // Recursively force every child visible (kills display:none, visibility:hidden, etc.)
+  clone.querySelectorAll<HTMLElement>("*").forEach((el) => {
+    el.style.cssText += ";display:block!important;visibility:visible!important;opacity:1!important;";
+    // Also remove any max-height or overflow that could clip content
+    el.style.maxHeight = "none!important";
+    el.style.overflow = "visible!important";
   });
-  // Make print-mode sections visible
+
+  // Specifically ensure data-print-mode sections are visible
   clone.querySelectorAll<HTMLElement>("[data-print-mode]").forEach((el) => {
-    el.style.display = "block";
+    el.style.cssText += ";display:block!important;";
   });
 
   document.body.appendChild(clone);
 
-  const opt = {
-    margin,
-    filename,
-    image: {
-      type: "jpeg" as const,
-      quality: 0.98,
-    },
-    html2canvas: {
-      scale: 3,            // 3x for crisp text (216 DPI)
-      useCORS: true,       // load cross-origin images
-      letterRendering: true,
-      logging: false,
-      allowTaint: false,
-      backgroundColor: "#ffffff",
-      windowWidth: format === "a4" ? 794 : 816, // A4 / Letter px at 96 DPI
-    },
-    jsPDF: {
-      unit: "mm",
-      format,
-      orientation: orientation as "portrait" | "landscape",
-      compress: true,
-    },
-    pagebreak: {
-      mode: ["avoid-all", "css", "legacy"] as const,
-      before: ".break-before",
-      avoid: [".avoid-break", "tr", "h2", "h3", "h4", "p"],
-    },
-  };
-
   try {
-    await html2pdf().set(opt).from(clone).save();
+    await html2pdf()
+      .set({
+        margin: [14, 16, 14, 16],
+        filename,
+        image: { type: "jpeg" as const, quality: 0.98 },
+        html2canvas: {
+          scale: 3,
+          useCORS: true,
+          letterRendering: true,
+          logging: false,
+          allowTaint: false,
+          backgroundColor: "#ffffff",
+          windowWidth: 794, // A4 at 96 DPI
+        },
+        jsPDF: {
+          unit: "mm",
+          format: "a4",
+          orientation: "portrait",
+        },
+
+      })
+      .from(clone)
+      .save();
   } finally {
     document.body.removeChild(clone);
   }

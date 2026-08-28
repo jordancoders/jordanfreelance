@@ -105,7 +105,7 @@ export default function MonthlyStatements({ invoices, expenses }: MonthlyStateme
   };
 
   useEffect(() => {
-    if (!activePrintTarget) return;
+    if (!activePrintTarget || downloading) return;
     const id = requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         window.print();
@@ -118,7 +118,7 @@ export default function MonthlyStatements({ invoices, expenses }: MonthlyStateme
       });
     });
     return () => cancelAnimationFrame(id);
-  }, [activePrintTarget]);
+  }, [activePrintTarget, downloading]);
 
   const now = new Date().toLocaleDateString("en-ZA", { day: "2-digit", month: "long", year: "numeric" });
 
