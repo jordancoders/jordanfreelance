@@ -11,7 +11,6 @@ import {
   ShieldCheck,
   Plus,
   Trash2,
-  Printer,
   Mail,
   Send,
   Search,
@@ -189,38 +188,37 @@ function AdminDashboardInner() {
   const [signerName, setSignerName] = useState("");
   const [declarationAcknowledged, setDeclarationAcknowledged] = useState(false);
 
-  // Print mode — controls which sections render in the print-only invoice
-  type PrintMode = "invoice" | "invoice-declaration" | "declaration" | "cover-letter" | "full-package";
-  const [printMenuOpen, setPrintMenuOpen] = useState(false);
-  const printMenuRef = useRef<HTMLDivElement>(null);
+  // PDF export dropdown
+  const [exportMenuOpen, setExportMenuOpen] = useState(false);
+  const exportMenuRef = useRef<HTMLDivElement>(null);
+  const [pdfGenerating, setPdfGenerating] = useState<string | null>(null);
 
-  const handlePrint = (mode: PrintMode) => {
-    setPrintMenuOpen(false);
-    // Set body attribute so CSS data-print-mode rules show the right section
-    document.body.dataset.printMode = mode;
-    // Brief delay so the browser applies the CSS before capturing for print.
-    // The .print-container class is hidden on screen, visible in @media print.
-    // No React state needed — CSS handles all visibility.
-    const timer = setTimeout(() => {
-      window.print();
-      // Clean up after print dialog closes
-      const cleanup = () => { delete document.body.dataset.printMode; };
-      window.addEventListener("afterprint", cleanup, { once: true });
-      setTimeout(cleanup, 120_000);
-    }, 200);
-    // Store timer ref for potential cleanup
-    void timer;
+  const handlePdfExport = async (type: "invoice" | "declaration" | "cover-letter") => {
+    if (!selectedInvoice || pdfGenerating) return;
+    setPdfGenerating(type);
+    setExportMenuOpen(false);
+    try {
+      const { downloadInvoicePDF, downloadDeclarationPDF, downloadCoverLetterPDF } = await import("@/lib/generatePDF");
+      if (type === "invoice") await downloadInvoicePDF(selectedInvoice);
+      else if (type === "declaration" && selectedInvoice.declaration) await downloadDeclarationPDF(selectedInvoice, selectedInvoice.declaration);
+      else if (type === "cover-letter") await downloadCoverLetterPDF(selectedInvoice);
+    } catch (err) {
+      console.error("PDF generation failed:", err);
+      alert("PDF generation failed. Please try again.");
+    } finally {
+      setPdfGenerating(null);
+    }
   };
 
-  // Close print menu on outside click
+  // Close export menu on outside click
   useEffect(() => {
-    if (!printMenuOpen) return;
+    if (!exportMenuOpen) return;
     const handler = (e: MouseEvent) => {
-      if (printMenuRef.current && !printMenuRef.current.contains(e.target as Node)) setPrintMenuOpen(false);
+      if (exportMenuRef.current && !exportMenuRef.current.contains(e.target as Node)) setExportMenuOpen(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
-  }, [printMenuOpen]);
+  }, [exportMenuOpen]);
 
   const persistDeclaration = useCallback(
     (next: Partial<{ signatureDataUrl: string; signerName: string; acknowledged: boolean }>) => {
@@ -1998,41 +1996,43 @@ function AdminDashboardInner() {
                                   Edit
                                 </button>
 
-                                {/* Print / Export dropdown */}
-                                <div className="relative" ref={printMenuRef}>
+                                {/* PDF Export dropdown */}
+                                <div className="relative" ref={exportMenuRef}>
                                   <button
-                                    onClick={() => setPrintMenuOpen(!printMenuOpen)}
+                                    onClick={() => setExportMenuOpen(!exportMenuOpen)}
                                     className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold transition-colors flex items-center gap-1"
                                   >
-                                    <Printer className="w-3.5 h-3.5" />
+                                    <FileText className="w-3.5 h-3.5" />
                                     Export
-                                    <svg className={`w-3 h-3 transition-transform ${printMenuOpen ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                                    <svg className={`w-3 h-3 transition-transform ${exportMenuOpen ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                                   </button>
-                                  {printMenuOpen && (
+                                  {exportMenuOpen && (
                                     <div className="absolute right-0 top-full mt-1 w-64 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl z-50 py-1 overflow-hidden">
-                                      <p className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">PDF / Print Export</p>
-                                      <button onClick={() => handlePrint("invoice")} className="w-full text-left px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2">
-                                        <FileText className="w-3.5 h-3.5 text-orange-500" /> Clean Invoice
-                                        <span className="ml-auto text-[10px] text-slate-400">Lines + totals only</span>
+                                      <p className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Download PDF</p>
+                                      <button
+                                        onClick={() => handlePdfExport("invoice")}
+                                        disabled={!!pdfGenerating}
+                                        className="w-full text-left px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2 disabled:opacity-50"
+                                      >
+                                        <FileText className="w-3.5 h-3.5 text-orange-500" /> {pdfGenerating === "invoice" ? "Generating…" : "Invoice"}
+                                        <span className="ml-auto text-[10px] text-slate-400">Lines + totals</span>
                                       </button>
-                                      <button onClick={() => handlePrint("invoice-declaration")} className="w-full text-left px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2">
-                                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" /> Invoice + Declaration
+                                      <button
+                                        onClick={() => handlePdfExport("cover-letter")}
+                                        disabled={!!pdfGenerating}
+                                        className="w-full text-left px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2 disabled:opacity-50"
+                                      >
+                                        <Mail className="w-3.5 h-3.5 text-violet-500" /> {pdfGenerating === "cover-letter" ? "Generating…" : "Cover Letter"}
+                                        <span className="ml-auto text-[10px] text-slate-400">Transmittal</span>
+                                      </button>
+                                      <button
+                                        onClick={() => handlePdfExport("declaration")}
+                                        disabled={!!pdfGenerating || !selectedInvoice?.declaration}
+                                        className="w-full text-left px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2 disabled:opacity-50"
+                                      >
+                                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" /> {pdfGenerating === "declaration" ? "Generating…" : "Declaration"}
                                         <span className="ml-auto text-[10px] text-slate-400">Signed contract</span>
                                       </button>
-                                      <button onClick={() => handlePrint("declaration")} className="w-full text-left px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2">
-                                        <PenLine className="w-3.5 h-3.5 text-blue-500" /> Declaration Only
-                                        <span className="ml-auto text-[10px] text-slate-400">Signature page</span>
-                                      </button>
-                                      <div className="border-t border-slate-200 dark:border-slate-700 my-1" />
-                                      <button onClick={() => handlePrint("cover-letter")} className="w-full text-left px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2">
-                                        <Mail className="w-3.5 h-3.5 text-violet-500" /> Cover Letter
-                                        <span className="ml-auto text-[10px] text-slate-400">Transmittal page</span>
-                                      </button>
-                                      <button onClick={() => handlePrint("full-package")} className="w-full text-left px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2">
-                                        <Download className="w-3.5 h-3.5 text-amber-500" /> Full Package
-                                        <span className="ml-auto text-[10px] text-slate-400">Letter + Invoice + Declaration</span>
-                                      </button>
-
                                     </div>
                                   )}
                                 </div>
@@ -3549,358 +3549,8 @@ function AdminDashboardInner() {
         </div>
       </main>
 
-      {/* PRINT-ONLY DOCUMENT — shown on paper only. Sections are wrapped in
-           data-print-mode attributes so the CSS in globals.css shows/hides them
-           based on which mode the user chose from the Export dropdown.
-           DOM order: Cover Letter (p1) → Invoice (p2) → Declaration (p3).
-           Each section gets its own page break when printed together. */}
-      {selectedInvoice && (
-        <div className="hidden print-show print-exact bg-white text-slate-900">
-          <div className="p-8">
-            {/* ── COVER LETTER (print-mode: cover-letter / full-package) — FIRST PAGE ── */}
-            <div data-print-mode="cover-letter" className="pb-2">
-              <div className="flex flex-col sm:flex-row justify-between items-start gap-6 mb-8 border-b-2 border-slate-900 pb-6">
-                <div>
-                  <Logo
-                    variant="full"
-                    iconSize={48}
-                    text={SITE_CONFIG.tradingName}
-                    subtext={`by ${SITE_CONFIG.developerName}`}
-                  />
-                  <div className="text-xs text-slate-500 font-mono mt-2 space-y-0.5">
-                    <div>{SITE_CONFIG.email}</div>
-                    <div>WhatsApp: {SITE_CONFIG.whatsappFormatted} • {SITE_CONFIG.location}</div>
-                    <div>Web: {SITE_CONFIG.siteUrl}</div>
-                  </div>
-                </div>
-                <div className="text-right text-xs text-slate-500 font-mono shrink-0">
-                  <div className="font-bold text-slate-900 text-sm">{SITE_CONFIG.developerName}</div>
-                  <div>{SITE_CONFIG.tradingName}</div>
-                  <div className="mt-2 font-mono">Date: {new Date().toLocaleDateString("en-ZA", { day: "2-digit", month: "long", year: "numeric" })}</div>
-                  <div>Ref: {selectedInvoice.invoiceNumber}</div>
-                </div>
-              </div>
-
-              <div className="mb-6 p-4 bg-slate-50 border border-slate-200 rounded-lg">
-                <div className="text-[11px] uppercase font-bold text-slate-500 mb-1 tracking-wider">To</div>
-                <div className="text-base font-bold text-slate-900">{selectedInvoice.clientName}</div>
-                {selectedInvoice.clientCompany && <div className="text-sm text-slate-700">{selectedInvoice.clientCompany}</div>}
-                {(selectedInvoice.clientEmail || selectedInvoice.clientPhone) && (
-                  <div className="text-xs text-slate-500 mt-1 font-mono">
-                    {[selectedInvoice.clientEmail, selectedInvoice.clientPhone].filter(Boolean).join(" • ")}
-                  </div>
-                )}
-              </div>
-
-              <div className="text-sm text-slate-800 leading-relaxed space-y-4">
-                <p>Dear {selectedInvoice.clientName.split(" ")[0] || selectedInvoice.clientName},</p>
-
-                <p>
-                  Thank you for considering {SITE_CONFIG.tradingName} for your project. Please find your{" "}
-                  <strong className="text-slate-900">
-                    {selectedInvoice.documentType === "Quote" ? "proposal / quotation" : "invoice"} {selectedInvoice.invoiceNumber}
-                  </strong>{" "}
-                  attached{selectedInvoice.documentType === "Quote" ? " — prepared as a detailed proposal so you can evaluate exactly what is included" : ""}.
-                </p>
-
-                {selectedInvoice.documentType === "Quote" && selectedInvoice.proposalSummary && (
-                  <div className="p-3 bg-orange-50 border-l-4 border-orange-500 text-sm">
-                    <strong className="text-orange-700">Project understanding:</strong> {selectedInvoice.proposalSummary}
-                  </div>
-                )}
-
-                <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg font-mono text-xs flex flex-wrap gap-x-6 gap-y-1">
-                  <span><strong>Total value:</strong> {selectedInvoice.currency === "ZAR" ? "R" : "$"} {calculateInvoiceSubtotal(selectedInvoice).toLocaleString()}</span>
-                  <span><strong>Kick-off deposit ({selectedInvoice.depositPercent ?? 50}%):</strong> {selectedInvoice.currency === "ZAR" ? "R" : "$"} {calculateDepositAmount(selectedInvoice).toLocaleString()}</span>
-                  <span><strong>Balance on completion:</strong> {selectedInvoice.currency === "ZAR" ? "R" : "$"} {calculateClientBalance(selectedInvoice).toLocaleString()}</span>
-                </div>
-
-                <p>
-                  {selectedInvoice.documentType === "Quote"
-                    ? "This proposal includes a 48-hour staging demo — you will receive a live, clickable link to test the build before any further commitment. If the demo is not delivered within 48 hours of deposit confirmation, you receive a 100% refund of the deposit plus unused API credits (see Guarantee policy for qualifying criteria)."
-                    : "Payment is due by the date shown on the invoice. The deposit secures your 48-hour staging window; the balance is due on final approval and source-code handover."}
-                </p>
-
-                {selectedInvoice.documentType === "Quote" && selectedInvoice.proposalNextSteps && (
-                  <p><strong>Next steps:</strong> {selectedInvoice.proposalNextSteps}</p>
-                )}
-
-                <p className="pt-4 border-t border-slate-200">
-                  Kind regards,<br />
-                  <strong className="text-slate-900 text-base">{SITE_CONFIG.developerName}</strong><br />
-                  <span className="text-slate-700">{SITE_CONFIG.tradingName}</span><br />
-                  <span className="font-mono text-xs text-slate-500">{SITE_CONFIG.email} • {SITE_CONFIG.whatsappFormatted}</span>
-                </p>
-                <p className="text-[10px] text-slate-400 pt-2">
-                  This letter, together with the {selectedInvoice.documentType === "Quote" ? "quotation" : "invoice"} and — where signed — the declaration, forms the contract record. Valid for 30 days from issue. Terms at {SITE_CONFIG.siteUrl}/terms • Guarantee at {SITE_CONFIG.siteUrl}/guarantee
-                </p>
-              </div>
-            </div>
-
-            {/* ── INVOICE / QUOTE (print-mode: invoice / invoice-declaration / full-package) ── */}
-            <div data-print-mode="invoice" className="avoid-break">
-              {/* Invoice letterhead — repeated on every invoice page for standalone prints */}
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 border-b-2 border-slate-900 pb-6 mb-6">
-                <div>
-                  <Logo
-                    variant="full"
-                    iconSize={48}
-                    text={SITE_CONFIG.tradingName}
-                    subtext={`by ${SITE_CONFIG.developerName}`}
-                  />
-                  <div className="text-xs text-slate-500 font-mono mt-2 space-y-0.5">
-                    <div>Email: {SITE_CONFIG.email}</div>
-                    <div>WhatsApp: {SITE_CONFIG.whatsappFormatted}</div>
-                    <div>PayPal.me: {SITE_CONFIG.paypalMeUrl}</div>
-                    <div className="text-[11px]">Web: {SITE_CONFIG.siteUrl}</div>
-                  </div>
-                </div>
-
-                <div className="text-right font-mono text-xs bg-slate-50 border border-slate-300 p-4 min-w-[180px]">
-                  <div className="text-sm font-bold text-orange-600 uppercase tracking-widest font-sans">
-                    {selectedInvoice.documentType === "Quote" ? "Proposal / Quotation" : selectedInvoice.documentType || "Invoice"}
-                  </div>
-                  <div className="font-bold text-slate-900 text-sm mt-1 font-mono"># {selectedInvoice.invoiceNumber}</div>
-                  <div className="mt-1">Issue: {selectedInvoice.issueDate}</div>
-                  <div>Due: {selectedInvoice.dueDate}</div>
-                  <div className="mt-2 inline-flex px-2 py-0.5 rounded-full text-[11px] font-bold border bg-white text-slate-700 border-slate-300">
-                    Status: {selectedInvoice.status}
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 p-4 bg-slate-50 border border-slate-200">
-                <div>
-                  <div className="text-[11px] uppercase font-bold text-slate-500 tracking-wider mb-1">Billed To</div>
-                  <div className="text-sm font-bold text-slate-900">{selectedInvoice.clientName}</div>
-                  {selectedInvoice.clientCompany && <div className="text-xs text-slate-600">{selectedInvoice.clientCompany}</div>}
-                  {selectedInvoice.clientEmail && <div className="text-xs text-slate-600 font-mono">{selectedInvoice.clientEmail}</div>}
-                  {selectedInvoice.clientPhone && <div className="text-xs text-slate-600 font-mono">{selectedInvoice.clientPhone}</div>}
-                </div>
-                <div className="text-right sm:text-left lg:text-right">
-                  <div className="text-[11px] uppercase font-bold text-slate-500 tracking-wider mb-1">Issued By</div>
-                  <div className="text-sm font-bold text-slate-900">{SITE_CONFIG.tradingName}</div>
-                  <div className="text-xs text-slate-600">Attn: {SITE_CONFIG.developerName}</div>
-                  <div className="text-xs text-slate-500 font-mono mt-1">{SITE_CONFIG.siteUrl}</div>
-                </div>
-              </div>
-
-              <table className="w-full text-left text-sm border-collapse border border-slate-300">
-                <thead>
-                  <tr className="border-b-2 border-slate-900 bg-slate-100 text-slate-900 font-bold">
-                    <th className="p-3 border-r border-slate-300">Deliverable / Description</th>
-                    <th className="p-3 text-center border-r border-slate-300 w-16">Qty</th>
-                    <th className="p-3 text-right border-r border-slate-300 w-28">Rate</th>
-                    <th className="p-3 text-right w-28">Line Total</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200">
-                  {selectedInvoice.items.map((item) => (
-                    <tr key={item.id} className="even:bg-slate-50/60">
-                      <td className="p-3 font-medium text-slate-900 border-r border-slate-200">{item.description}</td>
-                      <td className="p-3 text-center text-slate-700 border-r border-slate-200 font-mono">{item.quantity}</td>
-                      <td className="p-3 text-right text-slate-700 border-r border-slate-200 font-mono">
-                        {selectedInvoice.currency === "ZAR" ? "R" : "$"} {item.rate.toLocaleString()}
-                      </td>
-                      <td className="p-3 text-right font-bold text-slate-900 font-mono">
-                        {selectedInvoice.currency === "ZAR" ? "R" : "$"} {(item.quantity * item.rate).toLocaleString()}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-
-              <div className="flex justify-end mt-6 break-inside-avoid">
-                <div className="w-full sm:w-72 border border-slate-300">
-                  <div className="flex justify-between text-xs text-slate-600 px-3 py-2 border-b border-slate-200 bg-slate-50">
-                    <span>Subtotal (Total ex VAT):</span>
-                    <span className="font-mono font-semibold">{selectedInvoice.currency === "ZAR" ? "R" : "$"} {calculateInvoiceSubtotal(selectedInvoice).toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between text-xs px-3 py-2 border-b border-slate-200">
-                    <span>Kick-off Deposit ({selectedInvoice.depositPercent ?? 50}%):</span>
-                    <span className="text-emerald-700 font-bold font-mono">
-                      {selectedInvoice.currency === "ZAR" ? "R" : "$"} {calculateDepositAmount(selectedInvoice).toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm font-black text-slate-900 px-3 py-2 bg-slate-50 border-t-2 border-slate-900">
-                    <span>Balance Due ({100 - (selectedInvoice.depositPercent ?? 50)}%):</span>
-                    <span className="text-orange-600 font-mono">
-                      {selectedInvoice.currency === "ZAR" ? "R" : "$"} {calculateClientBalance(selectedInvoice).toLocaleString()}
-                    </span>
-                  </div>
-                  {selectedInvoice.depositPaid > 0 && (
-                    <div className="flex justify-between text-[11px] text-slate-500 px-3 py-1.5 border-t border-slate-200">
-                      <span>Already paid:</span>
-                      <span className="font-mono">{selectedInvoice.currency === "ZAR" ? "R" : "$"} {selectedInvoice.depositPaid.toLocaleString()}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="mt-6 p-5 border-2 border-slate-900 break-inside-avoid">
-                <h3 className="font-black text-sm text-slate-900 uppercase tracking-wider mb-1 flex items-center gap-2">
-                  <span className="inline-block w-1.5 h-5 bg-orange-500" />
-                  Payment Options
-                </h3>
-                <p className="text-xs text-slate-600 mb-4">Payable via PayPal or Direct EFT (Bank Transfer). Bank details are issued upon quote confirmation.</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                  <div className="p-3 border border-slate-300 bg-slate-50 space-y-1">
-                    <strong className="block font-bold text-slate-900">Option 1 — PayPal (instant)</strong>
-                    <div className="font-mono text-xs">
-                      <a href={SITE_CONFIG.paypalMeUrl} className="text-slate-900 underline font-mono text-xs" target="_blank" rel="noopener noreferrer">{SITE_CONFIG.paypalMeUrl}</a>
-                    </div>
-                    <div className="text-slate-500 text-[11px]">Instant, secure transfer — works worldwide.</div>
-                  </div>
-                  <div className="p-3 border border-slate-300 bg-slate-50 space-y-1">
-                    <strong className="block font-bold text-slate-900">Option 2 — Direct EFT / Bank Transfer</strong>
-                    <div>
-                      Proof via WhatsApp: <strong className="text-slate-900 font-mono">{SITE_CONFIG.whatsappFormatted}</strong>
-                    </div>
-                    <div className="text-slate-500 text-[11px]">Bank details provided upon quote confirmation. Send POP via WhatsApp to confirm.</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* ── PROPOSAL SECTIONS (quotes only) — each card keeps its tint in print ── */}
-              {selectedInvoice.documentType === "Quote" && (
-                <div className="mt-8 space-y-4">
-                  {selectedInvoice.proposalSummary && (
-                    <div className="p-4 border-l-4 border-orange-500 bg-orange-50 break-inside-avoid">
-                      <h4 className="font-black text-orange-700 text-xs uppercase tracking-widest mb-1">🎯 Your Project — What You Need</h4>
-                      <p className="text-sm text-slate-800 leading-relaxed whitespace-pre-wrap">{selectedInvoice.proposalSummary}</p>
-                    </div>
-                  )}
-                  {selectedInvoice.proposalSolution && (
-                    <div className="p-4 border-l-4 border-emerald-500 bg-emerald-50 break-inside-avoid">
-                      <h4 className="font-black text-emerald-700 text-xs uppercase tracking-widest mb-1">💡 Proposed Solution</h4>
-                      <p className="text-sm text-slate-800 leading-relaxed whitespace-pre-wrap">{selectedInvoice.proposalSolution}</p>
-                    </div>
-                  )}
-                  {selectedInvoice.proposalDeliverables && selectedInvoice.proposalDeliverables.length > 0 && (
-                    <div className="p-4 border border-slate-300 bg-slate-50 break-inside-avoid">
-                      <h4 className="font-black text-slate-900 text-xs uppercase tracking-widest mb-2">📦 What You Get — Deliverables</h4>
-                      <ul className="space-y-1">
-                        {selectedInvoice.proposalDeliverables.map((d, i) => (
-                          <li key={i} className="flex items-start gap-2 text-sm text-slate-800">
-                            <span className="text-emerald-600 font-bold mt-0.5">✓</span>
-                            <span>{d}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  {selectedInvoice.proposalTimeline && (
-                    <div className="p-4 border-l-4 border-blue-500 bg-blue-50 break-inside-avoid">
-                      <h4 className="font-black text-blue-700 text-xs uppercase tracking-widest mb-1">⏱️ Timeline</h4>
-                      <p className="text-sm text-slate-800 leading-relaxed whitespace-pre-wrap">{selectedInvoice.proposalTimeline}</p>
-                    </div>
-                  )}
-                  {(selectedInvoice.proposalGuarantee || selectedInvoice.proposalSocialProof || selectedInvoice.proposalNextSteps) && (
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 break-inside-avoid">
-                      {selectedInvoice.proposalGuarantee && (
-                        <div className="p-3 border-2 border-slate-900 bg-white">
-                          <h4 className="font-black text-xs text-slate-900 uppercase mb-1">🛡️ Guarantee</h4>
-                          <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-wrap">{selectedInvoice.proposalGuarantee}</p>
-                        </div>
-                      )}
-                      {selectedInvoice.proposalSocialProof && (
-                        <div className="p-3 border border-slate-300 bg-slate-50">
-                          <h4 className="font-black text-xs text-slate-900 uppercase mb-1">⭐ Why Us</h4>
-                          <p className="text-xs text-slate-600 leading-relaxed whitespace-pre-wrap">{selectedInvoice.proposalSocialProof}</p>
-                        </div>
-                      )}
-                      {selectedInvoice.proposalNextSteps && (
-                        <div className="p-3 border-2 border-orange-500 bg-orange-50">
-                          <h4 className="font-black text-xs text-orange-700 uppercase mb-1">🚀 Next Steps</h4>
-                          <p className="text-xs text-orange-900 leading-relaxed font-semibold whitespace-pre-wrap">{selectedInvoice.proposalNextSteps}</p>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {selectedInvoice.notes && (
-                <div className="mt-6 text-xs text-slate-700 border border-slate-300 bg-slate-50 p-3 break-inside-avoid">
-                  <strong className="text-slate-900 block mb-1 uppercase text-[11px] tracking-wider">Notes & Terms</strong>
-                  <span className="whitespace-pre-wrap leading-relaxed">{selectedInvoice.notes}</span>
-                </div>
-              )}
-
-              <div className="mt-6 text-[10px] text-slate-500 leading-relaxed border-t-2 border-slate-900 pt-3 break-inside-avoid">
-                <strong className="text-slate-700">Legal:</strong> Payment of this {selectedInvoice.documentType.toLowerCase()} constitutes acceptance of the Master Services
-                Agreement, Privacy Policy, POPIA Compliance Policy, and the No-Gamble Guarantee. Source code is released only
-                upon final payment. Confidential client data is permanently destroyed within 7 calendar days of handover — a voluntary
-                commitment exceeding the statutory duty under Section 14 of POPIA. Quote valid 30 days. Full terms: {SITE_CONFIG.siteUrl}/terms
-              </div>
-            </div>{/* end data-print-mode=invoice */}
-
-            {/* ── SIGNED DECLARATION (print-mode: declaration / invoice-declaration / full-package) — LAST PAGE ── */}
-            <div data-print-mode="declaration" className="border-2 border-slate-900 p-6 break-inside-avoid">
-              <div className="flex items-center gap-2 text-emerald-700 mb-1">
-                <div className="w-1 h-5 bg-emerald-600" />
-                <span className="text-xs font-black uppercase tracking-widest">Signed Declaration — legally binding</span>
-              </div>
-              <h3 className="font-black text-slate-900 text-lg mb-1">Declaration of Agreement & Consent</h3>
-              <p className="text-[11px] text-slate-500 font-mono mb-4">Ref: {selectedInvoice.invoiceNumber} • {selectedInvoice.documentType} • {SITE_CONFIG.siteUrl}</p>
-              <p className="text-xs text-slate-700 leading-relaxed mb-3">
-                I, <strong className="text-slate-900 border-b border-slate-900 px-1">{signerName?.trim() || "_______________________________"}</strong>,
-                {" "}being the authorised representative of{" "}
-                <strong className="text-slate-900 border-b border-slate-900 px-1">{selectedInvoice.clientCompany || selectedInvoice.clientName}</strong>,
-                {" "}confirm that the details in this {selectedInvoice.documentType.toLowerCase()} are correct, that I have read and accept the
-                Terms of Service, Privacy Policy, POPIA Compliance Policy, and the No-Gamble Guarantee (including the 14-day bug-fix warranty and 7-day data-erasure commitment),
-                and that by signing below this document becomes legally binding.
-              </p>
-              <p className="text-xs text-slate-700 leading-relaxed mb-6">
-                I acknowledge that confidential data will be processed under POPIA (Act 4 of 2013) and will be permanently destroyed within 7 calendar days of handover.
-                Where the client acts as data controller, processing follows the Data Processing Agreement where applicable.
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-2">
-                <div className="sm:col-span-1">
-                  <div className="h-24 border border-slate-300 bg-white flex items-center justify-center overflow-hidden">
-                    {signatureDataUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={signatureDataUrl} alt="Client signature" className="h-20 w-auto object-contain" />
-                    ) : (
-                      <span className="text-[11px] text-slate-400 italic">No signature captured — sign on the line below</span>
-                    )}
-                  </div>
-                  <div className="h-6 border-b-2 border-slate-900 mt-2" />
-                  <p className="text-[10px] text-slate-500 mt-1 font-bold uppercase tracking-wider">Signature</p>
-                  {signerName && <p className="text-[11px] text-slate-700 font-mono">{signerName}</p>}
-                </div>
-                <div className="text-left sm:text-center">
-                  <div className="h-24 flex items-end justify-center">
-                    <div className="w-full border-b-2 border-slate-900 h-6 text-xs text-slate-700 font-mono flex items-end pb-1">
-                      {selectedInvoice.declaration?.signedAt
-                        ? new Date(selectedInvoice.declaration.signedAt).toLocaleDateString("en-ZA", { day: "2-digit", month: "long", year: "numeric" })
-                        : new Date().toLocaleDateString("en-ZA", { day: "2-digit", month: "long", year: "numeric" })}
-                    </div>
-                  </div>
-                  <p className="text-[10px] text-slate-500 mt-1 font-bold uppercase tracking-wider">Date</p>
-                  <p className="text-[10px] text-slate-400">Signed on server time</p>
-                </div>
-                <div className="text-left sm:text-center">
-                  <div className="h-24 flex items-end justify-center">
-                    <div className="w-full border-b-2 border-slate-400 h-6" />
-                  </div>
-                  <p className="text-[10px] text-slate-500 mt-1 font-bold uppercase tracking-wider">Witness (optional)</p>
-                  <p className="text-[10px] text-slate-400">Name + signature</p>
-                </div>
-              </div>
-              <div className="mt-6 pt-3 border-t border-slate-200 flex flex-wrap justify-between gap-2 text-[10px] text-slate-400 font-mono">
-                <span>Generated {new Date().toLocaleDateString("en-ZA", { day: "2-digit", month: "long", year: "numeric" })} • {SITE_CONFIG.brandLine} • {SITE_CONFIG.siteUrl}</span>
-                <span>{selectedInvoice.declaration?.signedBy === "client" ? "Signed by client via portal" : selectedInvoice.declaration?.signedBy === "admin" ? "Signed in studio (admin)" : signerName || signatureDataUrl ? "Signature on file" : "Awaiting signature"}</span>
-              </div>
-              {!signatureDataUrl && !signerName && (
-                <p className="mt-3 text-[11px] text-amber-700 bg-amber-50 border border-amber-200 p-2">
-                  This declaration is unsigned. Capture a signature in the studio above or have the client sign via their portal before issuing the final PDF.
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      {/* PRINT-ONLY DOCUMENT — now generated via @react-pdf/renderer, not HTML print.
+           The old hidden div with data-print-mode sections has been removed. */}
 
       <Footer />
       <WhatsAppButton />

@@ -351,42 +351,18 @@ html {
 }
 
 /* ── PRINT MODE SECTIONS ───────────────────────────────────────────────────────
-   Each print section has a data-print-mode attribute. On screen, these sections
-   live inside a .print:block parent (which is hidden on screen). During print,
-   only the section whose attribute matches body's data-print-mode is shown.
-   The body gets its data-print-mode set in handlePrint() before window.print(). */
-
-/* Screen: hide print-mode sections inside the .print:block container */
-body:not([data-print-mode]) [data-print-mode] {
-  display: none;
-}
-
-/* Print: hide all first, then show matching sections */
+   PDF generation now uses @react-pdf/renderer (real PDF from React components).
+   The old HTML print container with data-print-mode has been removed.
+   Client dashboard + MonthlyStatements still use window.print(). */
 @media print {
-  [data-print-mode] { display: none !important; }
-}
-
-@media print {
-  body[data-print-mode="invoice"] [data-print-mode="invoice"] { display: block !important; }
-  body[data-print-mode="invoice-declaration"] [data-print-mode="invoice"] { display: block !important; }
-  body[data-print-mode="invoice-declaration"] [data-print-mode="declaration"] { display: block !important; page-break-before: always !important; }
-  body[data-print-mode="declaration"] [data-print-mode="declaration"] { display: block !important; }
-  body[data-print-mode="cover-letter"] [data-print-mode="cover-letter"] { display: block !important; }
-  body[data-print-mode="full-package"] [data-print-mode="cover-letter"] { display: block !important; }
-  body[data-print-mode="full-package"] [data-print-mode="invoice"] { display: block !important; page-break-before: always !important; }
-  body[data-print-mode="full-package"] [data-print-mode="declaration"] { display: block !important; page-break-before: always !important; }
-  /* Monthly statement modes */
-  body[data-print-mode="current"] [data-print-mode="monthly-statement"] { display: block !important; }
-  body[data-print-mode="year"] [data-print-mode="ytd-summary"] { display: block !important; }
-}
-
-/* ── PRINT CONTAINER ───────────────────────────────────────────────────────────
-   The print container uses Tailwind's built-in `hidden` class (display:none) on
-   screen. During print, we override it to display:block. Tailwind v4 strips
-   custom CSS classes it doesn't recognize, so we MUST use an existing utility
-   and override it here in globals.css with @media print. */
-@media print {
+  .print-exact, .print-exact * {
+    border-radius: 0 !important;
+  }
+  /* MonthlyStatements uses hidden + print-show for window.print() path */
   .hidden.print-show {
+    display: block !important;
+  }
+  .hidden.print-show[data-print-mode] > * {
     display: block !important;
   }
 }

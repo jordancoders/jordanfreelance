@@ -10,6 +10,7 @@
     "clean": "next clean"
   },
   "dependencies": {
+    "@react-pdf/renderer": "^4.9.0",
     "autoprefixer": "^10.4.21",
     "clsx": "^2.1.1",
     "framer-motion": "^13.1.1",
