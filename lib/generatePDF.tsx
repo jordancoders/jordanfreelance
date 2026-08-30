@@ -136,45 +136,88 @@ export function downloadInvoicePDF(inv: Invoice, filename?: string) {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const isQuote = invoice.documentType === "Quote";
 
-  // ── Header ──
-  drawHeader(doc,
-    [SITE_CONFIG.tradingName, `by ${SITE_CONFIG.developerName}`, SITE_CONFIG.email, `WhatsApp: ${SITE_CONFIG.whatsappFormatted}`],
-    [isQuote ? "QUOTATION" : "INVOICE", invoice.invoiceNumber, fmtDate(invoice.issueDate)],
-  );
+  // ═══════════════════════════════════════════════════════════════════════════
+  // HEADER — matches invoice-template page layout
+  // ═══════════════════════════════════════════════════════════════════════════
+  let y = 16;
 
-  // ── Status badge ──
-  const statusY = 46;
+  // Brand (left)
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(18);
+  doc.setTextColor(...C.darkText);
+  doc.text(SITE_CONFIG.tradingName, 16, y);
+  y += 6;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(...C.muted);
+  doc.text(`by ${SITE_CONFIG.developerName}`, 16, y);
+  y += 10;
+  doc.setFontSize(7);
+  doc.text(SITE_CONFIG.email, 16, y);
+  y += 4;
+  doc.text(`WhatsApp: ${SITE_CONFIG.whatsappFormatted}`, 16, y);
+  y += 4;
+  doc.text(`PayPal: ${SITE_CONFIG.paypalMeUrl.replace("https://www.paypal.com/paypalme/", "paypal.me/")}`, 16, y);
+  y += 4;
+  doc.text(`Location: ${SITE_CONFIG.location}`, 16, y);
+
+  // Invoice info box (right) — bordered box like the template
+  doc.setFillColor(...C.lightGray);
+  doc.setDrawColor(...C.midGray);
+  doc.roundedRect(130, 14, 64, 32, 2, 2, "FD");
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(9);
+  doc.setTextColor(...C.orange);
+  doc.text(isQuote ? "QUOTATION" : "INVOICE", 162, 22, { align: "center" });
+  doc.setFontSize(8);
+  doc.setTextColor(...C.darkText);
+  doc.text(`Ref: ${invoice.invoiceNumber}`, 162, 29, { align: "center" });
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7);
+  doc.setTextColor(...C.bodyText);
+  doc.text(`Issue: ${fmtDate(invoice.issueDate)}`, 162, 35, { align: "center" });
+  doc.text(`Due: ${fmtDate(invoice.dueDate)}`, 162, 39, { align: "center" });
+
+  // Status badge
+  const statusColor: [number, number, number] = invoice.status === "Paid" ? C.green : C.orange;
+  const statusBg: [number, number, number] = invoice.status === "Paid" ? C.greenBg : [255, 247, 237];
+  doc.setFillColor(statusBg[0], statusBg[1], statusBg[2]);
+  doc.roundedRect(144, 41, 36, 5, 1, 1, "F");
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(6);
+  doc.setTextColor(...statusColor);
+  doc.text(invoice.status.toUpperCase(), 162, 44.5, { align: "center" });
+
+  // Divider line
+  y = 52;
+  doc.setDrawColor(...C.midGray);
+  doc.setLineWidth(0.3);
+  doc.line(16, y, 194, y);
+  y += 8;
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // BILLED TO — full width box like the template
+  // ═══════════════════════════════════════════════════════════════════════════
+  doc.setFillColor(...C.lightGray);
+  doc.setDrawColor(...C.midGray);
+  doc.roundedRect(16, y, 178, 22, 2, 2, "FD");
   doc.setFont("helvetica", "bold");
   doc.setFontSize(7);
-  if (invoice.status === "Paid") {
-    doc.setFillColor(...C.greenBg);
-    doc.setDrawColor(...C.greenBorder);
-  } else {
-    doc.setFillColor(254, 243, 199);
-    doc.setDrawColor(253, 224, 71);
-  }
-  doc.roundedRect(16, statusY - 4, 24, 6, 1, 1, "FD");
-  doc.setTextColor(...(invoice.status === "Paid" ? C.green : C.orange));
-  doc.text(invoice.status.toUpperCase(), 28, statusY, { align: "center" });
+  doc.setTextColor(...C.muted);
+  doc.text("BILLED TO", 22, y + 6);
+  doc.setFontSize(11);
+  doc.setTextColor(...C.darkText);
+  doc.text(invoice.clientName, 22, y + 13);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7);
+  doc.setTextColor(...C.bodyText);
+  const billedLines = [invoice.clientCompany, [invoice.clientEmail, invoice.clientPhone].filter(Boolean).join("  •  ")].filter(Boolean);
+  if (billedLines.length) doc.text(billedLines.join("  •  "), 22, y + 19);
+  y += 30;
 
-  // ── Client & Payment info boxes ──
-  const boxY = 56;
-  drawInfoBox(doc, 16, boxY, 90, 30, "BILL TO", [
-    invoice.clientName,
-    invoice.clientCompany || "",
-    [invoice.clientEmail, invoice.clientPhone].filter(Boolean).join("  •  "),
-  ].filter(Boolean));
-
-  drawInfoBox(doc, 112, boxY, 82, 30, "PAYMENT DETAILS", [
-    `PayPal: ${SITE_CONFIG.paypalMeUrl.replace("https://www.paypal.com/paypalme/", "paypal.me/")}`,
-    `Due by: ${fmtDate(invoice.dueDate)}`,
-    `Deposit: ${invoice.depositPercent ?? 50}% upfront`,
-  ]);
-
-  // ── Items table ──
-  let startY = 94;
-  startY = sectionTitle(doc, "Items", startY);
-
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ITEMS TABLE — matches template: light gray header with bold border
+  // ═══════════════════════════════════════════════════════════════════════════
   const tableData = (invoice.items || []).map((item) => [
     item.description,
     String(item.quantity),
@@ -183,81 +226,159 @@ export function downloadInvoicePDF(inv: Invoice, filename?: string) {
   ]);
 
   autoTable(doc, {
-    startY,
-    head: [["Description", "Qty", "Rate", "Amount"]],
+    startY: y,
+    head: [["Item Description", "Qty", "Rate", "Amount (" + cur + ")"]],
     body: tableData,
-    theme: "striped",
-    headStyles: { fillColor: C.navy, fontStyle: "bold", fontSize: 7, textColor: C.white, cellPadding: 4 },
-    styles: { fontSize: 8, cellPadding: 3.5, textColor: C.darkText, lineColor: C.midGray, lineWidth: 0.1 },
+    theme: "grid",
+    headStyles: { fillColor: [241, 245, 249], fontStyle: "bold", fontSize: 7, textColor: C.darkText, cellPadding: 4, lineColor: C.darkText, lineWidth: 0.4 },
+    styles: { fontSize: 8, cellPadding: 3.5, textColor: C.darkText, lineColor: C.midGray, lineWidth: 0.15 },
     columnStyles: {
-      0: { cellWidth: 88 },
+      0: { cellWidth: 86 },
       1: { cellWidth: 18, halign: "center" },
       2: { cellWidth: 36, halign: "right" },
       3: { cellWidth: 36, halign: "right", fontStyle: "bold" },
     },
-    alternateRowStyles: { fillColor: C.lightGray },
+    alternateRowStyles: { fillColor: [248, 250, 252] },
   });
 
-  // ── Totals ──
-  const finalY = (doc as any).lastAutoTable?.finalY || startY + 20;
-  const txR = 194;
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TOTALS + GUARANTEE — split layout like the template
+  // ═══════════════════════════════════════════════════════════════════════════
+  const finalY = (doc as any).lastAutoTable?.finalY || y + 20;
 
-  // Totals box
+  // Left: Guarantee text
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(8);
+  doc.setTextColor(...C.green);
+  doc.text("No-Gamble Guarantee Included:", 16, finalY + 10);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7);
+  doc.setTextColor(...C.bodyText);
+  const guaranteeText = "If the 48-hour staging demo link is not delivered on time, 100% of the deposit + 100% of unused API credits will be refunded immediately.";
+  const gLines = doc.splitTextToSize(guaranteeText, 80);
+  gLines.forEach((line: string, i: number) => {
+    doc.text(line, 16, finalY + 16 + i * 4);
+  });
+
+  // Right: Totals box — matches template exactly
+  const totBoxX = 114;
+  const totBoxY = finalY + 4;
   doc.setFillColor(...C.lightGray);
   doc.setDrawColor(...C.midGray);
-  doc.roundedRect(120, finalY + 4, 74, 36, 2, 2, "FD");
+  doc.roundedRect(totBoxX, totBoxY, 80, 38, 2, 2, "FD");
 
-  let ty = finalY + 12;
-  const addRow = (label: string, value: string, bold = false) => {
-    doc.setFont("helvetica", bold ? "bold" : "normal");
-    doc.setFontSize(bold ? 9 : 8);
-    doc.setTextColor(...(bold ? C.darkText : C.bodyText));
-    doc.text(label, 126, ty);
-    doc.text(value, txR - 4, ty, { align: "right" });
-    ty += bold ? 8 : 6;
+  let ty = totBoxY + 8;
+  const addTotRow = (label: string, value: string, opts?: { bold?: boolean; orange?: boolean; divider?: boolean; big?: boolean }) => {
+    if (opts?.divider) {
+      doc.setDrawColor(...C.midGray);
+      doc.setLineWidth(0.2);
+      doc.line(totBoxX + 4, ty - 2, totBoxX + 76, ty - 2);
+    }
+    doc.setFont("helvetica", opts?.bold ? "bold" : "normal");
+    doc.setFontSize(opts?.big ? 10 : 8);
+    doc.setTextColor(...(opts?.orange ? C.orange : opts?.bold ? C.darkText : C.bodyText));
+    doc.text(label, totBoxX + 6, ty);
+    doc.text(value, totBoxX + 74, ty, { align: "right" });
+    ty += opts?.big ? 8 : 6;
   };
 
-  addRow("Subtotal", fmtCur(subtotal, cur));
-  addRow(`Deposit (${invoice.depositPercent ?? 50}%)`, fmtCur(deposit, cur));
-  addRow("Balance due", fmtCur(balance, cur));
+  addTotRow("Subtotal:", fmtCur(subtotal, cur));
+  addTotRow(`Kick-off Deposit (${invoice.depositPercent ?? 50}%):`, fmtCur(deposit, cur), { bold: true, orange: true, divider: true });
+  addTotRow(`Final Balance (${100 - (invoice.depositPercent ?? 50)}%):`, fmtCur(balance, cur));
+  addTotRow("Due Now:", fmtCur(deposit, cur), { bold: true, big: true, divider: true });
 
-  // Divider
-  doc.setDrawColor(...C.navy);
-  doc.setLineWidth(0.4);
-  doc.line(126, ty - 1, txR - 4, ty - 1);
-  ty += 2;
+  y = finalY + 50;
 
-  addRow("TOTAL", fmtCur(total, cur), true);
-
-  // Orange total highlight
-  doc.setFillColor(...C.orange);
-  doc.roundedRect(124, ty - 5, 66, 10, 1, 1, "F");
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PAYMENT OPTIONS — dark navy card like the template
+  // ═══════════════════════════════════════════════════════════════════════════
+  if (y > 220) { doc.addPage(); y = 20; }
+  doc.setFillColor(...C.navy);
+  doc.roundedRect(16, y, 178, 32, 2, 2, "F");
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
-  doc.setTextColor(...C.white);
-  doc.text(`TOTAL  ${fmtCur(total, cur)}`, 157, ty + 1, { align: "center" });
+  doc.setTextColor(...C.orange);
+  doc.text("PAYMENT OPTIONS", 22, y + 8);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7);
+  doc.setTextColor(203, 213, 225);
+  doc.text("Payable via PayPal or Direct EFT (Bank Transfer).", 22, y + 14);
 
-  // ── Notes ──
-  let noteY = finalY + 48;
+  // PayPal box
+  doc.setFillColor(30, 41, 59);
+  doc.setDrawColor(51, 65, 85);
+  doc.roundedRect(22, y + 18, 80, 12, 1.5, 1.5, "FD");
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(7);
+  doc.setTextColor(...C.white);
+  doc.text("PayPal", 26, y + 24);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(6);
+  doc.setTextColor(52, 211, 153);
+  doc.text(SITE_CONFIG.paypalMeUrl.replace("https://www.paypal.com/paypalme/", "paypal.me/"), 26, y + 28);
+
+  // EFT box
+  doc.setFillColor(30, 41, 59);
+  doc.setDrawColor(51, 65, 85);
+  doc.roundedRect(108, y + 18, 80, 12, 1.5, 1.5, "FD");
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(7);
+  doc.setTextColor(...C.white);
+  doc.text("Direct EFT (Bank Transfer)", 112, y + 24);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(6);
+  doc.setTextColor(203, 213, 225);
+  doc.text(`WhatsApp: ${SITE_CONFIG.whatsappFormatted}`, 112, y + 28);
+
+  y += 40;
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // NOTES (if any)
+  // ═══════════════════════════════════════════════════════════════════════════
   if (invoice.notes) {
-    if (noteY > 250) { doc.addPage(); noteY = 20; }
+    if (y > 250) { doc.addPage(); y = 20; }
     doc.setFillColor(...C.orange);
-    doc.rect(16, noteY - 1, 2, 10, "F");
+    doc.rect(16, y - 1, 2, 10, "F");
     doc.setFillColor(255, 247, 237);
-    doc.rect(18, noteY - 1, 176, 10, "F");
+    doc.rect(18, y - 1, 176, 10, "F");
     doc.setFont("helvetica", "bold");
     doc.setFontSize(7);
     doc.setTextColor(...C.orange);
-    doc.text("NOTE", 22, noteY + 2);
+    doc.text("NOTE", 22, y + 2);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(7);
     doc.setTextColor(...C.bodyText);
-    doc.text(invoice.notes, 22, noteY + 7);
-    noteY += 16;
+    doc.text(invoice.notes, 22, y + 7);
+    y += 16;
   }
 
-  // ── Proposal fields (quotes only) ──
+  // ═══════════════════════════════════════════════════════════════════════════
+  // LEGAL TERMS — matches template
+  // ═══════════════════════════════════════════════════════════════════════════
+  if (y > 230) { doc.addPage(); y = 20; }
+  doc.setFillColor(...C.lightGray);
+  doc.setDrawColor(...C.midGray);
+  doc.roundedRect(16, y, 178, 30, 2, 2, "FD");
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(7);
+  doc.setTextColor(...C.darkText);
+  doc.text("LEGAL TERMS & CONDITIONS OF PAYMENT", 22, y + 6);
+  doc.setDrawColor(...C.midGray);
+  doc.setLineWidth(0.2);
+  doc.line(22, y + 8, 188, y + 8);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(6);
+  doc.setTextColor(...C.bodyText);
+  doc.text('"PAY & AGREE": Payment of the deposit invoice constitutes full legal acceptance of our Terms of Service, Privacy Policy, POPIA Compliance Policy, and the No-Gamble Guarantee.', 22, y + 13);
+  doc.text("• Source code released only upon receipt of final payment balance.", 22, y + 18);
+  doc.text("• Staging environments contain minified code to protect intellectual property.", 22, y + 22);
+  doc.text("• All confidential Client datasets permanently destroyed within 7 calendar days of handover (exceeds POPIA Section 14).", 22, y + 26);
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PROPOSAL FIELDS (quotes only)
+  // ═══════════════════════════════════════════════════════════════════════════
   if (isQuote) {
+    y += 38;
     const proposalFields = [
       invoice.proposalSummary && { title: "Project Understanding", text: invoice.proposalSummary },
       invoice.proposalSolution && { title: "Proposed Solution", text: invoice.proposalSolution },
@@ -267,33 +388,31 @@ export function downloadInvoicePDF(inv: Invoice, filename?: string) {
     ].filter(Boolean) as { title: string; text: string }[];
 
     proposalFields.forEach(({ title, text }) => {
-      if (noteY > 250) { doc.addPage(); noteY = 20; }
-      noteY = sectionTitle(doc, title, noteY);
+      if (y > 250) { doc.addPage(); y = 20; }
+      y = sectionTitle(doc, title, y);
       doc.setFont("helvetica", "normal");
       doc.setFontSize(8);
       doc.setTextColor(...C.bodyText);
       const lines = doc.splitTextToSize(text, 174);
       lines.forEach((line: string) => {
-        if (noteY > 270) { doc.addPage(); noteY = 20; }
-        doc.text(line, 16, noteY);
-        noteY += 4;
+        if (y > 270) { doc.addPage(); y = 20; }
+        doc.text(line, 16, y);
+        y += 4;
       });
-      noteY += 4;
+      y += 4;
     });
 
-    // Deliverables
     if (invoice.proposalDeliverables?.length) {
-      if (noteY > 250) { doc.addPage(); noteY = 20; }
-      noteY = sectionTitle(doc, "Deliverables", noteY);
+      if (y > 250) { doc.addPage(); y = 20; }
+      y = sectionTitle(doc, "Deliverables", y);
       invoice.proposalDeliverables.forEach((d) => {
-        if (noteY > 270) { doc.addPage(); noteY = 20; }
+        if (y > 270) { doc.addPage(); y = 20; }
         doc.setFont("helvetica", "normal");
         doc.setFontSize(8);
         doc.setTextColor(...C.darkText);
-        doc.text(`✓  ${d}`, 20, noteY);
-        noteY += 5;
+        doc.text(`✓  ${d}`, 20, y);
+        y += 5;
       });
-      noteY += 4;
     }
   }
 
