@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Globe, ExternalLink, X, ArrowUpRight, Eye, Maximize2 } from "lucide-react";
 import type { Project } from "@/lib/types";
-import TourismDashboardPreview from "@/components/TourismDashboardPreview";
+
 
 /**
  * Hardens an embed URL: only http(s) URLs are ever allowed into an iframe.
@@ -36,7 +36,7 @@ export default function LiveSiteEmbed({ projects }: LiveSiteEmbedProps) {
   );
   const embedProject = candidates.find((p) => p.featured) ?? candidates[0] ?? null;
 
-  if (!embedProject || !embedProject.embedUrl) return <TourismDashboardPreview />;
+  if (!embedProject || !embedProject.embedUrl) return null;
 
   const url = normalizeEmbedUrl(embedProject.embedUrl)!;
   const displayUrl = url.replace(/^https?:\/\//, "").replace(/\/$/, "");

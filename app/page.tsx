@@ -3,14 +3,11 @@ import { ArrowRight, ShieldCheck, CheckCircle2, Sparkles, Clock, Lock, Mail, Glo
 import StatsBar from "@/components/StatsBar";
 import ProcessSteps from "@/components/ProcessSteps";
 import LiveSiteEmbed from "@/components/LiveSiteEmbed";
-import PromptEngineeringLog from "@/components/PromptEngineeringLog";
 import RecentReviews from "@/components/RecentReviews";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import AnimatedHero from "@/components/AnimatedHero";
-import LiveBuildTicker from "@/components/LiveBuildTicker";
-import BeforeAfterSlider from "@/components/BeforeAfterSlider";
 import SectionReveal from "@/components/SectionReveal";
 import { SITE_CONFIG } from "@/data/portfolioData";
 import { getPublishedReviews, getPublishedProjects } from "@/lib/db";
@@ -40,10 +37,9 @@ export default async function HomePage() {
       <main className="flex-1">
         <AnimatedHero />
 
-        {/* STATS BAR + LIVE TICKER */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 relative z-20 space-y-4">
+        {/* STATS BAR */}
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 relative z-20">
           <StatsBar />
-          <LiveBuildTicker />
         </section>
 
         {/* CLIENT TRUST & TESTIMONIALS — bento */}
@@ -145,8 +141,6 @@ export default async function HomePage() {
             </div>
 
             <LiveSiteEmbed projects={projects} />
-            <BeforeAfterSlider />
-            <PromptEngineeringLog />
 
             <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
               <a

@@ -4,7 +4,6 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import LiveSiteEmbed from "@/components/LiveSiteEmbed";
-import PromptEngineeringLog from "@/components/PromptEngineeringLog";
 import { getPublishedProjects } from "@/lib/db";
 import type { Project } from "@/lib/types";
 import ProjectsFilter from "./ProjectsFilter";
@@ -50,7 +49,6 @@ export default async function ProjectsPage() {
         {/* FEATURED FLAGSHIP PREVIEW */}
         <section className="py-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
           <LiveSiteEmbed projects={projects} />
-          <PromptEngineeringLog />
         </section>
 
         {/* FILTER & GRID SECTION */}

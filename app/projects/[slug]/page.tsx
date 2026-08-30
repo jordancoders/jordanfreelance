@@ -3,8 +3,6 @@ import { ArrowLeft, CheckCircle2, ShieldCheck, Clock, Award, Star, ArrowRight, E
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
-import TourismDashboardPreview from "@/components/TourismDashboardPreview";
-import PromptEngineeringLog from "@/components/PromptEngineeringLog";
 import { getProjectBySlug } from "@/lib/db";
 import type { Project } from "@/lib/types";
 import { notFound } from "next/navigation";
@@ -166,8 +164,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                 <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300">
                   Click below to test and interact with the live 48-hour staging demo built for this project.
                 </p>
-                <TourismDashboardPreview />
-                <PromptEngineeringLog />
+
               </div>
             )}
 
