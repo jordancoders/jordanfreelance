@@ -195,6 +195,10 @@ function AdminDashboardInner() {
 
   const handlePdfExport = async (type: "invoice" | "declaration" | "cover-letter") => {
     if (!selectedInvoice || pdfGenerating) return;
+    if (type === "declaration" && !selectedInvoice.declaration) {
+      showToast("No signature captured yet — add a signature before exporting the declaration.");
+      return;
+    }
     setPdfGenerating(type);
     setExportMenuOpen(false);
     try {
@@ -202,9 +206,16 @@ function AdminDashboardInner() {
       if (type === "invoice") await downloadInvoicePDF(selectedInvoice);
       else if (type === "declaration" && selectedInvoice.declaration) await downloadDeclarationPDF(selectedInvoice, selectedInvoice.declaration);
       else if (type === "cover-letter") await downloadCoverLetterPDF(selectedInvoice);
-    } catch (err) {
+      else throw new Error("No declaration to export — capture a signature first.");
+      showToast(`PDF downloaded — ${type}`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
       console.error("PDF generation failed:", err);
-      alert("PDF generation failed. Please try again.");
+      // Surface the real error so you can see if it's a missing field, signature, or chunk load.
+      showToast(`PDF failed: ${msg.slice(0, 160)}`);
+      // Keep alert for visibility when toast is missed
+      // eslint-disable-next-line no-alert
+      alert(`PDF generation failed:\n${msg}\n\nCheck console for details. If this persists, try refreshing or re-saving the invoice.`);
     } finally {
       setPdfGenerating(null);
     }

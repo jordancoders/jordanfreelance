@@ -1,5 +1,3 @@
-"use client";
-
 import React from "react";
 import { Document, Page, Text, View, Image } from "@react-pdf/renderer";
 import { pdfStyles, fmtDate } from "./styles";
@@ -91,12 +89,16 @@ export default function DeclarationPDF({
         <View style={pdfStyles.mt16}>
           <Text style={pdfStyles.sectionTitle}>Signature</Text>
 
-          {declaration.signatureDataUrl ? (
+          {declaration.signatureDataUrl && declaration.signatureDataUrl.startsWith("data:image/") ? (
             <View style={{ marginTop: 10 }}>
               <Image
                 src={declaration.signatureDataUrl}
                 style={{ width: 180, height: 60, objectFit: "contain" }}
               />
+            </View>
+          ) : declaration.signatureDataUrl && /^https?:\/\//.test(declaration.signatureDataUrl) ? (
+            <View style={{ marginTop: 10 }}>
+              <Image src={declaration.signatureDataUrl} style={{ width: 180, height: 60, objectFit: "contain" }} />
             </View>
           ) : (
             <View style={pdfStyles.signatureLine}>

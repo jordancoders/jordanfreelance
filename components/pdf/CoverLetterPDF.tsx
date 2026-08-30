@@ -1,5 +1,3 @@
-"use client";
-
 import React from "react";
 import { Document, Page, Text, View } from "@react-pdf/renderer";
 import { pdfStyles, fmtCurrency, fmtDate, calcSubtotal, calcDeposit, calcBalance } from "./styles";
