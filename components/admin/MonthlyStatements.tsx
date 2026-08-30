@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useMemo, useRef } from "react";
-import { Calendar, Printer, TrendingUp, TrendingDown, DollarSign, FileText } from "lucide-react";
+import { useState, useMemo } from "react";
+import { Calendar, TrendingUp, TrendingDown, DollarSign, FileText } from "lucide-react";
 import { SITE_CONFIG } from "@/data/portfolioData";
-import Logo from "@/components/Logo";
 import type { Invoice, ExpenseEntry } from "@/lib/types";
 import { EXPENSE_CATEGORIES } from "@/lib/types";
 
@@ -27,7 +26,7 @@ export default function MonthlyStatements({ invoices, expenses }: MonthlyStateme
   }, [invoices, expenses]);
 
   const [selectedMonth, setSelectedMonth] = useState(months[0] || "");
-  const [printTarget, setPrintTarget] = useState<"current" | "year">("current");
+
 
   const monthInvoices = invoices.filter((inv) => monthKey(inv.issueDate) === selectedMonth);
   const monthExpenses = expenses.filter((exp) => monthKey(exp.date) === selectedMonth);
@@ -63,20 +62,46 @@ export default function MonthlyStatements({ invoices, expenses }: MonthlyStateme
     count: monthExpenses.filter((e) => e.category === cat.value).length,
   })).filter((c) => c.total > 0);
 
-  const monthlyRef = useRef<HTMLDivElement>(null);
-  const ytdRef = useRef<HTMLDivElement>(null);
+  const handleStatementPDF = async () => {
+    const { downloadMonthlyStatementPDF } = await import("@/lib/generatePDF");
+    downloadMonthlyStatementPDF({
+      monthLabel: monthLabel(selectedMonth),
+      incomeZAR, incomeUSD, expensesZAR, expensesUSD, profitZAR, profitUSD,
+      monthInvoices: monthInvoices.map((inv) => ({
+        invoiceNumber: inv.invoiceNumber,
+        amount: (inv.items || []).reduce((a, it) => a + (it.quantity || 0) * (it.rate || 0), 0),
+        currency: inv.currency,
+      })),
+      monthExpenses: monthExpenses.map((e) => ({
+        description: e.description,
+        category: e.category,
+        amount: e.amount,
+        currency: e.currency,
+      })),
+    });
+  };
 
-  const doPrint = (target: "current" | "year") => {
-    setPrintTarget(target);
-    document.body.dataset.printMode = target;
-    // Brief delay so CSS data-print-mode rules apply before print dialog opens.
-    // hidden (Tailwind display:none) + print-show (CSS @media print override).
-    setTimeout(() => {
-      window.print();
-      const cleanup = () => { delete document.body.dataset.printMode; };
-      window.addEventListener("afterprint", cleanup, { once: true });
-      setTimeout(cleanup, 120_000);
-    }, 200);
+  const handleYTDPDF = async () => {
+    const { downloadYTDSummaryPDF } = await import("@/lib/generatePDF");
+    downloadYTDSummaryPDF({
+      year: yearKey,
+      ytdIncomeZAR, ytdIncomeUSD, ytdExpensesZAR, ytdExpensesUSD,
+      ytdProfitZAR: ytdIncomeZAR - ytdExpensesZAR,
+      ytdProfitUSD: ytdIncomeUSD - ytdExpensesUSD,
+      allInvoices: yearInvoices.map((inv) => ({
+        invoiceNumber: inv.invoiceNumber,
+        amount: (inv.items || []).reduce((a, it) => a + (it.quantity || 0) * (it.rate || 0), 0),
+        currency: inv.currency,
+        date: inv.issueDate,
+      })),
+      allExpenses: yearExpenses.map((e) => ({
+        description: e.description,
+        category: e.category,
+        amount: e.amount,
+        currency: e.currency,
+        date: e.date,
+      })),
+    });
   };
 
   const now = new Date().toLocaleDateString("en-ZA", { day: "2-digit", month: "long", year: "numeric" });
@@ -101,10 +126,10 @@ export default function MonthlyStatements({ invoices, expenses }: MonthlyStateme
               <option key={m} value={m}>{monthLabel(m)}</option>
             ))}
           </select>
-          <button onClick={() => doPrint("current")} className="px-4 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs flex items-center gap-1.5">
-            <Printer className="w-4 h-4" /> Print Statement
+          <button onClick={handleStatementPDF} className="px-4 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs flex items-center gap-1.5">
+            <FileText className="w-4 h-4" /> Download Statement
           </button>
-          <button onClick={() => doPrint("year")} className="px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-800 text-white font-bold text-xs flex items-center gap-1.5">
+          <button onClick={handleYTDPDF} className="px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-800 text-white font-bold text-xs flex items-center gap-1.5">
             <FileText className="w-4 h-4" /> YTD Summary
           </button>
         </div>
@@ -169,89 +194,6 @@ export default function MonthlyStatements({ invoices, expenses }: MonthlyStateme
             <span className="font-bold">{inv.currency === "USD" ? "$" : "R"} {(inv.items || []).reduce((a, it) => a + (it.quantity || 0) * (it.rate || 0), 0).toLocaleString()}</span>
           </div>
         ))}
-      </div>
-
-      {/* PRINT-ONLY: Monthly Statement */}
-      <div ref={monthlyRef} className="hidden print-show bg-white text-slate-900" data-print-mode="monthly-statement">
-        <div className="p-10">
-          <div className="flex justify-between items-start border-b-2 border-slate-900 pb-6 mb-8">
-            <Logo variant="full" iconSize={48} text={SITE_CONFIG.tradingName} subtext={`by ${SITE_CONFIG.developerName}`} />
-            <div className="text-right">
-              <h1 className="text-2xl font-black">Monthly Statement</h1>
-              <p className="text-sm text-slate-600 mt-1">{monthLabel(selectedMonth)}</p>
-              <p className="text-xs text-slate-400 mt-1">Generated {now}</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4 mb-8">
-            <div className="p-4 border border-slate-300 rounded-lg">
-              <div className="text-xs font-bold text-slate-500 mb-1">Income (ZAR)</div>
-              <div className="text-xl font-black text-emerald-700">R {incomeZAR.toLocaleString()}</div>
-            </div>
-            <div className="p-4 border border-slate-300 rounded-lg">
-              <div className="text-xs font-bold text-slate-500 mb-1">Expenses (ZAR)</div>
-              <div className="text-xl font-black text-red-700">R {expensesZAR.toLocaleString()}</div>
-            </div>
-            <div className="p-4 border border-slate-300 rounded-lg">
-              <div className="text-xs font-bold text-slate-500 mb-1">Profit (ZAR)</div>
-              <div className={`text-xl font-black ${profitZAR >= 0 ? "text-emerald-700" : "text-red-700"}`}>R {profitZAR.toLocaleString()}</div>
-            </div>
-            <div className="p-4 border border-slate-300 rounded-lg">
-              <div className="text-xs font-bold text-slate-500 mb-1">Profit (USD)</div>
-              <div className={`text-xl font-black ${profitUSD >= 0 ? "text-emerald-700" : "text-red-700"}`}>$ {profitUSD.toLocaleString()}</div>
-            </div>
-          </div>
-
-          <table className="w-full text-xs border-collapse mb-6">
-            <thead>
-              <tr className="border-b-2 border-slate-900">
-                <th className="text-left py-2 font-bold">Invoice</th>
-                <th className="text-right py-2 font-bold">Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              {monthInvoices.map((inv) => (
-                <tr key={inv.id} className="border-b border-slate-200">
-                  <td className="py-2 font-mono">{inv.invoiceNumber}</td>
-                  <td className="py-2 text-right font-bold">{inv.currency === "USD" ? "$" : "R"} {(inv.items || []).reduce((a, it) => a + (it.quantity || 0) * (it.rate || 0), 0).toLocaleString()}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          <div className="mt-8 text-[10px] text-slate-400 text-center border-t border-slate-200 pt-4">
-            {SITE_CONFIG.brandLine} — Monthly Statement for {monthLabel(selectedMonth)} • Generated {now}
-          </div>
-        </div>
-      </div>
-
-      {/* PRINT-ONLY: Year-to-Date Summary */}
-      <div ref={ytdRef} className="hidden print-show bg-white text-slate-900" data-print-mode="ytd-summary">
-        <div className="p-10">
-          <div className="flex justify-between items-start border-b-2 border-slate-900 pb-6 mb-8">
-            <Logo variant="full" iconSize={48} text={SITE_CONFIG.tradingName} subtext={`by ${SITE_CONFIG.developerName}`} />
-            <div className="text-right">
-              <h1 className="text-2xl font-black">Year-to-Date Summary</h1>
-              <p className="text-sm text-slate-600 mt-1">{yearKey}</p>
-              <p className="text-xs text-slate-400 mt-1">Generated {now}</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4 mb-8">
-            <div className="p-4 border border-slate-300 rounded-lg">
-              <div className="text-xs font-bold text-slate-500 mb-1">YTD Income (ZAR)</div>
-              <div className="text-xl font-black text-emerald-700">R {ytdIncomeZAR.toLocaleString()}</div>
-            </div>
-            <div className="p-4 border border-slate-300 rounded-lg">
-              <div className="text-xs font-bold text-slate-500 mb-1">YTD Expenses (ZAR)</div>
-              <div className="text-xl font-black text-red-700">R {ytdExpensesZAR.toLocaleString()}</div>
-            </div>
-          </div>
-
-          <div className="mt-8 text-[10px] text-slate-400 text-center border-t border-slate-200 pt-4">
-            {SITE_CONFIG.brandLine} — Year-to-Date Summary {yearKey} • Generated {now}
-          </div>
-        </div>
       </div>
     </div>
   );

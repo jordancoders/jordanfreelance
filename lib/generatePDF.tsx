@@ -546,3 +546,244 @@ function addProposalSection(doc: jsPDF, title: string, content: string, y: numbe
   });
   return y + 4;
 }
+
+/** Shared header for statement PDFs */
+function addStatementHeader(doc: jsPDF, title: string, subtitle: string) {
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(16);
+  doc.text(SITE_CONFIG.tradingName, 14, 18);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7);
+  doc.setTextColor(100, 116, 139);
+  doc.text(`by ${SITE_CONFIG.developerName}`, 14, 23);
+  doc.text(SITE_CONFIG.email, 14, 28);
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(12);
+  doc.setTextColor(15, 23, 42);
+  doc.text(title, 196, 18, { align: "right" });
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(100, 116, 139);
+  doc.text(subtitle, 196, 24, { align: "right" });
+  doc.setFontSize(7);
+  doc.text(`Generated ${fmtDate(new Date().toISOString())}`, 196, 29, { align: "right" });
+
+  doc.setDrawColor(15, 23, 42);
+  doc.setLineWidth(0.5);
+  doc.line(14, 33, 196, 33);
+}
+
+/** Shared footer for statement PDFs */
+function addStatementFooter(doc: jsPDF) {
+  const pageH = doc.internal.pageSize.getHeight();
+  doc.setDrawColor(226, 232, 240);
+  doc.setLineWidth(0.2);
+  doc.line(14, pageH - 12, 196, pageH - 12);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(6);
+  doc.setTextColor(148, 163, 184);
+  doc.text(`${SITE_CONFIG.brandLine} • Generated ${fmtDate(new Date().toISOString())}`, 105, pageH - 6, { align: "center" });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MONTHLY STATEMENT PDF
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export interface StatementData {
+  monthLabel: string;
+  incomeZAR: number;
+  incomeUSD: number;
+  expensesZAR: number;
+  expensesUSD: number;
+  profitZAR: number;
+  profitUSD: number;
+  monthInvoices: { invoiceNumber: string; amount: number; currency: "ZAR" | "USD" }[];
+  monthExpenses: { description: string; category: string; amount: number; currency: "ZAR" | "USD" }[];
+}
+
+export function downloadMonthlyStatementPDF(data: StatementData) {
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+  addStatementHeader(doc, "Monthly Statement", data.monthLabel);
+
+  // Summary boxes
+  let y = 42;
+  const boxW = 88;
+  const boxH = 16;
+  const boxes = [
+    { label: "Income (ZAR)", value: `R ${data.incomeZAR.toLocaleString()}`, color: [22, 101, 52] },
+    { label: "Expenses (ZAR)", value: `R ${data.expensesZAR.toLocaleString()}`, color: [220, 38, 38] },
+    { label: "Profit (ZAR)", value: `R ${data.profitZAR.toLocaleString()}`, color: data.profitZAR >= 0 ? [22, 101, 52] : [220, 38, 38] },
+    { label: "Profit (USD)", value: `$ ${data.profitUSD.toLocaleString()}`, color: data.profitUSD >= 0 ? [22, 101, 52] : [220, 38, 38] },
+  ];
+
+  boxes.forEach((b, i) => {
+    const bx = i % 2 === 0 ? 14 : 108;
+    const by = y + Math.floor(i / 2) * (boxH + 4);
+    doc.setFillColor(248, 250, 252);
+    doc.setDrawColor(226, 232, 240);
+    doc.roundedRect(bx, by, boxW, boxH, 1, 1, "FD");
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7);
+    doc.setTextColor(100, 116, 139);
+    doc.text(b.label, bx + 4, by + 5);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.setTextColor(b.color[0], b.color[1], b.color[2]);
+    doc.text(b.value, bx + 4, by + 12);
+  });
+  y += Math.ceil(boxes.length / 2) * (boxH + 4) + 6;
+
+  // Invoice table
+  if (data.monthInvoices.length > 0) {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8);
+    doc.setTextColor(100, 116, 139);
+    doc.text("INVOICES", 14, y);
+    y += 4;
+
+    autoTable(doc, {
+      startY: y,
+      head: [["Invoice #", "Amount"]],
+      body: data.monthInvoices.map((inv) => [
+        inv.invoiceNumber,
+        `${inv.currency === "USD" ? "$" : "R"} ${inv.amount.toLocaleString()}`,
+      ]),
+      theme: "grid",
+      headStyles: { fillColor: [15, 23, 42], fontStyle: "bold", fontSize: 7, textColor: 255 },
+      styles: { fontSize: 8, cellPadding: 3 },
+      columnStyles: { 1: { halign: "right", fontStyle: "bold" } },
+      alternateRowStyles: { fillColor: [248, 250, 252] },
+    });
+    y = (doc as any).lastAutoTable?.finalY + 8;
+  }
+
+  // Expense table
+  if (data.monthExpenses.length > 0) {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8);
+    doc.setTextColor(100, 116, 139);
+    doc.text("EXPENSES", 14, y);
+    y += 4;
+
+    autoTable(doc, {
+      startY: y,
+      head: [["Description", "Category", "Amount"]],
+      body: data.monthExpenses.map((e) => [
+        e.description,
+        e.category,
+        `${e.currency === "USD" ? "$" : "R"} ${e.amount.toLocaleString()}`,
+      ]),
+      theme: "grid",
+      headStyles: { fillColor: [15, 23, 42], fontStyle: "bold", fontSize: 7, textColor: 255 },
+      styles: { fontSize: 8, cellPadding: 3 },
+      columnStyles: { 2: { halign: "right", fontStyle: "bold" } },
+      alternateRowStyles: { fillColor: [248, 250, 252] },
+    });
+    y = (doc as any).lastAutoTable?.finalY + 8;
+  }
+
+  addStatementFooter(doc);
+  doc.save(`statement-${data.monthLabel.replace(/\s+/g, "-").toLowerCase()}.pdf`);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// YEAR-TO-DATE SUMMARY PDF
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export interface YTDData {
+  year: string;
+  ytdIncomeZAR: number;
+  ytdIncomeUSD: number;
+  ytdExpensesZAR: number;
+  ytdExpensesUSD: number;
+  ytdProfitZAR: number;
+  ytdProfitUSD: number;
+  allInvoices: { invoiceNumber: string; amount: number; currency: "ZAR" | "USD"; date: string }[];
+  allExpenses: { description: string; category: string; amount: number; currency: "ZAR" | "USD"; date: string }[];
+}
+
+export function downloadYTDSummaryPDF(data: YTDData) {
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+  addStatementHeader(doc, "Year-to-Date Summary", data.year);
+
+  let y = 42;
+  const boxW = 88;
+  const boxH = 16;
+  const boxes = [
+    { label: "YTD Income (ZAR)", value: `R ${data.ytdIncomeZAR.toLocaleString()}`, color: [22, 101, 52] },
+    { label: "YTD Expenses (ZAR)", value: `R ${data.ytdExpensesZAR.toLocaleString()}`, color: [220, 38, 38] },
+    { label: "YTD Profit (ZAR)", value: `R ${data.ytdProfitZAR.toLocaleString()}`, color: data.ytdProfitZAR >= 0 ? [22, 101, 52] : [220, 38, 38] },
+    { label: "YTD Profit (USD)", value: `$ ${data.ytdProfitUSD.toLocaleString()}`, color: data.ytdProfitUSD >= 0 ? [22, 101, 52] : [220, 38, 38] },
+  ];
+
+  boxes.forEach((b, i) => {
+    const bx = i % 2 === 0 ? 14 : 108;
+    const by = y + Math.floor(i / 2) * (boxH + 4);
+    doc.setFillColor(248, 250, 252);
+    doc.setDrawColor(226, 232, 240);
+    doc.roundedRect(bx, by, boxW, boxH, 1, 1, "FD");
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7);
+    doc.setTextColor(100, 116, 139);
+    doc.text(b.label, bx + 4, by + 5);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.setTextColor(b.color[0], b.color[1], b.color[2]);
+    doc.text(b.value, bx + 4, by + 12);
+  });
+  y += Math.ceil(boxes.length / 2) * (boxH + 4) + 6;
+
+  // All invoices for the year
+  if (data.allInvoices.length > 0) {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8);
+    doc.setTextColor(100, 116, 139);
+    doc.text("ALL INVOICES", 14, y);
+    y += 4;
+
+    autoTable(doc, {
+      startY: y,
+      head: [["Date", "Invoice #", "Amount"]],
+      body: data.allInvoices.map((inv) => [
+        fmtDate(inv.date),
+        inv.invoiceNumber,
+        `${inv.currency === "USD" ? "$" : "R"} ${inv.amount.toLocaleString()}`,
+      ]),
+      theme: "grid",
+      headStyles: { fillColor: [15, 23, 42], fontStyle: "bold", fontSize: 7, textColor: 255 },
+      styles: { fontSize: 8, cellPadding: 3 },
+      columnStyles: { 2: { halign: "right", fontStyle: "bold" } },
+      alternateRowStyles: { fillColor: [248, 250, 252] },
+    });
+    y = (doc as any).lastAutoTable?.finalY + 8;
+  }
+
+  // All expenses for the year
+  if (data.allExpenses.length > 0) {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8);
+    doc.setTextColor(100, 116, 139);
+    doc.text("ALL EXPENSES", 14, y);
+    y += 4;
+
+    autoTable(doc, {
+      startY: y,
+      head: [["Date", "Description", "Category", "Amount"]],
+      body: data.allExpenses.map((e) => [
+        fmtDate(e.date),
+        e.description,
+        e.category,
+        `${e.currency === "USD" ? "$" : "R"} ${e.amount.toLocaleString()}`,
+      ]),
+      theme: "grid",
+      headStyles: { fillColor: [15, 23, 42], fontStyle: "bold", fontSize: 7, textColor: 255 },
+      styles: { fontSize: 7, cellPadding: 2.5 },
+      columnStyles: { 3: { halign: "right", fontStyle: "bold" } },
+      alternateRowStyles: { fillColor: [248, 250, 252] },
+    });
+  }
+
+  addStatementFooter(doc);
+  doc.save(`ytd-summary-${data.year}.pdf`);
+}
