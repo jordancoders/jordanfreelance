@@ -209,7 +209,7 @@ export default function InternationalPage() {
               {[
                 { icon: Clock, title: "EU / UK Overlap", desc: "SAST (UTC+2) overlaps the full European working day — same-day replies are normal." },
                 { icon: Globe, title: "US / Canada Overlap", desc: "Early-morning calls sync with Eastern US hours; async updates keep momentum." },
-                { icon: Handshake, title: "Async-First Communication", desc: "Loom walkthroughs, staging links, and clear written updates so nothing depends on a single call." },
+                { icon: Handshake, title: "Async-First Communication", desc: "Screen-share walkthroughs, staging links, and clear written updates so nothing depends on a single call." },
               ].map((item) => (
                 <div key={item.title} className="p-6 rounded-3xl bg-white dark:bg-[#0D1A2D] border border-slate-200 dark:border-slate-800 shadow-lg space-y-3">
                   <item.icon className="w-7 h-7 mx-auto text-orange-500" />

@@ -181,7 +181,7 @@ function ContactFormContent() {
           </h3>
 
           <p className="text-xs sm:text-sm text-orange-100 leading-relaxed">
-            Schedule a 15-minute video walkthrough to discuss your project requirements, technical feasibility, and get instant pricing clarity.
+            Have a quick 15-minute chat to discuss your project requirements, technical feasibility, and get instant pricing clarity.
           </p>
 
           <div className="pt-2 space-y-3">

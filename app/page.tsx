@@ -71,17 +71,6 @@ export default async function HomePage() {
                   I won't publish fake or placeholder reviews — ever. Verified client reviews are featured on the Testimonials page after real project sign-offs. Until then, judge me by what you can actually test: your own staging demo in 48 hours, before you pay the balance.
                 </p>
                 <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
-                  {SITE_CONFIG.loomUrl && (
-                    <a
-                      id="reviews-loom-btn"
-                      href={SITE_CONFIG.loomUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-slate-900 dark:bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm shadow transition-all"
-                    >
-                      ▶ Watch the Sample Build Teardown
-                    </a>
-                  )}
                   <Link
                     id="reviews-cta-btn"
                     href="/contact"

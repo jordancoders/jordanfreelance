@@ -195,7 +195,7 @@ export default function OverviewTab({
             <div className="text-center py-8 space-y-2">
               <Users className="w-8 h-8 text-slate-300 mx-auto" />
               <p className="text-sm font-bold text-slate-600 dark:text-slate-300">No approved portals yet</p>
-              <p className="text-xs text-slate-400">Create and approve a portal to track a live build here.</p>
+              <p className="text-xs text-slate-400">Create and approve a client portal here.</p>
             </div>
           ) : (
             <div className="space-y-4">
