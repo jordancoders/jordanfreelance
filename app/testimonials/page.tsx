@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Star, Quote, Play, CheckCircle2, ShieldCheck } from "lucide-react";
+import { Star, Quote, CheckCircle2, ShieldCheck } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
@@ -149,46 +149,6 @@ export default async function TestimonialsPage() {
 
           </div>
         </section>
-
-        {/* BUILD TEARDOWN */}
-        {SITE_CONFIG.loomUrl && (
-          <section className="py-16 bg-slate-100 dark:bg-[#070D17] border-b border-slate-200 dark:border-slate-800">
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 text-center">
-
-              <span className="text-xs font-bold text-orange-500 uppercase tracking-widest bg-orange-50 dark:bg-orange-950/60 px-3 py-1 rounded-full border border-orange-200 dark:border-orange-800">
-                Build Teardown
-              </span>
-
-              <h3 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">
-                Watch a 2-Minute Staging Demo Walkthrough
-              </h3>
-
-              <a
-                id="testimonials-loom-link"
-                href={SITE_CONFIG.loomUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="relative block aspect-video rounded-3xl bg-slate-900 border-2 border-slate-800 overflow-hidden shadow-2xl group"
-              >
-                <img
-                  src="https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=1200&q=80"
-                  alt="Staging Demo Walkthrough Video"
-                  className="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-500"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent"></div>
-
-                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3">
-                  <div className="w-20 h-20 rounded-full bg-orange-500 text-white flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform">
-                    <Play className="w-8 h-8 fill-white ml-1" />
-                  </div>
-                  <span className="font-bold text-white text-base">Play Staging Walkthrough Video</span>
-                  <span className="text-xs text-orange-400 font-mono">2-minute build teardown</span>
-                </div>
-              </a>
-
-            </div>
-          </section>
-        )}
 
         {/* FINAL CTA */}
         <section className="py-16 bg-[#0A1628] text-white text-center">
