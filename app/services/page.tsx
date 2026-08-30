@@ -3,7 +3,6 @@ import { CheckCircle2, Layers, Code, Zap, Wrench, Database, ShoppingCart, Rocket
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
-import CostEstimator from "@/components/CostEstimator";
 import { SERVICES_DATA, Service, SITE_CONFIG } from "@/data/portfolioData";
 
 export const metadata = {
@@ -142,9 +141,6 @@ export default function ServicesPage() {
                   </div>
                 </div>
               )})}
-            </div>
-            <div className="pt-6 space-y-8">
-              <CostEstimator />
             </div>
 
           </div>
