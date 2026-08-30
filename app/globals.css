@@ -380,15 +380,13 @@ body:not([data-print-mode]) [data-print-mode] {
   body[data-print-mode="year"] [data-print-mode="ytd-summary"] { display: block !important; }
 }
 
-/* ── PRINT CONTAINER (replaces React state toggle) ──────────────────────────────
-   .print-container is hidden on screen via CSS, visible only during print.
-   This avoids the React state timing race that caused blank PDFs.
-   The container is ALWAYS in the DOM — CSS handles visibility, not React. */
-.print-container {
-  display: none !important;
-}
+/* ── PRINT CONTAINER ───────────────────────────────────────────────────────────
+   The print container uses Tailwind's built-in `hidden` class (display:none) on
+   screen. During print, we override it to display:block. Tailwind v4 strips
+   custom CSS classes it doesn't recognize, so we MUST use an existing utility
+   and override it here in globals.css with @media print. */
 @media print {
-  .print-container {
+  .hidden.print-show {
     display: block !important;
   }
 }

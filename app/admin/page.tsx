@@ -3555,7 +3555,7 @@ function AdminDashboardInner() {
            DOM order: Cover Letter (p1) → Invoice (p2) → Declaration (p3).
            Each section gets its own page break when printed together. */}
       {selectedInvoice && (
-        <div className="print-container print-exact bg-white text-slate-900">
+        <div className="hidden print-show print-exact bg-white text-slate-900">
           <div className="p-8">
             {/* ── COVER LETTER (print-mode: cover-letter / full-package) — FIRST PAGE ── */}
             <div data-print-mode="cover-letter" className="pb-2">
