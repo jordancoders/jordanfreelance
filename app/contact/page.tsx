@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
-import { Mail, Phone, Clock, MapPin, Send, MessageSquare, Calendar, Globe } from "lucide-react";
+import { Mail, Phone, Clock, MapPin, Send, MessageSquare, MessageCircle, Calendar, Globe } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
@@ -187,19 +187,15 @@ function ContactFormContent() {
           <div className="pt-2 space-y-3">
             <a
               id="book-discovery-call-trigger"
-              href={(SITE_CONFIG as any).calUrl || SITE_CONFIG.discoveryCallUrl}
+              href={SITE_CONFIG.whatsappLink + "?text=Hi%20Jordan%2C%20I%27d%20like%20to%20book%20a%2015-minute%20discovery%20call."}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white hover:bg-slate-200 dark:hover:bg-slate-700 font-bold text-sm transition-all border border-slate-300 dark:border-slate-700 shadow-sm"
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-white text-orange-600 hover:bg-orange-50 font-bold text-sm transition-all border border-white/30 shadow-sm"
             >
-              <Calendar className="w-4 h-4 text-orange-500" />
-              Book 15-Min Discovery Call
+              <MessageCircle className="w-4 h-4 text-green-500" />
+              Chat on WhatsApp — Book Your Call
             </a>
-            {(SITE_CONFIG as any).calUrl && (
-              <div className="rounded-2xl overflow-hidden border border-white/20 bg-white mt-3">
-                <iframe src={(SITE_CONFIG as any).calUrl} className="w-full h-[520px] border-0" title="Book a call with Jordan Peters" loading="lazy" />
-              </div>
-            )}
+            <p className="text-[11px] text-orange-200 font-mono">Direct message • No forms • Instant reply</p>
           </div>
         </div>
 

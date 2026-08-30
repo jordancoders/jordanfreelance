@@ -58,7 +58,7 @@ export const SITE_CONFIG = {
   repoUrl: "https://github.com/steamytooolz-commits/JordaPortfolio",
   // Loom teardown video of the sample build — placeholder until you record one.
   loomUrl: "https://www.loom.com/share/placeholder-jordan-peters-teardown",
-  calUrl: "https://cal.com/jordan-peters/15min",
+  calUrl: "https://wa.me/27848600638?text=Hi%20Jordan%2C%20I%27d%20like%20to%20book%20a%2015-minute%20discovery%20call.",
 };
 
 export const PROJECTS_DATA: Project[] = [];
