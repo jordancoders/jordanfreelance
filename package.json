@@ -10,10 +10,11 @@
     "clean": "next clean"
   },
   "dependencies": {
-    "@react-pdf/renderer": "^4.9.0",
     "autoprefixer": "^10.4.21",
     "clsx": "^2.1.1",
     "framer-motion": "^13.1.1",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.8",
     "lucide-react": "^0.553.0",
     "mongodb": "^6.16.0",
     "next": "^15.4.9",
