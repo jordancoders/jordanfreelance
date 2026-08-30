@@ -12,7 +12,6 @@ import AnimatedHero from "@/components/AnimatedHero";
 import LiveBuildTicker from "@/components/LiveBuildTicker";
 import BeforeAfterSlider from "@/components/BeforeAfterSlider";
 import SectionReveal from "@/components/SectionReveal";
-import PitchQualifier from "@/components/PitchQualifier";
 import { SITE_CONFIG } from "@/data/portfolioData";
 import { getPublishedReviews, getPublishedProjects } from "@/lib/db";
 import type { ClientReview, Project } from "@/lib/types";
@@ -147,7 +146,6 @@ export default async function HomePage() {
 
             <LiveSiteEmbed projects={projects} />
             <BeforeAfterSlider />
-            <SectionReveal><PitchQualifier /></SectionReveal>
             <PromptEngineeringLog />
 
             <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">

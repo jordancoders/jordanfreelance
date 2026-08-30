@@ -5,7 +5,6 @@ import { Mail, Phone, Clock, MapPin, Send, MessageSquare, Calendar, Globe } from
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
-import PitchQualifier from "@/components/PitchQualifier";
 import { SITE_CONFIG } from "@/data/portfolioData";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 
@@ -228,10 +227,6 @@ export default function ContactPage() {
             <p className="text-slate-600 dark:text-slate-300 text-base sm:text-lg">
               Tell me about your project, and I&apos;ll get back to you within 2 hours during business hours with a custom quote.
             </p>
-          </div>
-
-          <div className="max-w-4xl mx-auto">
-            <PitchQualifier />
           </div>
 
           <Suspense fallback={<div className="text-center py-12 text-slate-400">Loading form...</div>}>
